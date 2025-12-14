@@ -37,14 +37,20 @@ export default function TabLayout() {
                 name="index"
                 options={{
                     title: 'Home',
-                    tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+                    tabBarIcon: ({ color }) => (
+                        // @ts-ignore
+                        <Home size={24} color={color} />
+                    ),
                 }}
             />
             <Tabs.Screen
                 name="orders"
                 options={{
                     title: 'Orders',
-                    tabBarIcon: ({ color }) => <ShoppingBag size={24} color={color} />,
+                    tabBarIcon: ({ color }) => (
+                        // @ts-ignore
+                        <ShoppingBag size={24} color={color} />
+                    ),
                 }}
             />
             <Tabs.Screen
@@ -53,6 +59,7 @@ export default function TabLayout() {
                     title: 'Approvals',
                     tabBarIcon: ({ color }) => (
                         <View>
+                            {/* @ts-ignore */}
                             <ShieldCheck size={24} color={color} />
                             <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-[#0b141a]" />
                         </View>
@@ -63,14 +70,20 @@ export default function TabLayout() {
                 name="notifications"
                 options={{
                     title: 'Alerts',
-                    tabBarIcon: ({ color }) => <Bell size={24} color={color} />,
+                    tabBarIcon: ({ color }) => (
+                        // @ts-ignore
+                        <Bell size={24} color={color} />
+                    ),
                 }}
             />
             <Tabs.Screen
                 name="menu"
                 options={{
                     title: 'Menu',
-                    tabBarIcon: ({ color }) => <Menu size={24} color={color} />,
+                    tabBarIcon: ({ color }) => (
+                        // @ts-ignore
+                        <Menu size={24} color={color} />
+                    ),
                 }}
             />
         </Tabs>

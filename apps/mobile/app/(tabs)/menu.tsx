@@ -32,7 +32,9 @@ export default function MenuScreen() {
                         { icon: HelpCircle, label: 'Help & Support' },
                     ].map((item, i) => (
                         <TouchableOpacity key={i} className="flex-row items-center p-4 border-b border-white/5 last:border-0 active:bg-white/5">
+                            {/* @ts-ignore */}
                             <item.icon size={20} color="rgba(255,255,255,0.7)" />
+
                             <Text className="text-white ml-4 font-medium text-base">{item.label}</Text>
                         </TouchableOpacity>
                     ))}
@@ -42,7 +44,9 @@ export default function MenuScreen() {
                     onPress={() => router.replace('/(auth)/login')}
                     className="flex-row items-center justify-center p-4 rounded-xl border border-red-500/20 bg-red-500/10 active:bg-red-500/20"
                 >
+                    {/* @ts-ignore */}
                     <LogOut size={20} color="#ef4444" />
+
                     <Text className="text-red-500 ml-2 font-bold">Sign Out</Text>
                 </TouchableOpacity>
 

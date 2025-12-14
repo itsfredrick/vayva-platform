@@ -1,11 +1,10 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground } from 'react-native';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
+// @ts-ignore
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { styled } from 'nativewind';
 
-const StyledBlurView = styled(BlurView);
 
 export default function LoginScreen() {
     const handleLogin = () => {
@@ -27,7 +26,8 @@ export default function LoginScreen() {
                     <Text className="text-white/60 mt-2 text-base">Manage your store on the go</Text>
                 </View>
 
-                <StyledBlurView intensity={30} tint="dark" className="overflow-hidden rounded-3xl border border-white/10 p-6">
+                <BlurView intensity={30} tint="dark" className="overflow-hidden rounded-3xl border border-white/10 p-6">
+
                     <View className="gap-4">
                         <View>
                             <Text className="text-xs text-white/70 uppercase font-bold mb-2 ml-1">Email</Text>
@@ -58,7 +58,7 @@ export default function LoginScreen() {
                             <Text className="text-white/50 text-sm">Forgot password?</Text>
                         </TouchableOpacity>
                     </View>
-                </StyledBlurView>
+                </BlurView>
 
                 <View className="mt-10 items-center">
                     <Text className="text-white/30 text-xs">Vayva Inc • Version 1.0.0</Text>

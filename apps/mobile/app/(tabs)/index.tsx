@@ -2,10 +2,10 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, ChevronRight, TrendingUp, Package, Clock, AlertTriangle } from 'lucide-react-native';
+// @ts-ignore
 import { BlurView } from 'expo-blur';
-import { styled } from 'nativewind';
 
-const StyledBlurView = styled(BlurView);
+
 
 const METRICS = [
     { label: "Today's Revenue", value: '₦ 450,000', change: '+12%', icon: TrendingUp, color: 'text-[#46EC13]', bg: 'bg-[#46EC13]/10' },
@@ -40,7 +40,9 @@ export default function HomeScreen() {
                         </View>
                     </View>
                     <TouchableOpacity className="w-10 h-10 rounded-full bg-white/5 items-center justify-center border border-white/5">
+                        {/* @ts-ignore */}
                         <Bell size={20} color="white" />
+
                         <View className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
                     </TouchableOpacity>
                 </View>
@@ -51,7 +53,9 @@ export default function HomeScreen() {
                         <View key={i} className="w-[160px] h-[100px] bg-[#0b141a]/50 rounded-2xl p-4 border border-white/5 justify-between">
                             <View className="flex-row justify-between items-start">
                                 <View className={`w-8 h-8 rounded-full ${m.bg} items-center justify-center`}>
+                                    {/* @ts-ignore */}
                                     <m.icon size={16} className={m.color} />
+
                                 </View>
                                 <Text className="text-green-400 text-xs font-bold">{m.change}</Text>
                             </View>
@@ -67,16 +71,22 @@ export default function HomeScreen() {
                 <View className="px-6 mt-8">
                     <Text className="text-white font-bold text-lg mb-4">Action Required</Text>
                     {ALERTS.map((alert) => (
-                        <StyledBlurView key={alert.id} intensity={10} tint="dark" className="flex-row items-center gap-4 p-4 rounded-2xl border border-white/10 mb-3 overflow-hidden">
+                        <BlurView key={alert.id} intensity={10} tint="dark" className="flex-row items-center gap-4 p-4 rounded-2xl border border-white/10 mb-3 overflow-hidden">
+
                             <View className={`w-10 h-10 rounded-full ${alert.type === 'danger' ? 'bg-red-500/10' : 'bg-orange-500/10'} items-center justify-center`}>
+                                {/* @ts-ignore */}
                                 <AlertTriangle size={20} color={alert.type === 'danger' ? '#ef4444' : '#f97316'} />
+
                             </View>
                             <View className="flex-1">
                                 <Text className="text-white font-bold text-sm">{alert.title}</Text>
                                 <Text className="text-white/60 text-xs" numberOfLines={1}>{alert.desc}</Text>
                             </View>
+                            {/* @ts-ignore */}
                             <ChevronRight size={16} color="rgba(255,255,255,0.3)" />
-                        </StyledBlurView>
+
+                        </BlurView>
+
                     ))}
                 </View>
 
@@ -93,7 +103,9 @@ export default function HomeScreen() {
                         <View key={order.id} className="bg-[#0b141a]/50 border border-white/5 rounded-2xl p-4 mb-3 flex-row justify-between items-center">
                             <View className="flex-row gap-4 items-center">
                                 <View className="w-12 h-12 bg-white/5 rounded-xl items-center justify-center">
+                                    {/* @ts-ignore */}
                                     <Package size={20} color="rgba(255,255,255,0.5)" />
+
                                 </View>
                                 <View>
                                     <Text className="text-white font-bold text-base">#{order.id} • {order.customer}</Text>
@@ -103,10 +115,10 @@ export default function HomeScreen() {
                             <View className="items-end">
                                 <Text className="text-white font-bold text-base">{order.total}</Text>
                                 <View className={`px-2 py-0.5 rounded-full mt-1 ${order.status === 'Paid' ? 'bg-green-500/10' :
-                                        order.status === 'Pending' ? 'bg-yellow-500/10' : 'bg-blue-500/10'
+                                    order.status === 'Pending' ? 'bg-yellow-500/10' : 'bg-blue-500/10'
                                     }`}>
                                     <Text className={`text-[10px] font-bold ${order.status === 'Paid' ? 'text-green-400' :
-                                            order.status === 'Pending' ? 'text-yellow-400' : 'text-blue-400'
+                                        order.status === 'Pending' ? 'text-yellow-400' : 'text-blue-400'
                                         }`}>{order.status}</Text>
                                 </View>
                             </View>

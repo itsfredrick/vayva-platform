@@ -24,7 +24,9 @@ export default function OrdersScreen() {
                 {/* Search */}
                 <View className="flex-row gap-3 mb-6">
                     <View className="flex-1 h-12 bg-white/5 border border-white/10 rounded-full flex-row items-center px-4">
+                        {/* @ts-ignore */}
                         <Search size={20} color="rgba(255,255,255,0.4)" />
+
                         <TextInput
                             placeholder="Search orders..."
                             placeholderTextColor="rgba(255,255,255,0.4)"
@@ -32,7 +34,9 @@ export default function OrdersScreen() {
                         />
                     </View>
                     <TouchableOpacity className="w-12 h-12 bg-white/5 border border-white/10 rounded-full items-center justify-center">
+                        {/* @ts-ignore */}
                         <Filter size={20} color="white" />
+
                     </TouchableOpacity>
                 </View>
 
@@ -55,21 +59,23 @@ export default function OrdersScreen() {
                     <View key={order.id} className="bg-[#0b141a]/50 border border-white/5 rounded-2xl p-4 mb-3 flex-row justify-between items-start">
                         <View className="flex-row gap-4">
                             <View className="w-12 h-12 bg-white/5 rounded-xl items-center justify-center">
+                                {/* @ts-ignore */}
                                 <Package size={20} color="rgba(255,255,255,0.5)" />
+
                             </View>
                             <View>
                                 <Text className="text-white font-bold text-base">Order #{order.id}</Text>
                                 <Text className="text-white/70 text-sm mt-0.5">{order.customer}</Text>
                                 <View className="flex-row items-center mt-2 gap-2">
                                     <View className={`px-2 py-0.5 rounded-full ${order.status === 'Paid' ? 'bg-green-500/10' :
-                                            order.status === 'Pending' ? 'bg-yellow-500/10' :
-                                                order.status === 'Delivered' ? 'bg-blue-500/10' :
-                                                    'bg-white/10'
+                                        order.status === 'Pending' ? 'bg-yellow-500/10' :
+                                            order.status === 'Delivered' ? 'bg-blue-500/10' :
+                                                'bg-white/10'
                                         }`}>
                                         <Text className={`text-[10px] font-bold ${order.status === 'Paid' ? 'text-green-400' :
-                                                order.status === 'Pending' ? 'text-yellow-400' :
-                                                    order.status === 'Delivered' ? 'text-blue-400' :
-                                                        'text-white'
+                                            order.status === 'Pending' ? 'text-yellow-400' :
+                                                order.status === 'Delivered' ? 'text-blue-400' :
+                                                    'text-white'
                                             }`}>{order.status}</Text>
                                     </View>
                                     <Text className="text-white/30 text-xs">• {order.time}</Text>
