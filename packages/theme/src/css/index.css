@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 20 17% 10%;
+        /* #142210 Converted to HSL approx or use hex in config */
+        --foreground: 0 0% 100%;
+
+        --primary: 106 85% 50%;
+        /* #46EC13 */
+        --primary-foreground: 0 0% 0%;
+
+        --muted: 20 10% 20%;
+        --muted-foreground: 0 0% 64%;
+        /* secondary text */
+
+        --border: 0 0% 100% 0.1;
+    }
+
+    body {
+        @apply bg-[#142210] text-[#1d1d1f] font-sans antialiased;
+        /* User req: bg #142210, text primary #1d1d1f (actually text primary is dark on light, but for dark mode app it might differ. 
+       Wait, Vayva tokens say background #142210 (dark green) but text primary #1d1d1f (dark grey). 
+       This implies high contrast issue if not careful.
+       User said: "background gradient + overlay"
+       Let's stick to the token values but ensure text is readable on dark bg if that's the theme.
+       Actually #1d1d1f on #142210 is invisible. 
+       Checking tokens.ts: text.inverse is #FFFFFF. 
+       The default body text should probably be white (inverse) if background is dark.
+    */
+        background-color: #142210;
+        color: #FFFFFF;
+        background-image:
+            radial-gradient(circle at 50% 0%, rgba(70, 236, 19, 0.15) 0%, transparent 40%),
+            radial-gradient(circle at 100% 0%, rgba(20, 34, 16, 0.5) 0%, transparent 50%);
+        background-attachment: fixed;
+    }
+}

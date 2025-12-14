@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: Vayva Webhooks
+  version: 1.0.0
+paths:
+  /webhooks/paystack:
+    post:
+      summary: Paystack Webhook Handler
+      description: Receives payment events from Paystack. Verified via X-Paystack-Signature.
+      responses:
+        200:
+          description: Received
+  
+  /webhooks/whatsapp:
+    post:
+      summary: WhatsApp/Meta Webhook Handler
+      description: Receives message statuses and inbound messages. Verified via X-Hub-Signature.
+      responses:
+        200:
+          description: Received

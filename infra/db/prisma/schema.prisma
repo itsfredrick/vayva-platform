@@ -1,0 +1,640 @@
+// V1 Data Model - Vayva
+// Multi-tenant, Append-only Ledger, Audit-ready
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// 0. Enums (System-wide Domain Contracts)
+// -----------------------------------------------------------------------------
+
+enum Role {
+  OWNER
+  ADMIN
+  STAFF
+  OPS_ADMIN
+  OPS_AGENT
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUND_REQUESTED
+  REFUNDED
+  DISPUTED
+}
+
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  VERIFIED
+  FAILED
+  REFUNDED
+  DISPUTED
+}
+
+enum FulfillmentStatus {
+  UNFULFILLED
+  PROCESSING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum DeliveryTaskStatus {
+  PENDING
+  ASSIGNED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+enum ListingStatus {
+  UNLISTED
+  PENDING_REVIEW
+  LISTED
+  REJECTED
+}
+
+enum Direction {
+  INBOUND
+  OUTBOUND
+}
+
+enum Channel {
+  STOREFRONT
+  MARKETPLACE
+  WHATSAPP
+}
+
+// -----------------------------------------------------------------------------
+// 1. Tenancy & Access (Core Security Boundary)
+// -----------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Bcrypt hash
+  name      String?
+  phone     String?
+  avatarUrl String?
+  
+  // Merchant Context
+  isEmailVerified Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships Membership[] // Links user to multiple stores
+  sessions    MerchantSession[]
+  audits      AuditEvent[] // Actions performed by this user
+}
+
+model OpsUser {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   // OPS_ADMIN, OPS_AGENT
+  
+  mfaSecret String?  // TOTP Secret
+  isMfaEnabled Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions  OpsSession[]
+  audits    AuditEvent[] // Ops actions
+}
+
+model CustomerAccount {
+  id        String   @id @default(uuid())
+  
+  // Auth identifiers (One or both)
+  email     String?  @unique
+  phone     String?  @unique
+  
+  firstName String?
+  lastName  String?
+  
+  isVerified Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions  CustomerSession[]
+  // Link to store-scoped customer records if needed, 
+  // but usually CustomerAccount is the global identity 
+  // and Customer (below) is the store-specific record.
+}
+
+model MerchantSession {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique // JWT or opaque token
+  
+  device    String?
+  ipAddress String?
+  expiresAt DateTime
+  
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model OpsSession {
+  id        String   @id @default(uuid())
+  opsUserId String
+  token     String   @unique
+  
+  device    String?
+  ipAddress String?
+  expiresAt DateTime
+  
+  createdAt DateTime @default(now())
+  
+  opsUser   OpsUser  @relation(fields: [opsUserId], references: [id])
+}
+
+model CustomerSession {
+  id         String   @id @default(uuid())
+  customerId String
+  token      String   @unique
+  
+  device     String?
+  ipAddress  String?
+  expiresAt  DateTime
+  
+  createdAt  DateTime @default(now())
+  
+  account    CustomerAccount @relation(fields: [customerId], references: [id])
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  identifier String  // email or phone
+  code      String
+  type      String   // LOGIN, VERIFY, RESET
+  
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([identifier, type])
+}
+
+model Store {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique // Public URL identifier
+  logoUrl   String?
+  
+  // Settings (JSON for flexibility in v1)
+  settings  Json?    // { currency: "NGN", timezone: "Africa/Lagos", contact: {...} }
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships       Membership[]
+  products          Product[]
+  collections       Collection[]
+  orders            Order[]
+  customers         Customer[]
+  deliveryZones     DeliveryZone[]
+  whatsAppConfig    WhatsAppConfig?
+  conversations     Conversation[]
+  approvals         Approval[]
+  notifications     Notification[]
+  auditEvents       AuditEvent[]
+  transactions      PaymentTransaction[]
+  knowledgeBase     KnowledgeBaseEntry[]
+}
+
+model Membership {
+  id        String   @id @default(uuid())
+  userId    String
+  storeId   String
+  role      Role     @default(STAFF)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id])
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@unique([userId, storeId])
+  @@index([storeId])
+}
+
+// -----------------------------------------------------------------------------
+// 2. Commerce Core (Catalog, Orders, Ledger)
+// -----------------------------------------------------------------------------
+
+model Product {
+  id          String   @id @default(uuid())
+  storeId     String
+  
+  title       String
+  description String?
+  handle      String   // SEO friendly URL slug
+  status      String   @default("DRAFT") // DRAFT, ARCHIVED, ACTIVE
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store       Store                @relation(fields: [storeId], references: [id])
+  variants    Variant[]
+  media       ProductMedia[]
+  collections CollectionProduct[]
+  
+  // Marketplace Integration
+  listing     MarketplaceListing?
+
+  @@unique([storeId, handle])
+  @@index([storeId, status])
+}
+
+model Variant {
+  id        String   @id @default(uuid())
+  productId String
+  
+  title     String   // e.g. "Size: L / Color: Red"
+  sku       String?
+  barcode   String?
+  price     Decimal  @db.Decimal(10, 2)
+  compareAt Decimal? @db.Decimal(10, 2)
+  inventory Int      @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product   Product           @relation(fields: [productId], references: [id])
+  orderItems OrderItem[]
+  inventoryEvents InventoryEvent[]
+}
+
+model ProductMedia {
+  id        String    @id @default(uuid())
+  productId String
+  url       String
+  type      MediaType @default(IMAGE)
+  alt       String?
+  position  Int       @default(0)
+  
+  createdAt DateTime @default(now())
+  
+  product   Product  @relation(fields: [productId], references: [id])
+}
+
+model Collection {
+  id        String   @id @default(uuid())
+  storeId   String
+  title     String
+  handle    String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store     Store               @relation(fields: [storeId], references: [id])
+  products  CollectionProduct[]
+
+  @@unique([storeId, handle])
+}
+
+// Explicit M-to-N join for Collections <-> Products
+model CollectionProduct {
+  collectionId String
+  productId    String
+  
+  collection   Collection @relation(fields: [collectionId], references: [id])
+  product      Product    @relation(fields: [productId], references: [id])
+
+  @@id([collectionId, productId])
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  storeId   String
+  
+  email     String?
+  phone     String?
+  firstName String?
+  lastName  String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store     Store    @relation(fields: [storeId], references: [id])
+  orders    Order[]
+
+  @@unique([storeId, email]) 
+  // Phone uniqueness might be desired too, but handling nulls carefully
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  storeId       String
+  customerId    String?
+  
+  // Order State
+  orderNumber   Int         @default(autoincrement()) // Store-specific seq logic needed, simplified here
+  status        OrderStatus @default(DRAFT)
+  paymentStatus PaymentStatus @default(INITIATED)
+  fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
+  
+  // Financials
+  currency      String      @default("NGN")
+  subtotal      Decimal     @db.Decimal(10, 2)
+  tax           Decimal     @db.Decimal(10, 2) @default(0)
+  shippingTotal Decimal     @db.Decimal(10, 2) @default(0)
+  discountTotal Decimal     @db.Decimal(10, 2) @default(0)
+  total         Decimal     @db.Decimal(10, 2)
+
+  channel       Channel    @default(STOREFRONT)
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  store         Store               @relation(fields: [storeId], references: [id])
+  customer      Customer?           @relation(fields: [customerId], references: [id])
+  items         OrderItem[]
+  timeline      OrderTimelineEvent[]
+  transactions  PaymentTransaction[]
+  deliveryTask  DeliveryTask?
+  
+  @@index([storeId, createdAt])
+  @@index([storeId, status])
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  variantId String?  // Optional if product deleted, but we should snapshot
+  
+  // Snapshot data (Consistency even if product changes)
+  productId String?
+  title     String
+  sku       String?
+  price     Decimal  @db.Decimal(10, 2)
+  quantity  Int
+  
+  order     Order    @relation(fields: [orderId], references: [id])
+  variant   Variant? @relation(fields: [variantId], references: [id])
+}
+
+model PaymentTransaction {
+  id          String   @id @default(uuid())
+  storeId     String
+  orderId     String
+  
+  reference   String   @unique // Provider Reference (e.g. Paystack Ref)
+  provider    String   // 'paystack', 'flutterwave'
+  amount      Decimal  @db.Decimal(10, 2)
+  currency    String
+  status      PaymentStatus
+  type        String   // CHARGE, REFUND
+  
+  metadata    Json?    // Raw provider response
+  
+  createdAt   DateTime @default(now())
+
+  store       Store    @relation(fields: [storeId], references: [id])
+  order       Order    @relation(fields: [orderId], references: [id])
+
+  @@index([storeId, reference])
+}
+
+model InventoryEvent {
+  id        String   @id @default(uuid())
+  variantId String
+  action    String   // ADJUST, SALE, RETURN, STOCK_TAKE
+  quantity  Int      // Delta (+/-)
+  reason    String?
+  
+  createdAt DateTime @default(now())
+
+  variant   Variant  @relation(fields: [variantId], references: [id])
+}
+
+// -----------------------------------------------------------------------------
+// 3. Delivery & fulfillment
+// -----------------------------------------------------------------------------
+
+model DeliveryZone {
+  id        String   @id @default(uuid())
+  storeId   String
+  name      String   // "Lagos Island"
+  regions   String[] // List of cities/LGAs
+  basePrice Decimal  @db.Decimal(10, 2)
+  
+  store     Store    @relation(fields: [storeId], references: [id])
+}
+
+model DeliveryTask {
+  id              String      @id @default(uuid())
+  orderId         String      @unique
+  storeId         String
+  
+  provider        String      // "manual", "kwik", "gokada"
+  trackingId      String?
+  status          DeliveryTaskStatus @default(PENDING)
+  
+  driverName      String?
+  driverPhone     String?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  order           Order       @relation(fields: [orderId], references: [id])
+}
+
+// -----------------------------------------------------------------------------
+// 4. Marketplace & Network
+// -----------------------------------------------------------------------------
+
+model MarketplaceListing {
+  id             String   @id @default(uuid())
+  productId      String   @unique
+  
+  status         ListingStatus @default(UNLISTED)
+  category       String?
+  rankScore      Int      @default(0)
+  
+  moderationNote String?
+  moderatedBy    String? // User ID of Ops Agent
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  product        Product  @relation(fields: [productId], references: [id])
+}
+
+// -----------------------------------------------------------------------------
+// 5. WhatsApp AI & Communication
+// -----------------------------------------------------------------------------
+
+model WhatsAppConfig {
+  id        String   @id @default(uuid())
+  storeId   String   @unique
+  
+  phoneId   String?  // Meta Phone ID
+  wabaId    String?  // WhatsApp Business Account ID
+  apiKey    String?  // Encrypted?
+  
+  isEnabled Boolean  @default(false)
+  
+  store     Store    @relation(fields: [storeId], references: [id])
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  storeId   String
+  
+  customerPhone String
+  status    String   // OPEN, CLOSED
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store     Store    @relation(fields: [storeId], references: [id])
+  messages  Message[]
+  
+  @@unique([storeId, customerPhone])
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  
+  direction      Direction
+  type           String   // TEXT, IMAGE, TEMPLATE
+  content        String
+  
+  aiMetadata     Json?    // { intent: "order_status", confidence: 0.95 }
+  
+  createdAt      DateTime @default(now())
+  
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model Approval {
+  id        String   @id @default(uuid())
+  storeId   String
+  
+  type      String   // REFUND, DISCOUNT, AI_ACTION
+  summary   String
+  data      Json     // The payload to approve
+  
+  status    ApprovalStatus @default(PENDING)
+  actionBy  String?  // Ops Agent or AI
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  store     Store    @relation(fields: [storeId], references: [id])
+}
+
+model KnowledgeBaseEntry {
+  id        String   @id @default(uuid())
+  storeId   String
+  question  String
+  answer    String
+  tags      String[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  store     Store    @relation(fields: [storeId], references: [id])
+}
+
+// -----------------------------------------------------------------------------
+// 6. Audit & System Events
+// -----------------------------------------------------------------------------
+
+model AuditEvent {
+  id        String   @id @default(uuid())
+  storeId   String?
+  userId    String?    // Link to Merchant User
+  opsUserId String?    // Link to Ops User
+  
+  action    String   // LOGIN, SETTING_CHANGE, REFUND_APPROVE
+  resource  String   // Entity being acted on
+  resourceId String
+  
+  metadata  Json?    // oldVal, newVal, etc.
+  ipAddress String?
+  userAgent String?
+  
+  createdAt DateTime @default(now())
+
+  store     Store?   @relation(fields: [storeId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+  opsUser   OpsUser? @relation(fields: [opsUserId], references: [id])
+}
+
+model OrderTimelineEvent {
+  id        String   @id @default(uuid())
+  orderId   String
+  
+  text      String
+  type      String   // STATUS_CHANGE, NOTE, PAYMENT
+  metadata  Json?
+  
+  createdAt DateTime @default(now())
+  
+  order     Order    @relation(fields: [orderId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  storeId   String
+  userId    String?  // Optional: Some notifications are for the whole store staff
+  
+  title     String
+  message   String
+  type      String   // ORDER, SYSTEM
+  isRead    Boolean  @default(false)
+  link      String?
+  
+  createdAt DateTime @default(now())
+  
+  store     Store    @relation(fields: [storeId], references: [id])
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String
+  platform  String   // IOS, ANDROID, WEB
+  
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, token])
+}

@@ -12,10 +12,11 @@
     "db:push": "turbo run db:push"
   },
   "devDependencies": {
-    "turbo": "^1.10.0",
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^20.0.0",
     "prettier": "^3.0.0",
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "turbo": "^1.10.0",
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=20.0.0"
