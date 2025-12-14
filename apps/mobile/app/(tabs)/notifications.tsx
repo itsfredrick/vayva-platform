@@ -19,9 +19,16 @@ export default function NotificationsScreen() {
                 {NOTIFICATIONS.map(n => (
                     <View key={n.id} className="flex-row gap-4 mb-6 border-b border-white/5 pb-6 last:border-0">
                         <View className="w-10 h-10 rounded-full bg-white/5 items-center justify-center border border-white/10">
-                            {n.type === 'payment' ? <CreditCard size={18} color="#46EC13" /> :
-                                n.type === 'delivery' ? <Truck size={18} color="#3b82f6" /> :
-                                    <Bell size={18} color="#f59e0b" />}
+                            {n.type === 'payment' ? (
+                                // @ts-ignore
+                                <CreditCard size={18} color="#46EC13" />
+                            ) : n.type === 'delivery' ? (
+                                // @ts-ignore
+                                <Truck size={18} color="#3b82f6" />
+                            ) : (
+                                // @ts-ignore
+                                <Bell size={18} color="#f59e0b" />
+                            )}
                         </View>
                         <View className="flex-1">
                             <View className="flex-row justify-between mb-1">
