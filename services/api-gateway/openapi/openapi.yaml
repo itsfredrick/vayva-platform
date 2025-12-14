@@ -1,0 +1,216 @@
+openapi: 3.0.0
+info:
+  title: Vayva API
+  version: 1.0.0
+  description: Multi-tenant Commerce & Automation API
+servers:
+  - url: https://api.vayva.com/v1
+    description: Production V1
+  - url: http://localhost:4000/v1
+    description: Local Development
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    StorefrontAuth:
+      type: apiKey
+      in: header
+      name: X-Store-ID
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+
+    Product:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        handle: { type: string }
+        status: { type: string, enum: [DRAFT, ACTIVE, ARCHIVED] }
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variant'
+    
+    Variant:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        price: { type: number }
+        inventory: { type: integer }
+
+    Order:
+      type: object
+      properties:
+        id: { type: string }
+        orderNumber: { type: integer }
+        status: { type: string }
+        total: { type: number }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrderItem' }
+    
+    OrderItem:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        quantity: { type: integer }
+        price: { type: number }
+
+paths:
+  # ----------------------------------------------------------------------------
+  # AUTH
+  # ----------------------------------------------------------------------------
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken: { type: string }
+
+  # ----------------------------------------------------------------------------
+  # PRODUCTS
+  # ----------------------------------------------------------------------------
+  /products:
+    get:
+      summary: List Products
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        200:
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: 
+                    type: array
+                    items: { $ref: '#/components/schemas/Product' }
+                  meta: { type: object }
+
+    post:
+      summary: Create Product
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+                description: { type: string }
+      responses:
+        201:
+          description: Created
+
+  # ----------------------------------------------------------------------------
+  # ORDERS
+  # ----------------------------------------------------------------------------
+  /orders:
+    get:
+      summary: List Orders
+      security: [{ BearerAuth: [] }]
+      responses:
+        200:
+          description: OK
+  
+  /orders/{id}:
+    get:
+      summary: Get Order
+      security: [{ BearerAuth: [] }]
+      parameters: 
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: OK
+          content: 
+            application/json:
+                schema: { $ref: '#/components/schemas/Order' }
+
+  # ----------------------------------------------------------------------------
+  # WHATSAPP AI
+  # ----------------------------------------------------------------------------
+  /wa/conversations:
+    get:
+      summary: List WhatsApp Conversations
+      security: [{ BearerAuth: [] }]
+      responses:
+        200:
+          description: OK
+
+  /wa/approvals:
+    get:
+      summary: Pending Approvals
+      security: [{ BearerAuth: [] }]
+      responses:
+        200:
+          description: OK
+
+  # ----------------------------------------------------------------------------
+  # PUBLIC STOREFRONT
+  # ----------------------------------------------------------------------------
+  /public/store/{storeSlug}/products:
+    get:
+      summary: Public Product List
+      security: [{ StorefrontAuth: [] }]
+      parameters:
+        - name: storeSlug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: OK
+
+  /public/checkout/create-session:
+    post:
+      summary: Initialize Checkout
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Session Created

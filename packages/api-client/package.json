@@ -1,0 +1,13 @@
+{
+    "name": "@vayva/api-client",
+    "version": "0.0.0",
+    "main": "src/index.ts",
+    "types": "src/index.ts",
+    "scripts": {
+        "generate": "npx openapi-typescript ../../services/api-gateway/openapi/openapi.yaml -o src/generated/schema.d.ts"
+    },
+    "devDependencies": {
+        "openapi-typescript": "^6.7.0",
+        "typescript": "^5.0.0"
+    }
+}

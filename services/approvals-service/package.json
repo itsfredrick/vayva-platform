@@ -1,0 +1,21 @@
+{
+    "name": "approvals-service",
+    "version": "1.0.0",
+    "main": "src/index.ts",
+    "scripts": {
+        "dev": "tsx src/index.ts",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "fastify": "^4.24.3",
+        "@fastify/cors": "^8.4.1",
+        "@vayva/db": "workspace:*",
+        "zod": "^3.22.4",
+        "dotenv": "^16.3.1"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "tsx": "^4.6.2",
+        "typescript": "^5.3.3"
+    }
+}

@@ -1,0 +1,40 @@
+import { FastifyRequest, FastifyReply } from 'fastify';
+import { PrismaClient, ApprovalStatus } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export const listApprovalsHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { storeId, status } = req.query as { storeId: string, status?: ApprovalStatus };
+    if (!storeId) return reply.status(400).send({ error: 'storeId required' });
+
+    const approvals = await prisma.approval.findMany({
+        where: {
+            storeId,
+            status: status || undefined
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    return reply.send(approvals);
+};
+
+export const approveHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { id } = req.params as { id: string };
+    const { approverId } = req.body as { approverId: string }; // In real app, from Token
+
+    const approval = await prisma.approval.update({
+        where: { id },
+        data: {
+            status: 'APPROVED',
+            approverId: approverId || 'system',
+            approvedAt: new Date()
+        }
+    });
+
+    // Execute Hook (Placeholder)
+    // e.g. Call AI service to notify user "Approved!"
+    // axios.post('http://localhost:3006/v1/ai/notify_approval', { approvalId: id });
+    console.log(`[Approval] ${id} approved. Triggering downstream actions...`);
+
+    return reply.send(approval);
+};

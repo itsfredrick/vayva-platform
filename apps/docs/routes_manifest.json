@@ -1,0 +1,122 @@
+[
+    {
+        "app": "merchant-admin",
+        "path": "/signin",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/signup",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/onboarding",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/dashboard",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/orders",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/orders/[id]",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/products",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/products/new",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/customers",
+        "status": "placeholder"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/payments",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/payments/payouts",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/whatsapp",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/settings",
+        "status": "implemented"
+    },
+    {
+        "app": "merchant-admin",
+        "path": "/admin/delivery",
+        "status": "placeholder"
+    },
+    {
+        "app": "storefront",
+        "path": "/",
+        "status": "implemented"
+    },
+    {
+        "app": "storefront",
+        "path": "/product/[id]",
+        "status": "implemented"
+    },
+    {
+        "app": "storefront",
+        "path": "/cart",
+        "status": "implemented"
+    },
+    {
+        "app": "storefront",
+        "path": "/checkout",
+        "status": "implemented"
+    },
+    {
+        "app": "storefront",
+        "path": "/order/success",
+        "status": "implemented"
+    },
+    {
+        "app": "storefront",
+        "path": "/order/status",
+        "status": "implemented"
+    },
+    {
+        "app": "ops-console",
+        "path": "/",
+        "status": "implemented"
+    },
+    {
+        "app": "ops-console",
+        "path": "/queues/merchants",
+        "status": "placeholder"
+    },
+    {
+        "app": "marketplace",
+        "path": "/",
+        "status": "implemented"
+    },
+    {
+        "app": "marketplace",
+        "path": "/search",
+        "status": "placeholder"
+    }
+]
