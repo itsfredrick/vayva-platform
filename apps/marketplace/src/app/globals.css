@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 255 100% 100%;
+        --foreground: 0 0% 0%;
+        --primary: 106 85% 50%;
+        --primary-foreground: 0 0% 0%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+    }
+
+    body {
+        @apply bg-white text-black font-sans antialiased;
+        background-color: #FFFFFF;
+        background-image: none;
+        /* Remove dark gradients */
+    }
+}

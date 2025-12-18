@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Vayva Light Glass Theme */
+        --background: 180 3% 98.6%;
+        /* #FBFCFC - Strict Requirement */
+        --foreground: 222 47% 11%;
+        /* #0F172A */
+
+        --primary: 186 42% 8%;
+        /* #0D1D1E - Dark Accent */
+        --primary-foreground: 210 40% 98%;
+
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222 47% 11.2%;
+
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215 16% 47%;
+
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222 47% 11.2%;
+
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+
+        --border: 214 32% 91%;
+        --input: 214 32% 91%;
+        --ring: 222 84% 4.9%;
+
+        --radius: 0.5rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-[hsl(var(--background))] text-foreground font-sans selection:bg-primary/20;
+    }
+}
+
+/* Glass Utilities */
+@layer utilities {
+    .glass-card {
+        @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm rounded-xl;
+    }
+
+    .glass-header {
+        @apply bg-white/60 backdrop-blur-lg border-b border-gray-200/50;
+    }
+}

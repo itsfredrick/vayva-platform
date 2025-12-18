@@ -1,39 +1,50 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Button } from '@vayva/ui';
+import React, { useEffect } from 'react';
+import { StoreShell } from '@/components/StoreShell';
+import { useStore } from '@/context/StoreContext';
+import NextLink from 'next/link';
+import { CheckCircle } from 'lucide-react';
+
+const Link = NextLink as any;
+const CheckIcon = CheckCircle as any;
 
 export default function OrderSuccessPage() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const reference = searchParams.get('reference');
+    const { store } = useStore();
+
+    // In a real app we'd read Order ID from query params
+
+    if (!store) return null;
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8 text-center">
-            <div className="bg-green-500/20 text-green-400 p-6 rounded-full mb-6 text-6xl">
-                ✓
-            </div>
-            <h1 className="text-4xl font-bold mb-4">Order Confirmed!</h1>
-            <p className="text-gray-400 max-w-md mb-8">
-                Thank you for your purchase. Your order has been placed successfully.
-                <br /><br />
-                Payment Reference: <span className="font-mono text-white">{reference}</span>
-            </p>
+        <StoreShell>
+            <div className="max-w-xl mx-auto px-4 py-20 text-center">
+                <div className="flex justify-center mb-6">
+                    <CheckIcon size={64} className="text-green-500" />
+                </div>
+                <h1 className="text-3xl font-bold mb-4">Order Confirmed!</h1>
+                <p className="text-gray-500 mb-8">
+                    Thank you for your purchase. We have received your order and will begin processing it shortly.
+                </p>
 
-            <div className="flex gap-4">
-                <button
-                    onClick={() => router.push('/')}
-                    className="bg-white text-black font-bold py-3 px-8 rounded-full hover:bg-gray-200 transition-colors"
-                >
-                    Continue Shopping
-                </button>
-                <button
-                    onClick={() => router.push('/order/status')}
-                    className="bg-white/10 text-white font-bold py-3 px-8 rounded-full hover:bg-white/20 transition-colors"
-                >
-                    Track Order
-                </button>
+                <div className="bg-gray-50 p-6 rounded-xl mb-8 text-left">
+                    <p className="text-sm font-bold text-gray-500 uppercase mb-2">Order Reference</p>
+                    <p className="text-2xl font-mono font-bold tracking-wider">ORD-12345</p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                    <Link href={`/orders?store=${store.slug}`}>
+                        <button className="w-full border border-gray-200 py-3 rounded-lg font-bold hover:border-black transition-colors">
+                            Track Order Status
+                        </button>
+                    </Link>
+                    <Link href={`/?store=${store.slug}`}>
+                        <button className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-900 transition-colors">
+                            Continue Shopping
+                        </button>
+                    </Link>
+                </div>
             </div>
-        </div>
+        </StoreShell>
     );
 }

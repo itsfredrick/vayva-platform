@@ -1,89 +1,122 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import Cookies from 'js-cookie';
 import { useRouter, usePathname } from 'next/navigation';
+import { apiClient } from '@vayva/api-client';
+import { User, MerchantContext, UserRole, OnboardingStatus } from '@vayva/shared';
 
 interface AuthContextType {
-    user: any | null;
-    token: string | null;
+    user: User | null;
+    merchant: MerchantContext | null;
     isLoading: boolean;
-    login: (token: string, user: any) => void;
-    logout: () => void;
     isAuthenticated: boolean;
+    login: (token: string, user: User, merchant?: MerchantContext) => void;
+    logout: () => void;
+    refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    const [user, setUser] = useState<any | null>(null);
-    const [token, setToken] = useState<string | null>(null);
+    const [user, setUser] = useState<User | null>(null);
+    const [merchant, setMerchant] = useState<MerchantContext | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
     const router = useRouter();
     const pathname = usePathname();
 
-    useEffect(() => {
-        const storedToken = Cookies.get('vayva_token');
-        const storedUser = Cookies.get('vayva_user'); // V1 simple storage
-
-        if (storedToken) {
-            setToken(storedToken);
-            if (storedUser) setUser(JSON.parse(storedUser));
-        }
-        setIsLoading(false);
-    }, []);
-
-    const login = (newToken: string, newUser: any) => {
-        setToken(newToken);
-        setUser(newUser);
-        Cookies.set('vayva_token', newToken, { expires: 1, sameSite: 'Strict' });
-        Cookies.set('vayva_user', JSON.stringify(newUser), { expires: 1 });
-
-        // Store Selection Logic
-        const memberships = newUser.memberships || [];
-
-        if (memberships.length === 0) {
-            router.push('/onboarding');
-        } else if (memberships.length === 1) {
-            // Auto-select
-            Cookies.set('vayva_store_id', memberships[0], { expires: 1 });
-            router.push('/admin/dashboard');
-        } else {
-            // Multiple stores
-            router.push('/admin/select-store');
+    const fetchProfile = async () => {
+        try {
+            const data = await apiClient.auth.me();
+            setUser(data.user);
+            setMerchant(data.merchant || null);
+        } catch (error) {
+            console.error('Failed to fetch profile', error);
+            setUser(null);
+            setMerchant(null);
         }
     };
 
-    const logout = () => {
-        setToken(null);
+    useEffect(() => {
+        // Since we use httpOnly cookies, we just try to fetch /me on mount
+        fetchProfile().finally(() => setIsLoading(false));
+    }, []);
+
+    const login = (newToken: string, newUser: User, newMerchant?: MerchantContext) => {
+        // Token is handled by gateway cookie, but we still update local state
+        setUser(newUser);
+        setMerchant(newMerchant || null);
+
+        if (newMerchant?.onboardingStatus === OnboardingStatus.COMPLETE) {
+            router.push('/admin/dashboard');
+        } else {
+            router.push('/onboarding/resume');
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await apiClient.auth.logout();
+        } catch (e) {
+            console.error('Logout error', e);
+        }
         setUser(null);
-        Cookies.remove('vayva_token');
-        Cookies.remove('vayva_user');
-        Cookies.remove('vayva_store_id');
+        setMerchant(null);
         router.push('/signin');
     };
 
-    // Basic Route Guard
+    // Route Guard & Redirection Logic
     useEffect(() => {
-        const isPublicRoute = ['/signin', '/signup', '/forgot-password'].some(p => pathname.startsWith(p));
+        if (isLoading) return;
 
-        if (!isLoading && !token && !isPublicRoute) {
-            // Redirect to signin if accessing protected route
+        const publicRoutes = [
+            '/signin', '/signup', '/forgot-password', '/reset-password', '/verify',
+            '/', '/features', '/marketplace', '/pricing', '/templates', '/help',
+            '/legal', '/contact', '/about', '/how-it-works', '/status'
+        ];
+
+        const isPublicRoute = publicRoutes.some(p => pathname === p || (p !== '/' && pathname.startsWith(p + '/')));
+        const isAuthRoute = ['/signin', '/signup', '/verify'].includes(pathname);
+
+        if (!user && !isPublicRoute) {
             router.push('/signin');
+            return;
         }
 
-        if (!isLoading && token && isPublicRoute) {
-            // Redirect to dashboard if accessing public route while logged in
-            router.push('/admin/dashboard');
+        if (user) {
+            if (isAuthRoute) {
+                if (merchant?.onboardingStatus === OnboardingStatus.COMPLETE) {
+                    router.push('/admin/dashboard');
+                } else {
+                    router.push('/onboarding/resume');
+                }
+                return;
+            }
+
+            // Onboarding Gating
+            if (pathname.startsWith('/admin') && merchant?.onboardingStatus !== OnboardingStatus.COMPLETE) {
+                router.push('/onboarding/resume');
+            }
         }
-    }, [token, isLoading, pathname, router]);
+    }, [user, merchant, isLoading, pathname]);
+
+    const value = {
+        user,
+        merchant,
+        isLoading,
+        isAuthenticated: !!user,
+        login,
+        logout,
+        refreshProfile: fetchProfile
+    };
 
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, login, logout, isAuthenticated: !!token }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
 };
+
 
 export const useAuth = () => {
     const context = useContext(AuthContext);

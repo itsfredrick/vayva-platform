@@ -1,146 +1,165 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { AppShell } from '@vayva/ui';
-import { GlassPanel } from '@vayva/ui';
-import { Icon } from '@vayva/ui';
-import { AnalyticsFilterBar } from '@/components/analytics-filter-bar';
-import { TrendChart } from '@/components/trend-chart';
+import React, { useState, useEffect } from 'react';
+import { AdminShell } from '@/components/admin-shell';
+import { Button, Icon, cn } from '@vayva/ui';
+import { api } from '@/services/api';
 
-export default function AnalyticsOverviewPage() {
+export default function AnalyticsDashboardPage() {
+    const [data, setData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [range, setRange] = useState('30d');
+
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const res = await api.get(`/analytics/overview?range=${range}`);
+            setData(res.data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [range]);
+
+    if (isLoading || !data) {
+        return (
+            <AdminShell title="Analytics">
+                <div className="flex items-center justify-center h-96 text-gray-400">Loading analytics...</div>
+            </AdminShell>
+        );
+    }
+
+    const kpis = data.kpis || {};
+    const healthScore = data.healthScore || 0;
+
     return (
-        <AppShell title="Analytics Overview" breadcrumb="Analytics">
-            <div className="flex flex-col gap-6">
-                {/* Filters */}
-                <AnalyticsFilterBar />
+        <AdminShell title="Analytics">
+            <div className="flex flex-col gap-8">
 
-                {/* KPI Row */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {[
-                        { label: 'Total Revenue', value: '₦ 4,250,000', delta: '+12%', color: 'text-white' },
-                        { label: 'Orders', value: '142', delta: '+5%', color: 'text-white' },
-                        { label: 'Avg Order Value', value: '₦ 29,900', delta: '-2%', color: 'text-white' },
-                        { label: 'Store Sessions', value: '4,521', delta: '+24%', color: 'text-white' },
-                        { label: 'Conversion Rate', value: '3.14%', delta: '+0.5%', color: 'text-state-success' },
-                    ].map((stat, i) => (
-                        <GlassPanel key={i} className="p-4 flex flex-col gap-1">
-                            <div className="text-xs text-text-secondary font-bold uppercase tracking-wider">{stat.label}</div>
-                            <div className={`text-lg font-bold ${stat.color}`}>{stat.value}</div>
-                            <div className={`text-xs font-bold ${stat.delta.startsWith('+') ? 'text-state-success' : 'text-state-danger'}`}>
-                                {stat.delta} <span className="text-text-secondary opacity-60 font-normal">vs last period</span>
-                            </div>
-                        </GlassPanel>
-                    ))}
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-[#0B1220]">Business Overview</h1>
+                        <p className="text-[#525252]">Track your store's performance and health.</p>
+                    </div>
+                    <div className="flex gap-2">
+                        {['7d', '30d', '90d'].map(r => (
+                            <button
+                                key={r}
+                                onClick={() => setRange(r)}
+                                className={cn(
+                                    "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                                    range === r
+                                        ? "bg-[#22C55E] text-white shadow-sm"
+                                        : "bg-white border border-gray-200 text-[#525252] hover:border-gray-300"
+                                )}
+                            >
+                                {r === '7d' ? 'Last 7 Days' : r === '30d' ? 'Last 30 Days' : 'Last 90 Days'}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Main Chart */}
-                <GlassPanel className="p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex bg-white/5 rounded-lg p-1">
-                            {['Revenue', 'Orders', 'Sessions'].map((tab, i) => (
-                                <button key={tab} className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${i === 0 ? 'bg-white/10 text-white' : 'text-text-secondary hover:text-white'}`}>
-                                    {tab}
-                                </button>
-                            ))}
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <KPICard
+                        title="Net Sales"
+                        value={`₦ ${Number(kpis.netSales || 0).toLocaleString()}`}
+                        icon="TrendingUp"
+                        color="bg-green-50 text-green-600"
+                    />
+                    <KPICard
+                        title="Orders"
+                        value={kpis.orders || 0}
+                        icon="ShoppingBag"
+                        color="bg-blue-50 text-blue-600"
+                    />
+                    <KPICard
+                        title="Payment Success"
+                        value={`${kpis.paymentSuccessRate || 0}%`}
+                        icon="CreditCard"
+                        color="bg-purple-50 text-purple-600"
+                    />
+                    <KPICard
+                        title="Delivery Success"
+                        value={`${Number(kpis.deliverySuccessRate || 0).toFixed(1)}%`}
+                        icon="Truck"
+                        color="bg-orange-50 text-orange-600"
+                    />
+                    <KPICard
+                        title="Refund Rate"
+                        value={`${kpis.refundRate || 0}%`}
+                        icon="RotateCcw"
+                        color="bg-red-50 text-red-600"
+                    />
+                    <KPICard
+                        title="WhatsApp Response"
+                        value={`${Math.round((kpis.whatsappResponseTime || 0) / 60)}m`}
+                        icon="MessageCircle"
+                        color="bg-green-50 text-green-600"
+                    />
+                </div>
+
+                {/* Health Score */}
+                <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 border border-green-100">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-sm font-medium text-[#525252] mb-2">Business Health Score</h3>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-5xl font-bold text-[#0B1220]">{healthScore}</span>
+                                <span className="text-2xl text-[#525252]">/ 100</span>
+                            </div>
+                            <p className="text-sm text-[#525252] mt-2">
+                                {healthScore >= 80 ? '🎉 Excellent performance!' : healthScore >= 60 ? '👍 Good, room for improvement' : '⚠️ Needs attention'}
+                            </p>
                         </div>
-                        <div className="text-xs text-text-secondary">
-                            Highest day: <span className="text-white font-bold">Oct 24 (₦ 450k)</span>
+                        <div className="w-32 h-32 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center border border-green-200">
+                            <Icon name="Activity" size={48} className="text-green-600" />
                         </div>
                     </div>
-                    <TrendChart data={[120, 200, 150, 300, 250, 400, 350, 450, 400, 300]} height={250} />
-                </GlassPanel>
-
-                {/* Details Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Top Products */}
-                    <GlassPanel className="p-0 overflow-hidden h-full">
-                        <div className="p-4 border-b border-white/5 flex justify-between items-center">
-                            <h3 className="font-bold text-white">Top Products</h3>
-                            <Link href="/admin/analytics/products" className="text-xs text-primary hover:underline">View All</Link>
-                        </div>
-                        <table className="w-full text-left text-sm">
-                            <tbody className="divide-y divide-white/5">
-                                {[
-                                    { name: 'Ultra-Soft T-Shirt', sales: '84 sold', rev: '₦ 840,000' },
-                                    { name: 'Classic Leather Watch', sales: '24 sold', rev: '₦ 600,000' },
-                                    { name: 'Denim Jacket', sales: '15 sold', rev: '₦ 450,000' },
-                                ].map((prod, i) => (
-                                    <tr key={i} className="group hover:bg-white/5">
-                                        <td className="p-4 text-white font-medium">{prod.name}</td>
-                                        <td className="p-4 text-text-secondary">{prod.sales}</td>
-                                        <td className="p-4 text-white font-mono text-right">{prod.rev}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </GlassPanel>
-
-                    {/* Top Channels */}
-                    <GlassPanel className="p-6 h-full flex flex-col justify-between">
-                        <div className="flex justify-between mb-6">
-                            <h3 className="font-bold text-white">Sales by Channel</h3>
-                            <div className="flex gap-2">
-                                <span className="flex items-center gap-1 text-xs text-text-secondary"><span className="w-2 h-2 rounded-full bg-primary" /> Storefront</span>
-                                <span className="flex items-center gap-1 text-xs text-text-secondary"><span className="w-2 h-2 rounded-full bg-blue-500" /> WhatsApp</span>
-                            </div>
-                        </div>
-
-                        <div className="flex h-8 rounded-full overflow-hidden w-full mb-4">
-                            <div className="h-full bg-primary" style={{ width: '65%' }} />
-                            <div className="h-full bg-blue-500" style={{ width: '25%' }} />
-                            <div className="h-full bg-white/20" style={{ width: '10%' }} />
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4">
-                            <div>
-                                <div className="text-xs text-text-secondary uppercase font-bold">Storefront</div>
-                                <div className="text-lg font-bold text-white">65%</div>
-                            </div>
-                            <div>
-                                <div className="text-xs text-text-secondary uppercase font-bold">WhatsApp</div>
-                                <div className="text-lg font-bold text-white">25%</div>
-                            </div>
-                            <div>
-                                <div className="text-xs text-text-secondary uppercase font-bold">Marketplace</div>
-                                <div className="text-lg font-bold text-white">10%</div>
-                            </div>
-                        </div>
-                    </GlassPanel>
                 </div>
 
-                {/* Operational Highlights */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <GlassPanel className="p-4 flex items-center justify-between group cursor-pointer hover:border-primary/50 transition-colors">
-                        <div>
-                            <div className="text-xs text-text-secondary uppercase font-bold">Unfulfilled</div>
-                            <div className="text-xl font-bold text-white">12 Orders</div>
-                        </div>
-                        <Icon name="arrow_forward" className="text-text-secondary group-hover:text-primary" />
-                    </GlassPanel>
-                    <GlassPanel className="p-4 flex items-center justify-between group cursor-pointer hover:border-primary/50 transition-colors">
-                        <div>
-                            <div className="text-xs text-text-secondary uppercase font-bold">Disputed</div>
-                            <div className="text-xl font-bold text-state-danger">1 Payment</div>
-                        </div>
-                        <Icon name="arrow_forward" className="text-text-secondary group-hover:text-primary" />
-                    </GlassPanel>
-                    <GlassPanel className="p-4 flex items-center justify-between group cursor-pointer hover:border-primary/50 transition-colors">
-                        <div>
-                            <div className="text-xs text-text-secondary uppercase font-bold">Low Stock</div>
-                            <div className="text-xl font-bold text-state-warning">3 Products</div>
-                        </div>
-                        <Icon name="arrow_forward" className="text-text-secondary group-hover:text-primary" />
-                    </GlassPanel>
-                    <GlassPanel className="p-4 flex items-center justify-between group cursor-pointer hover:border-primary/50 transition-colors">
-                        <div>
-                            <div className="text-xs text-text-secondary uppercase font-bold">AI Response</div>
-                            <div className="text-xl font-bold text-text-secondary">98% Autopilot</div>
-                        </div>
-                        <Icon name="arrow_forward" className="text-text-secondary group-hover:text-primary" />
-                    </GlassPanel>
+                {/* Quick Links */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <QuickLink href="/admin/analytics/reports" icon="BarChart" title="View Reports" />
+                    <QuickLink href="/admin/analytics/goals" icon="Target" title="Manage Goals" />
+                    <QuickLink href="/admin/analytics/insights" icon="Lightbulb" title="AI Insights" />
                 </div>
+
             </div>
-        </AppShell>
+        </AdminShell>
+    );
+}
+
+function KPICard({ title, value, icon, color }: any) {
+    return (
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+            <div>
+                <p className="text-sm font-medium text-[#525252] mb-1">{title}</p>
+                <h3 className="text-2xl font-bold text-[#0B1220]">{value}</h3>
+            </div>
+            <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", color)}>
+                <Icon name={icon} size={24} />
+            </div>
+        </div>
+    );
+}
+
+function QuickLink({ href, icon, title }: any) {
+    return (
+        <a
+            href={href}
+            className="bg-white rounded-xl p-4 border border-gray-100 hover:border-green-200 hover:shadow-md transition-all flex items-center gap-3 group"
+        >
+            <div className="w-10 h-10 bg-gray-50 group-hover:bg-green-50 rounded-lg flex items-center justify-center transition-all">
+                <Icon name={icon} size={20} className="text-gray-600 group-hover:text-green-600 transition-all" />
+            </div>
+            <span className="font-medium text-[#0B1220] group-hover:text-green-600 transition-all">{title}</span>
+        </a>
     );
 }

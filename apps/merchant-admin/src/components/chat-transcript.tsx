@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icon } from '@/components/ui/icon';
-import { Button } from '@/components/ui/button';
+import { Icon } from '@vayva/ui';
+import { Button } from '@vayva/ui';
 
 export type Message = {
     id: string;
@@ -26,14 +26,14 @@ export function ChatTranscript({ messages }: { messages: Message[] }) {
                 return (
                     <div key={msg.id} className={`flex ${isCustomer ? 'justify-start' : 'justify-end'}`}>
                         <div className={`max-w-[80%] rounded-lg p-3 ${isCustomer
-                                ? 'bg-[#202c33] text-white rounded-tl-none'
-                                : msg.sender === 'ai'
-                                    ? 'bg-[#005c4b] text-white rounded-tr-none border border-emerald-500/20'
-                                    : 'bg-[#2a3942] text-white rounded-tr-none border border-orange-500/20'
+                            ? 'bg-[#202c33] text-white rounded-tl-none'
+                            : msg.sender === 'ai'
+                                ? 'bg-[#005c4b] text-white rounded-tr-none border border-emerald-500/20'
+                                : 'bg-[#2a3942] text-white rounded-tr-none border border-orange-500/20'
                             }`}>
                             {msg.sender !== 'customer' && (
                                 <div className="text-[10px] font-bold mb-1 uppercase tracking-wider flex items-center gap-1 opacity-70">
-                                    {msg.sender === 'ai' ? <><Icon name="smart_toy" size={10} /> AI Assistant</> : <><Icon name="person" size={10} /> Staff</>}
+                                    {msg.sender === 'ai' ? <><Icon name="Bot" size={10} /> AI Assistant</> : <><Icon name="User" size={10} /> Staff</>}
                                 </div>
                             )}
 

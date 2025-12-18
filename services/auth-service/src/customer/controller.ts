@@ -1,9 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@vayva/db';
 import { storeOtp, verifyOtp } from '../utils/otp';
-
-const prisma = new PrismaClient();
 
 const startSchema = z.object({
     phone: z.string().optional(),

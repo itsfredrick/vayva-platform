@@ -11,7 +11,7 @@ export default function HelpCenterPage() {
                     <h1 className="text-4xl font-bold text-white mb-6">How can we help?</h1>
 
                     <div className="max-w-xl mx-auto relative">
-                        <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
+                        <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
                         <input
                             placeholder="Search for articles..."
                             className="w-full h-12 bg-white/5 border border-white/10 rounded-full pl-12 pr-4 text-white placeholder:text-white/30 focus:outline-none focus:border-[#46EC13]"
@@ -21,12 +21,12 @@ export default function HelpCenterPage() {
 
                 <div className="grid md:grid-cols-3 gap-6">
                     {[
-                        { title: 'Getting Started', icon: 'flag' },
-                        { title: 'Account & Billing', icon: 'account_circle' },
-                        { title: 'Store Management', icon: 'storefront' },
-                        { title: 'Payments & Payouts', icon: 'payments' },
-                        { title: 'Delivery & Logistics', icon: 'local_shipping' },
-                        { title: 'WhatsApp Automation', icon: 'chat' },
+                        { title: 'Getting Started', icon: 'Flag' },
+                        { title: 'Account & Billing', icon: 'User' },
+                        { title: 'Store Management', icon: 'Store' },
+                        { title: 'Payments & Payouts', icon: 'Banknote' },
+                        { title: 'Delivery & Logistics', icon: 'Truck' },
+                        { title: 'WhatsApp Automation', icon: 'MessageSquare' },
                     ].map((cat, i) => (
                         <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition-colors cursor-pointer group">
                             <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 group-hover:text-[#46EC13] mb-4">

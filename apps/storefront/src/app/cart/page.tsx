@@ -1,56 +1,73 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
+import { StoreShell } from '@/components/StoreShell';
+import { useStore } from '@/context/StoreContext';
+import NextLink from 'next/link';
+const Link = NextLink as any;
 
 export default function CartPage() {
-    const router = useRouter();
-    const [cart, setCart] = useState<any[]>([]);
+    const { store, cart, removeFromCart } = useStore();
 
-    useEffect(() => {
-        const stored = JSON.parse(localStorage.getItem('vayva_cart') || '[]');
-        setCart(stored);
-    }, []);
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    if (!store) return null;
 
     return (
-        <div className="min-h-screen bg-black text-white p-8 max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
+        <StoreShell>
+            <div className="max-w-3xl mx-auto px-4 py-20">
+                <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
-            {cart.length === 0 ? (
-                <div className="text-center py-20 text-gray-500">Cart is empty.</div>
-            ) : (
-                <div className="space-y-4">
-                    {cart.map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-center p-4 border border-white/10 rounded-xl bg-white/5">
-                            <div>
-                                <div className="font-medium text-lg">{item.title}</div>
-                                <div className="text-sm text-gray-400">Qty: {item.quantity} × NGN {item.price.toLocaleString()}</div>
-                            </div>
-                            <div className="font-mono text-xl">NGN {(item.price * item.quantity).toLocaleString()}</div>
-                        </div>
-                    ))}
-
-                    <div className="border-t border-white/10 pt-8 mt-8 flex justify-between items-center text-xl font-bold">
-                        <span>Total</span>
-                        <span>NGN {total.toLocaleString()}</span>
+                {cart.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500 mb-8">Your cart is currently empty.</p>
+                        <Link href={`/collections/all?store=${store.slug}`}>
+                            <button className="bg-black text-white px-8 py-4 rounded-full font-bold text-sm tracking-wide hover:bg-gray-900 transition-colors">
+                                Continue Shopping
+                            </button>
+                        </Link>
                     </div>
+                ) : (
+                    <div>
+                        <div className="space-y-6 mb-8">
+                            {cart.map((item, idx) => (
+                                <div key={idx} className="flex gap-4 border-b border-gray-100 pb-6 last:border-0">
+                                    <div className="w-24 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                        {item.image && <img src={item.image} alt={item.productName} className="w-full h-full object-cover" />}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="font-bold">{item.productName}</h3>
+                                            <span className="font-bold">₦{(item.price * item.quantity).toLocaleString()}</span>
+                                        </div>
+                                        <div className="text-sm text-gray-500 mb-4">
+                                            Quantity: {item.quantity}
+                                        </div>
+                                        <button
+                                            onClick={() => removeFromCart(item.productId)}
+                                            className="text-xs text-red-500 underline hover:text-red-600"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
 
-                    <button
-                        onClick={() => router.push('/checkout')}
-                        className="w-full bg-primary text-black font-bold h-14 rounded-full mt-8 hover:bg-primary/90 transition-colors"
-                    >
-                        Proceed to Checkout
-                    </button>
-                    <button
-                        onClick={() => router.push('/')}
-                        className="w-full mt-4 text-gray-500 hover:text-white transition-colors text-center block"
-                    >
-                        Continue Shopping
-                    </button>
-                </div>
-            )}
-        </div>
+                        <div className="border-t border-gray-200 pt-8">
+                            <div className="flex justify-between text-lg font-bold mb-8">
+                                <span>Subtotal</span>
+                                <span>₦{subtotal.toLocaleString()}</span>
+                            </div>
+                            <Link href={`/checkout?store=${store.slug}`}>
+                                <button className="w-full bg-black text-white py-4 rounded-full font-bold hover:bg-gray-900 transition-colors">
+                                    Proceed to Checkout
+                                </button>
+                            </Link>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </StoreShell>
     );
 }

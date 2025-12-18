@@ -26,7 +26,7 @@ export default function CollectionPage({ params }: { params: { slug: string, col
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
                     <div>
                         <div className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-2 flex items-center gap-2">
-                            Home <Icon name="chevron_right" size={14} /> Collections <Icon name="chevron_right" size={14} /> <span className="text-white">{collectionName}</span>
+                            Home <Icon name="ChevronRight" size={14} /> Collections <Icon name="ChevronRight" size={14} /> <span className="text-white">{collectionName}</span>
                         </div>
                         <h1 className="text-4xl font-bold text-white mb-2">{collectionName}</h1>
                         <p className="text-text-secondary">Found {MOCK_PRODUCTS.length} products</p>
@@ -35,11 +35,11 @@ export default function CollectionPage({ params }: { params: { slug: string, col
                     {/* Toolbar */}
                     <div className="flex gap-3 w-full md:w-auto">
                         <Button variant="outline" className="flex-1 md:flex-none justify-between text-white border-white/10 hover:bg-white/5">
-                            <span className="flex items-center gap-2"><Icon name="tune" size={16} /> Filter</span>
+                            <span className="flex items-center gap-2"><Icon name="Sliders" size={16} /> Filter</span>
                         </Button>
                         <Button variant="outline" className="flex-1 md:flex-none justify-between text-white border-white/10 hover:bg-white/5 gap-4">
-                            <span className="flex items-center gap-2"><Icon name="sort" size={16} /> Sort</span>
-                            <Icon name="expand_more" size={16} className="text-text-secondary" />
+                            <span className="flex items-center gap-2"><Icon name="ArrowUpDown" size={16} /> Sort</span>
+                            <Icon name="ChevronDown" size={16} className="text-text-secondary" />
                         </Button>
                     </div>
                 </div>

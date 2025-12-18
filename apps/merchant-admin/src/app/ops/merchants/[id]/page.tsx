@@ -28,10 +28,10 @@ export default function OpsMerchantDetailPage({ params }: { params: { id: string
             actions={
                 <div className="flex gap-2">
                     <Button variant="outline" className="border-white/10 text-white hover:bg-white/5 gap-2">
-                        <Icon name="login" size={16} /> Impersonate
+                        <Icon name="LogIn" size={16} /> Impersonate
                     </Button>
                     <Button className="bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500/20 gap-2">
-                        <Icon name="block" size={16} /> Suspend Store
+                        <Icon name="Ban" size={16} /> Suspend Store
                     </Button>
                 </div>
             }
@@ -44,7 +44,7 @@ export default function OpsMerchantDetailPage({ params }: { params: { id: string
                     {/* Overview Panel */}
                     <section className="bg-white/5 border border-white/5 rounded-xl p-6">
                         <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                            <Icon name="info" className="text-text-secondary" /> Overview
+                            <Icon name="Info" className="text-text-secondary" /> Overview
                         </h3>
                         <div className="grid grid-cols-2 gap-6">
                             <div>
@@ -70,7 +70,7 @@ export default function OpsMerchantDetailPage({ params }: { params: { id: string
                     {/* Payments & Payouts */}
                     <section className="bg-white/5 border border-white/5 rounded-xl p-6">
                         <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                            <Icon name="payments" className="text-text-secondary" /> Payments & Payouts
+                            <Icon name="Banknote" className="text-text-secondary" /> Payments & Payouts
                         </h3>
                         <div className="grid grid-cols-2 gap-6 mb-6">
                             <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
@@ -109,7 +109,7 @@ export default function OpsMerchantDetailPage({ params }: { params: { id: string
                     <section className="bg-white/5 border border-white/5 rounded-xl p-6">
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="text-white font-bold flex items-center gap-2">
-                                <Icon name="security" className="text-text-secondary" /> Risk Profile
+                                <Icon name="Shield" className="text-text-secondary" /> Risk Profile
                             </h3>
                             <RiskChip level="Low" />
                         </div>
@@ -131,7 +131,7 @@ export default function OpsMerchantDetailPage({ params }: { params: { id: string
 
                         <div className="mt-6 pt-4 border-t border-white/10">
                             <Button variant="ghost" size="sm" className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10 justify-start gap-2">
-                                <Icon name="flag" size={16} /> Add Internal Flag
+                                <Icon name="Flag" size={16} /> Add Internal Flag
                             </Button>
                         </div>
                     </section>
@@ -139,7 +139,7 @@ export default function OpsMerchantDetailPage({ params }: { params: { id: string
                     {/* Audit Log Snippet */}
                     <section className="bg-white/5 border border-white/5 rounded-xl p-6">
                         <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                            <Icon name="history" className="text-text-secondary" /> Recent Activity
+                            <Icon name="History" className="text-text-secondary" /> Recent Activity
                         </h3>
                         <div className="space-y-4 relative pl-2 border-l border-white/10">
                             {[

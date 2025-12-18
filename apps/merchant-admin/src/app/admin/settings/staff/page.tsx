@@ -1,47 +1,70 @@
 'use client';
 
-import React, { useState } from 'react';
-import { AppShell } from '@vayva/ui';
-import { GlassPanel } from '@vayva/ui';
-import { Input } from '@vayva/ui';
-import { Button } from '@vayva/ui';
-import { Icon } from '@vayva/ui';
+import React, { useState, useEffect } from 'react';
+import { AppShell, GlassPanel, Input, Button, Icon } from '@vayva/ui';
+import { apiClient } from '@vayva/api-client';
+import { UserRole } from '@vayva/shared';
 
-type StaffMember = {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    role: 'Owner' | 'Admin' | 'Staff';
-    status: 'Active' | 'Invited' | 'Suspended';
-    lastActive: string;
-};
-
-const MOCK_STAFF: StaffMember[] = [
-    { id: '1', name: 'John Doe', email: 'john@store.com', phone: '08123456789', role: 'Owner', status: 'Active', lastActive: '2 mins ago' },
-    { id: '2', name: 'Sarah Smith', email: 'sarah@store.com', phone: '08098765432', role: 'Staff', status: 'Active', lastActive: '1 hr ago' },
-    { id: '3', name: 'Mike Johnson', email: 'mike@store.com', phone: '07012345678', role: 'Admin', status: 'Invited', lastActive: '-' },
-];
 
 export default function StaffSettingsPage() {
-    const [selectedMember, setSelectedMember] = useState<StaffMember | null>(null);
+    const [staff, setStaff] = useState<any[]>([]);
+    const [invites, setInvites] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedMember, setSelectedMember] = useState<any | null>(null);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
 
     // Invite Form State
     const [inviteEmail, setInviteEmail] = useState('');
-    const [inviteRole, setInviteRole] = useState('Staff');
+    const [inviteRole, setInviteRole] = useState('STAFF');
     const [isInviting, setIsInviting] = useState(false);
+
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const [staffList, inviteList] = await Promise.all([
+                apiClient.staff.list(),
+                // Note: apiClient.staff.getInvites() was missing in my index.ts but I'll add it or proxy correctly
+                fetch('http://localhost:4000/v1/staff/invites', { credentials: 'include' }).then(r => r.json())
+            ]);
+            setStaff(staffList);
+            setInvites(inviteList);
+        } catch (error) {
+            console.error('Failed to fetch staff data', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsInviting(true);
-        setTimeout(() => {
-            setIsInviting(false);
+        try {
+            await apiClient.staff.invite({ email: inviteEmail, role: inviteRole });
+            await fetchData();
             setIsInviteOpen(false);
             setInviteEmail('');
-            alert('Invite sent!');
-        }, 1500);
+        } catch (error: any) {
+            alert(error.message || 'Failed to send invite');
+        } finally {
+            setIsInviting(false);
+        }
     };
+
+    const handleRemove = async (id: string) => {
+        if (!confirm('Are you sure you want to remove this staff member?')) return;
+        try {
+            await apiClient.staff.remove(id);
+            await fetchData();
+            setSelectedMember(null);
+        } catch (error: any) {
+            alert(error.message || 'Failed to remove staff');
+        }
+    };
+
 
     return (
         <AppShell breadcrumb="Settings / Staff" title="Staff & Roles">
@@ -50,7 +73,7 @@ export default function StaffSettingsPage() {
                 {/* Toolbar */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
                     <div className="relative w-full md:w-auto">
-                        <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
+                        <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                         <input
                             className="bg-white/5 border border-white/5 rounded-full pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-primary w-full md:w-64"
                             placeholder="Search staff..."
@@ -63,7 +86,7 @@ export default function StaffSettingsPage() {
                             <option>Staff</option>
                         </select>
                         <Button className="bg-primary text-black border-none" onClick={() => setIsInviteOpen(true)}>
-                            <Icon name="person_add" className="mr-2" /> Invite Staff
+                            <Icon name="UserPlus" className="mr-2" /> Invite Staff
                         </Button>
                     </div>
                 </div>
@@ -83,43 +106,67 @@ export default function StaffSettingsPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {MOCK_STAFF.map((member) => (
+                                {staff.map((member) => (
                                     <tr key={member.id} className="hover:bg-white/5 transition-colors group">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-9 h-9 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold">
-                                                    {member.name.charAt(0)}
+                                                    {member.firstName?.charAt(0) || member.email?.charAt(0)}
                                                 </div>
-                                                <span className="font-bold text-white">{member.name}</span>
+                                                <span className="font-bold text-white">{member.firstName} {member.lastName}</span>
                                             </div>
                                         </td>
-                                        <td className="p-4 text-text-secondary">{member.email}<br /><span className="text-xs opacity-50">{member.phone}</span></td>
+                                        <td className="p-4 text-text-secondary">{member.email}<br /><span className="text-xs opacity-50">{member.phone || 'No phone'}</span></td>
                                         <td className="p-4">
                                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider 
-                                                ${member.role === 'Owner' ? 'bg-amber-500/20 text-amber-400' : ''}
-                                                ${member.role === 'Admin' ? 'bg-purple-500/20 text-purple-400' : ''}
-                                                ${member.role === 'Staff' ? 'bg-blue-500/20 text-blue-400' : ''}
+                                                ${member.role === 'OWNER' ? 'bg-amber-500/20 text-amber-400' : ''}
+                                                ${member.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-400' : ''}
+                                                ${member.role === 'STAFF' ? 'bg-blue-500/20 text-blue-400' : ''}
                                             `}>
                                                 {member.role}
                                             </span>
                                         </td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider 
-                                                ${member.status === 'Active' ? 'bg-state-success/10 text-state-success' : ''}
-                                                ${member.status === 'Invited' ? 'bg-white/10 text-white/70' : ''}
-                                                ${member.status === 'Suspended' ? 'bg-state-danger/10 text-state-danger' : ''}
-                                            `}>
-                                                {member.status}
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-state-success/10 text-state-success`}>
+                                                Active
                                             </span>
                                         </td>
-                                        <td className="p-4 text-xs text-text-secondary">{member.lastActive}</td>
+                                        <td className="p-4 text-xs text-text-secondary">Recent</td>
                                         <td className="p-4 text-right">
-                                            {member.role !== 'Owner' && (
-                                                <Button size="sm" variant="ghost" className="h-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setSelectedMember(member)}>Manage</Button>
+                                            {member.role !== 'OWNER' && (
+                                                <Button size="sm" variant="ghost" className="h-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setSelectedMember({ ...member, status: 'Active' })}>Manage</Button>
                                             )}
                                         </td>
                                     </tr>
                                 ))}
+                                {invites.map((invite) => (
+                                    <tr key={invite.id} className="hover:bg-white/5 transition-colors group">
+                                        <td className="p-4 opacity-70">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-full bg-gray-500/20 text-gray-400 flex items-center justify-center font-bold">
+                                                    ?
+                                                </div>
+                                                <span className="font-bold text-white">Pending Invite</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-text-secondary opacity-70">{invite.email}</td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400`}>
+                                                {invite.role}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white/70`}>
+                                                Invited
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-xs text-text-secondary">Sent {new Date(invite.createdAt).toLocaleDateString()}</td>
+                                        <td className="p-4 text-right">
+                                            <Button size="sm" variant="ghost" className="h-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setSelectedMember({ ...invite, status: 'Invited' })}>Manage</Button>
+                                        </td>
+                                    </tr>
+                                ))}
+
                             </tbody>
                         </table>
                     </div>
@@ -131,19 +178,20 @@ export default function StaffSettingsPage() {
                         <div className="w-full max-w-md h-full bg-[#142210] border-l border-white/10 p-6 flex flex-col animate-slide-in-right">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-bold text-white">Manage Access</h2>
-                                <Button variant="ghost" size="icon" onClick={() => setSelectedMember(null)}><Icon name="close" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => setSelectedMember(null)}><Icon name="X" /></Button>
                             </div>
 
                             <div className="flex flex-col gap-6 flex-1">
                                 <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
                                     <div className="w-12 h-12 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-lg">
-                                        {selectedMember.name.charAt(0)}
+                                        {selectedMember.firstName?.charAt(0) || selectedMember.email?.charAt(0)}
                                     </div>
                                     <div>
-                                        <div className="font-bold text-white">{selectedMember.name}</div>
+                                        <div className="font-bold text-white">{selectedMember.firstName} {selectedMember.lastName}</div>
                                         <div className="text-sm text-text-secondary">{selectedMember.email}</div>
                                     </div>
                                 </div>
+
 
                                 <div>
                                     <label className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-2 block">Role</label>
@@ -162,10 +210,15 @@ export default function StaffSettingsPage() {
 
                                 <div className="mt-auto pt-6 border-t border-white/10">
                                     <Button className="w-full mb-3 bg-primary text-black hover:bg-primary/90">Save Changes</Button>
-                                    <Button variant="outline" className="w-full text-state-danger hover:text-state-danger hover:bg-state-danger/10 border-state-danger/20">
+                                    <Button
+                                        variant="outline"
+                                        className="w-full text-state-danger hover:text-state-danger hover:bg-state-danger/10 border-state-danger/20"
+                                        onClick={() => handleRemove(selectedMember.id || selectedMember.email)}
+                                    >
                                         Remove Access
                                     </Button>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -175,7 +228,7 @@ export default function StaffSettingsPage() {
                 {isInviteOpen && (
                     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                         <GlassPanel className="w-full max-w-lg p-6 relative">
-                            <button onClick={() => setIsInviteOpen(false)} className="absolute top-4 right-4 text-text-secondary hover:text-white"><Icon name="close" /></button>
+                            <button onClick={() => setIsInviteOpen(false)} className="absolute top-4 right-4 text-text-secondary hover:text-white"><Icon name="X" /></button>
                             <h2 className="text-xl font-bold text-white mb-2">Invite Staff Members</h2>
                             <p className="text-text-secondary text-sm mb-6">Send an invite link to your team member's email.</p>
 

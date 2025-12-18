@@ -1,90 +1,178 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AppShell, Button, GlassPanel, StatusChip, EmptyState } from '@vayva/ui';
-import { OrderService, Order } from '@/services/orders';
-import Cookies from 'js-cookie';
-import { useAuth } from '@/context/AuthContext';
+import { AdminShell } from '@/components/admin-shell';
+import { OrdersService, Order } from '@/services/orders';
+import { Button, Icon, cn } from '@vayva/ui';
+import { motion } from 'framer-motion';
+import { FulfillmentDrawer } from '@/components/orders/fulfillment-drawer';
+
+// --- Components ---
+
+const StatusBadge = ({ status, type = 'status' }: { status: string, type?: 'status' | 'payment' | 'fulfillment' }) => {
+    let colors = "bg-gray-50 text-gray-600";
+    const s = status?.toLowerCase();
+
+    if (type === 'payment') {
+        if (s === 'success' || s === 'paid') colors = "bg-green-50 text-green-700";
+        else if (s === 'pending' || s === 'initiated') colors = "bg-orange-50 text-orange-700";
+        else if (s === 'failed' || s === 'unpaid') colors = "bg-red-50 text-red-700";
+    } else if (type === 'fulfillment') {
+        if (s === 'fulfilled') colors = "bg-green-50 text-green-700";
+        else if (s === 'unfulfilled') colors = "bg-gray-50 text-gray-700";
+        else if (s === 'processing' || s === 'dispatched') colors = "bg-blue-50 text-blue-700";
+    } else {
+        // Order Status
+        if (s === 'delivered' || s === 'paid') colors = "bg-green-50 text-green-700";
+        else if (s === 'pending_payment') colors = "bg-orange-50 text-orange-700";
+        else if (s === 'processing' || s === 'fulfilling') colors = "bg-blue-50 text-blue-700";
+        else if (s === 'cancelled') colors = "bg-red-50 text-red-700";
+    }
+
+    return (
+        <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider", colors)}>
+            {status?.replace('_', ' ')}
+        </span>
+    );
+};
 
 export default function OrdersPage() {
     const router = useRouter();
-    const { user } = useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(true);
-    const storeId = Cookies.get('vayva_store_id');
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fulfillment State
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [isFulfillmentOpen, setIsFulfillmentOpen] = useState(false);
+
+    const openFulfillment = (e: React.MouseEvent, order: Order) => {
+        e.stopPropagation();
+        setSelectedOrder(order);
+        setIsFulfillmentOpen(true);
+    };
+
+    const fetchOrders = async () => {
+        setIsLoading(true);
+        try {
+            const data = await OrdersService.getOrders({});
+            setOrders(data);
+        } catch (err) {
+            console.error('Fetch orders error', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        if (storeId) {
-            OrderService.list(storeId)
-                .then(setOrders)
-                .catch(console.error)
-                .finally(() => setLoading(false));
-        }
-    }, [storeId]);
+        fetchOrders();
+    }, []);
 
     return (
-        <AppShell
-            title="Orders"
-            breadcrumbs={[{ label: 'Orders', href: '/admin/orders' }]}
-            profile={{ name: user?.name || 'Merchant', email: user?.email || '' }}
-            storeName="Store" // Todo
-            onLogout={() => router.push('/signin')} // Todo
-        >
-            <div className="space-y-6">
-                <GlassPanel className="p-0 overflow-hidden">
-                    {/* Simplified loading/empty handling outside table structure for clean design, or inside if preferred. 
-                        Design spec: "screens show the correct data states". 
-                        If empty, show EmptyState component, not a table with headers and 1 row.
-                    */}
-                    {loading ? (
-                        <div className="p-12 text-center text-text-secondary animate-pulse">Loading orders...</div>
-                    ) : orders.length === 0 ? (
-                        <div className="p-8">
-                            <EmptyState
-                                title="No Orders Yet"
-                                description="Your store hasn't received any orders yet. Once products are live, orders will appear here."
-                                icon="receipt" // assuming receipt icon exists or generic
+        <AdminShell title="Orders">
+            <div className="flex flex-col gap-6">
+
+                {/* Header Actions */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 max-w-md w-full">
+                        <div className="relative flex-1">
+                            <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search orders..."
+                                className="w-full h-10 pl-10 pr-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black/5"
                             />
                         </div>
-                    ) : (
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-white/10 bg-white/5">
-                                    <th className="p-4 text-sm font-medium text-text-secondary">Order ID</th>
-                                    <th className="p-4 text-sm font-medium text-text-secondary">Date</th>
-                                    <th className="p-4 text-sm font-medium text-text-secondary">Customer</th>
-                                    <th className="p-4 text-sm font-medium text-text-secondary">Status</th>
-                                    <th className="p-4 text-sm font-medium text-text-secondary">Total</th>
-                                    <th className="p-4 text-sm font-medium text-text-secondary">Action</th>
+                        <Button variant="outline"><Icon name="Filter" size={16} className="mr-2" /> Filters</Button>
+                    </div>
+                </div>
+
+                {/* Orders Table */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-medium">
+                            <tr>
+                                <th className="px-6 py-4">Ref Code</th>
+                                <th className="px-6 py-4">Date</th>
+                                <th className="px-6 py-4">Customer</th>
+                                <th className="px-6 py-4">Statuses</th>
+                                <th className="px-6 py-4">Total</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {isLoading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={i}>
+                                        <td className="px-6 py-4"><div className="h-4 w-16 bg-gray-100 rounded animate-pulse" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 w-24 bg-gray-100 rounded animate-pulse" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 w-32 bg-gray-100 rounded animate-pulse" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 w-20 bg-gray-100 rounded animate-pulse" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 w-16 bg-gray-100 rounded animate-pulse" /></td>
+                                        <td className="px-6 py-4"></td>
+                                    </tr>
+                                ))
+                            ) : orders.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Icon name="ShoppingBag" size={32} className="text-gray-300" />
+                                            <p>No orders found.</p>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {orders.map((order) => (
-                                    <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                        <td className="p-4 text-white font-medium">#{order.id.substring(0, 8)}</td>
-                                        <td className="p-4 text-text-secondary">{new Date(order.createdAt).toLocaleDateString()}</td>
-                                        <td className="p-4 text-white">{order.customer?.name || 'Guest'}</td>
-                                        <td className="p-4">
-                                            <StatusChip status={order.status} />
+                            ) : (
+                                orders.map((order) => (
+                                    <motion.tr
+                                        key={order.id}
+                                        whileHover={{ backgroundColor: "#F9FAFB" }}
+                                        onClick={() => router.push(`/admin/orders/${order.id}`)}
+                                        className="cursor-pointer group"
+                                    >
+                                        <td className="px-6 py-4 font-bold text-[#0B0B0B]">{order.refCode}</td>
+                                        <td className="px-6 py-4 text-[#525252]">{new Date(order.createdAt).toLocaleDateString()}</td>
+                                        <td className="px-6 py-4 text-[#0B0B0B]">{order.customer?.name || 'Guest'}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-wrap gap-1 items-start">
+                                                <StatusBadge status={order.status} />
+                                                <StatusBadge status={order.paymentStatus} type="payment" />
+                                                <StatusBadge status={order.fulfillmentStatus} type="fulfillment" />
+                                            </div>
                                         </td>
-                                        <td className="p-4 text-white">NGN {order.total.toLocaleString()}</td>
-                                        <td className="p-4">
+                                        <td className="px-6 py-4 font-bold text-[#0B0B0B]">₦ {Number(order.total).toLocaleString()}</td>
+                                        <td className="px-6 py-4 text-right flex justify-end gap-2">
                                             <Button
                                                 size="sm"
-                                                variant="ghost"
-                                                onClick={() => router.push(`/admin/orders/${order.id}`)}
+                                                variant="outline"
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                                onClick={(e: React.MouseEvent) => openFulfillment(e, order)}
                                             >
-                                                View
+                                                Fulfill
                                             </Button>
+                                            <button className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Icon name="ChevronRight" size={16} />
+                                            </button>
                                         </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </GlassPanel>
+                                    </motion.tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
-        </AppShell>
+
+            {selectedOrder && (
+                <FulfillmentDrawer
+                    isOpen={isFulfillmentOpen}
+                    onClose={() => setIsFulfillmentOpen(false)}
+                    order={selectedOrder}
+                    onUpdate={() => {
+                        fetchOrders();
+                    }}
+                />
+            )}
+        </AdminShell>
     );
 }

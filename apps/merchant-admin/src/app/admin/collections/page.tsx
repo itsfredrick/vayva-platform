@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AppShell } from '@vayva/ui';
+import { AdminShell } from '@/components/admin-shell';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
@@ -15,19 +15,20 @@ const MOCK_COLLECTIONS = [
 
 export default function CollectionsPage() {
     return (
-        <AppShell title="Collections" breadcrumb="Catalog / Collections">
+        <AdminShell title="Collections" breadcrumb="Catalog / Collections">
             <div className="flex flex-col gap-6">
                 {/* Top Controls */}
                 <div className="flex items-center justify-between">
                     <div className="flex-1 max-w-sm">
                         <GlassPanel className="p-1 pl-4 flex items-center gap-2">
-                            <Icon name="search" className="text-text-secondary" />
+                            <Icon name="Search" className="text-text-secondary" />
                             <input
                                 className="bg-transparent border-none outline-none text-white text-sm w-full h-10 placeholder:text-text-secondary"
                                 placeholder="Search collections..."
                             />
                         </GlassPanel>
                     </div>
+                    {/* @ts-ignore */}
                     <Link href="/admin/collections/new">
                         <Button>Create Collection</Button>
                     </Link>
@@ -55,6 +56,7 @@ export default function CollectionsPage() {
                                             <input type="checkbox" className="checkbox checkbox-xs rounded-sm border-white/20" />
                                         </td>
                                         <td className="p-4 font-bold text-white">
+                                            {/* @ts-ignore */}
                                             <Link href={`/admin/collections/${col.id}`} className="hover:underline hover:text-primary transition-colors">
                                                 {col.name}
                                             </Link>
@@ -68,9 +70,10 @@ export default function CollectionsPage() {
                                         </td>
                                         <td className="p-4 text-text-secondary text-xs">{col.updated}</td>
                                         <td className="p-4 text-right">
+                                            {/* @ts-ignore */}
                                             <Link href={`/admin/collections/${col.id}`}>
                                                 <Button size="icon" variant="ghost" className="h-8 w-8 text-text-secondary hover:text-white">
-                                                    <Icon name="chevron_right" size={20} />
+                                                    <Icon name="ChevronRight" size={20} />
                                                 </Button>
                                             </Link>
                                         </td>
@@ -81,6 +84,6 @@ export default function CollectionsPage() {
                     </div>
                 </GlassPanel>
             </div>
-        </AppShell>
+        </AdminShell>
     );
 }

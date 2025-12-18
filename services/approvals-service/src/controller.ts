@@ -1,7 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient, ApprovalStatus } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, ApprovalStatus } from '@vayva/db';
 
 export const listApprovalsHandler = async (req: FastifyRequest, reply: FastifyReply) => {
     const { storeId, status } = req.query as { storeId: string, status?: ApprovalStatus };
@@ -26,8 +24,8 @@ export const approveHandler = async (req: FastifyRequest, reply: FastifyReply) =
         where: { id },
         data: {
             status: 'APPROVED',
-            approverId: approverId || 'system',
-            approvedAt: new Date()
+            actionBy: approverId || 'system',
+            // approvedAt: new Date() // Schema doesn't have approvedAt, checks updatedAT
         }
     });
 

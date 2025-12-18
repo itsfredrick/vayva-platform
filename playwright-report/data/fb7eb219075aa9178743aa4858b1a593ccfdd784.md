@@ -1,0 +1,111 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e6]
+        - heading "Vayva" [level=1] [ref=e10]
+      - navigation [ref=e11]:
+        - link "Overview" [ref=e12] [cursor=pointer]:
+          - /url: /admin
+          - img [ref=e13]
+          - generic [ref=e18]: Overview
+        - link "Products" [ref=e19] [cursor=pointer]:
+          - /url: /admin/products
+          - img [ref=e20]
+          - generic [ref=e24]: Products
+        - link "Orders" [ref=e25] [cursor=pointer]:
+          - /url: /admin/orders
+          - img [ref=e26]
+          - generic [ref=e29]: Orders
+        - link "Customers" [ref=e30] [cursor=pointer]:
+          - /url: /admin/customers
+          - img [ref=e31]
+          - generic [ref=e36]: Customers
+        - link "Wallet" [ref=e37] [cursor=pointer]:
+          - /url: /admin/wallet
+          - img [ref=e38]
+          - generic [ref=e42]: Wallet
+        - link "WA Agent" [ref=e43] [cursor=pointer]:
+          - /url: /admin/whatsapp
+          - img [ref=e44]
+          - generic [ref=e46]: WA Agent
+      - link "Control Center Builder, Themes & Pages" [ref=e48] [cursor=pointer]:
+        - /url: /admin/control-center
+        - generic [ref=e49]:
+          - img [ref=e51]
+          - generic:
+            - paragraph: Control Center
+            - paragraph: Builder, Themes & Pages
+      - generic [ref=e55] [cursor=pointer]:
+        - generic [ref=e56]: FD
+        - generic:
+          - paragraph
+    - main [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]: Home
+          - generic [ref=e61]: /
+          - generic [ref=e62]: Customers
+        - generic [ref=e64]:
+          - img [ref=e65]
+          - textbox "Search for anything..." [ref=e68]
+        - generic [ref=e69]:
+          - link "Visit Store" [ref=e70] [cursor=pointer]:
+            - /url: http://localhost:3001?store=undefined
+            - text: Visit Store
+            - img [ref=e71]
+          - button [ref=e75] [cursor=pointer]:
+            - img [ref=e76]
+          - button "FD" [ref=e81] [cursor=pointer]
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - img [ref=e87]
+            - textbox "Search by name, email, or phone..." [ref=e90]
+          - button "Filter" [ref=e91] [cursor=pointer]:
+            - img [ref=e92]
+            - text: Filter
+        - table [ref=e95]:
+          - rowgroup [ref=e96]:
+            - row "Customer Contact Orders Total Spent Last Order" [ref=e97]:
+              - columnheader "Customer" [ref=e98]
+              - columnheader "Contact" [ref=e99]
+              - columnheader "Orders" [ref=e100]
+              - columnheader "Total Spent" [ref=e101]
+              - columnheader "Last Order" [ref=e102]
+          - rowgroup [ref=e103]:
+            - row [ref=e104]:
+              - cell [ref=e105]
+              - cell [ref=e107]
+              - cell [ref=e109]
+              - cell [ref=e111]
+              - cell [ref=e113]
+            - row [ref=e115]:
+              - cell [ref=e116]
+              - cell [ref=e118]
+              - cell [ref=e120]
+              - cell [ref=e122]
+              - cell [ref=e124]
+            - row [ref=e126]:
+              - cell [ref=e127]
+              - cell [ref=e129]
+              - cell [ref=e131]
+              - cell [ref=e133]
+              - cell [ref=e135]
+            - row [ref=e137]:
+              - cell [ref=e138]
+              - cell [ref=e140]
+              - cell [ref=e142]
+              - cell [ref=e144]
+              - cell [ref=e146]
+            - row [ref=e148]:
+              - cell [ref=e149]
+              - cell [ref=e151]
+              - cell [ref=e153]
+              - cell [ref=e155]
+              - cell [ref=e157]
+  - alert [ref=e159]
+```

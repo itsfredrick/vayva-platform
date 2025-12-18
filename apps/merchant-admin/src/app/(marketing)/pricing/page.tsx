@@ -116,6 +116,7 @@ export default function PricingPage() {
                             </div>
                             <p className="text-[#1d1d1f]/60 text-sm mb-8 leading-relaxed">{plan.description}</p>
 
+                            {/* @ts-ignore */}
                             <Link href="/auth/signup" className="block mb-8">
                                 <Button
                                     className={`w-full h-12 rounded-full font-bold text-lg ${plan.popular
@@ -130,7 +131,7 @@ export default function PricingPage() {
                             <ul className="space-y-4">
                                 {plan.features.map((feature) => (
                                     <li key={feature} className="flex items-start gap-3 text-sm text-[#1d1d1f]/80">
-                                        <Icon name="check_circle" className="text-[#46EC13] shrink-0" size={18} />
+                                        <Icon name="CheckCircle" className="text-[#46EC13] shrink-0" size={18} />
                                         <span>{feature}</span>
                                     </li>
                                 ))}

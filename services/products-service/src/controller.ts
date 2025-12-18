@@ -1,7 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@vayva/db';
 
 export const listProductsHandler = async (req: FastifyRequest, reply: FastifyReply) => {
     const storeId = req.headers['x-store-id'] as string;
@@ -35,20 +33,22 @@ export const createProductHandler = async (req: FastifyRequest, reply: FastifyRe
     if (!storeId) return reply.status(400).send({ error: 'Store ID required' });
 
     const { name, description, price, sku, stock } = req.body as any;
+    const title = name;
+    const handle = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
     const product = await prisma.product.create({
         data: {
             storeId,
-            name,
+            title,
+            handle: handle + '-' + Date.now(), // Ensure unique
             description,
             status: 'ACTIVE',
             variants: {
                 create: {
-                    name: 'Default',
+                    title: 'Default',
                     price: parseFloat(price),
                     sku,
-                    stock: parseInt(stock || '0'),
-                    options: {}
+                    inventory: parseInt(stock || '0'),
                 }
             }
         },
@@ -59,10 +59,10 @@ export const createProductHandler = async (req: FastifyRequest, reply: FastifyRe
     await prisma.inventoryEvent.create({
         data: {
             variantId: product.variants[0].id,
-            change: parseInt(stock || '0'),
-            type: 'ADJUSTMENT',
+            quantity: parseInt(stock || '0'),
+            action: 'ADJUSTMENT',
             reason: 'Initial stock',
-            performedBy: 'user' // Placeholder
+            // performedBy: 'user' // Placeholder
         }
     });
 
@@ -89,7 +89,7 @@ export const updateProductHandler = async (req: FastifyRequest, reply: FastifyRe
     const product = await prisma.product.update({
         where: { id },
         data: {
-            name,
+            title: name,
             description,
         },
         include: { variants: true }
@@ -101,7 +101,7 @@ export const updateProductHandler = async (req: FastifyRequest, reply: FastifyRe
             where: { id: product.variants[0].id },
             data: {
                 price: price ? parseFloat(price) : undefined,
-                stock: stock ? parseInt(stock) : undefined
+                inventory: stock ? parseInt(stock) : undefined
             }
         });
     }

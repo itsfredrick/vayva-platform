@@ -1,0 +1,127 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e6]
+        - heading "Vayva" [level=1] [ref=e10]
+      - navigation [ref=e11]:
+        - link "Overview" [ref=e12] [cursor=pointer]:
+          - /url: /admin
+          - img [ref=e13]
+          - generic [ref=e18]: Overview
+        - link "Products" [ref=e19] [cursor=pointer]:
+          - /url: /admin/products
+          - img [ref=e20]
+          - generic [ref=e24]: Products
+        - link "Orders" [ref=e25] [cursor=pointer]:
+          - /url: /admin/orders
+          - img [ref=e26]
+          - generic [ref=e29]: Orders
+        - link "Customers" [ref=e30] [cursor=pointer]:
+          - /url: /admin/customers
+          - img [ref=e31]
+          - generic [ref=e36]: Customers
+        - link "Wallet" [ref=e37] [cursor=pointer]:
+          - /url: /admin/wallet
+          - img [ref=e38]
+          - generic [ref=e42]: Wallet
+        - link "WA Agent" [ref=e43] [cursor=pointer]:
+          - /url: /admin/whatsapp
+          - img [ref=e44]
+          - generic [ref=e46]: WA Agent
+      - link "Control Center Builder, Themes & Pages" [ref=e48] [cursor=pointer]:
+        - /url: /admin/control-center
+        - generic [ref=e49]:
+          - img [ref=e51]
+          - generic:
+            - paragraph: Control Center
+            - paragraph: Builder, Themes & Pages
+      - generic [ref=e55] [cursor=pointer]:
+        - generic [ref=e56]: FD
+        - generic:
+          - paragraph
+    - main [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]: Home
+          - generic [ref=e61]: /
+          - generic [ref=e62]: Orders
+        - generic [ref=e64]:
+          - img [ref=e65]
+          - textbox "Search for anything..." [ref=e68]
+        - generic [ref=e69]:
+          - link "Visit Store" [ref=e70] [cursor=pointer]:
+            - /url: http://localhost:3001?store=undefined
+            - text: Visit Store
+            - img [ref=e71]
+          - button [ref=e75] [cursor=pointer]:
+            - img [ref=e76]
+          - button "FD" [ref=e81] [cursor=pointer]
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - generic [ref=e87]:
+              - img [ref=e88]
+              - textbox "Search orders..." [ref=e91]
+            - button "Filters" [ref=e92] [cursor=pointer]:
+              - img [ref=e93]
+              - text: Filters
+          - button "Create Order" [disabled]:
+            - img
+            - text: Create Order
+        - generic [ref=e95]:
+          - button "All" [ref=e96] [cursor=pointer]
+          - button "Unpaid" [ref=e97] [cursor=pointer]
+          - button "Processing" [ref=e98] [cursor=pointer]
+          - button "Ready to Ship" [ref=e99] [cursor=pointer]
+          - button "Delivered" [ref=e100] [cursor=pointer]
+        - table [ref=e102]:
+          - rowgroup [ref=e103]:
+            - row "Order Date Customer Status Total Actions" [ref=e104]:
+              - columnheader "Order" [ref=e105]
+              - columnheader "Date" [ref=e106]
+              - columnheader "Customer" [ref=e107]
+              - columnheader "Status" [ref=e108]
+              - columnheader "Total" [ref=e109]
+              - columnheader "Actions" [ref=e110]
+          - rowgroup [ref=e111]:
+            - row [ref=e112]:
+              - cell [ref=e113]
+              - cell [ref=e115]
+              - cell [ref=e117]
+              - cell [ref=e119]
+              - cell [ref=e121]
+              - cell [ref=e123]
+            - row [ref=e124]:
+              - cell [ref=e125]
+              - cell [ref=e127]
+              - cell [ref=e129]
+              - cell [ref=e131]
+              - cell [ref=e133]
+              - cell [ref=e135]
+            - row [ref=e136]:
+              - cell [ref=e137]
+              - cell [ref=e139]
+              - cell [ref=e141]
+              - cell [ref=e143]
+              - cell [ref=e145]
+              - cell [ref=e147]
+            - row [ref=e148]:
+              - cell [ref=e149]
+              - cell [ref=e151]
+              - cell [ref=e153]
+              - cell [ref=e155]
+              - cell [ref=e157]
+              - cell [ref=e159]
+            - row [ref=e160]:
+              - cell [ref=e161]
+              - cell [ref=e163]
+              - cell [ref=e165]
+              - cell [ref=e167]
+              - cell [ref=e169]
+              - cell [ref=e171]
+  - alert [ref=e172]
+```

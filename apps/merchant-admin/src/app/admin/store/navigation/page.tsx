@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AppShell } from '@vayva/ui';
+import { AdminShell } from '@/components/admin-shell';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
@@ -17,7 +17,7 @@ export default function NavigationPage() {
     const [activeMenu, setActiveMenu] = useState<'Main Menu' | 'Footer Menu'>('Main Menu');
 
     return (
-        <AppShell title="Navigation" breadcrumb="Storefront / Navigation">
+        <AdminShell title="Navigation" breadcrumb="Storefront / Navigation">
             <div className="flex flex-col gap-6 max-w-5xl mx-auto">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-white">Menus</h1>
@@ -45,7 +45,7 @@ export default function NavigationPage() {
                             <div className="p-6 flex flex-col gap-3">
                                 {MOCK_MENU.map(item => (
                                     <div key={item.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 group hover:border-white/20 transition-colors">
-                                        <Icon name="drag_indicator" size={20} className="text-text-secondary cursor-grab" />
+                                        <Icon name="GripVertical" size={20} className="text-text-secondary cursor-grab" />
                                         <div className="flex-1">
                                             <p className="font-bold text-white">{item.label}</p>
                                             <div className="flex items-center gap-2 text-xs text-text-secondary">
@@ -54,14 +54,14 @@ export default function NavigationPage() {
                                             </div>
                                         </div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button size="icon" variant="ghost" className="w-8 h-8"><Icon name="edit" size={16} /></Button>
-                                            <Button size="icon" variant="ghost" className="w-8 h-8 text-state-danger hover:bg-state-danger/20"><Icon name="delete" size={16} /></Button>
+                                            <Button size="icon" variant="ghost" className="w-8 h-8"><Icon name="Pencil" size={16} /></Button>
+                                            <Button size="icon" variant="ghost" className="w-8 h-8 text-state-danger hover:bg-state-danger/20"><Icon name="Trash" size={16} /></Button>
                                         </div>
                                     </div>
                                 ))}
 
                                 <Button variant="outline" className="border-dashed border-white/20 text-text-secondary hover:text-white mt-2">
-                                    <Icon name="add" className="mr-2" size={18} />
+                                    <Icon name="Plus" className="mr-2" size={18} />
                                     Add menu item
                                 </Button>
                             </div>
@@ -94,6 +94,6 @@ export default function NavigationPage() {
                     </GlassPanel>
                 </div>
             </div>
-        </AppShell>
+        </AdminShell>
     );
 }

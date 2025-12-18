@@ -2,15 +2,17 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 import { Input } from '@vayva/ui';
-import { authClient } from '@/lib/auth-client';
+import { AuthService } from '@/services/auth';
+import { SplitAuthLayout } from '@/components/auth/SplitAuthLayout';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [resendTimer, setResendTimer] = useState(0);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -18,69 +20,120 @@ export default function ForgotPasswordPage() {
         setError(null);
 
         try {
-            await authClient.forgotPassword({ email });
+            await AuthService.forgotPassword({ email });
             setSuccess(true);
+            setResendTimer(30);
+
+            // Start countdown
+            const interval = setInterval(() => {
+                setResendTimer((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(interval);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
         } catch (err: any) {
-            setError(err.message || 'Failed to send reset link');
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to send reset link');
         } finally {
             setLoading(false);
         }
     };
 
+    const handleResend = () => {
+        setSuccess(false);
+        setResendTimer(0);
+    };
+
     if (success) {
         return (
-            <div className="text-center">
-                <h1 className="text-3xl font-bold text-[#1d1d1f] mb-4">Check your email</h1>
-                <p className="text-[#1d1d1f]/60 mb-8">We have sent a password reset link to <span className="font-bold text-[#1d1d1f]">{email}</span>.</p>
-                <Link href="/auth/signin">
-                    <Button className="w-full h-14 bg-[#1d1d1f] text-white font-bold rounded-xl">
-                        Back to Sign In
-                    </Button>
-                </Link>
-            </div>
+            <SplitAuthLayout
+                title="Check your email"
+                subtitle={`We've sent a password reset link to ${email}`}
+                showSignInLink
+            >
+                <div className="text-center">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Icon name="CheckCircle" className="w-8 h-8 text-green-600" />
+                    </div>
+
+                    {resendTimer > 0 ? (
+                        <p className="text-sm text-gray-400 mb-6">
+                            Didn't receive it? Resend in {resendTimer}s
+                        </p>
+                    ) : (
+                        <button
+                            onClick={handleResend}
+                            className="text-sm text-[#0D1D1E] hover:text-black font-medium mb-6"
+                        >
+                            Resend reset link
+                        </button>
+                    )}
+
+                    <Link href="/signin">
+                        <Button variant="secondary" className="w-full !border-2 !border-black !rounded-xl !h-12">
+                            Back to sign in
+                        </Button>
+                    </Link>
+                </div>
+            </SplitAuthLayout>
         );
     }
 
     return (
-        <>
-            <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-[#1d1d1f] mb-2">Reset Password</h1>
-                <p className="text-[#1d1d1f]/60">Enter your email to receive instructions.</p>
+        <SplitAuthLayout
+            title="Forgot password?"
+            subtitle="No worries, we'll send you reset instructions"
+            showSignInLink
+        >
+            <div className="flex justify-center mb-6">
+                <div className="w-16 h-16 bg-black/5 rounded-full flex items-center justify-center">
+                    <Icon name="KeyRound" className="w-8 h-8 text-black" />
+                </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
-                    <div className="p-3 text-sm text-red-500 bg-red-50 rounded-xl text-center">
+                    <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl">
                         {error}
                     </div>
                 )}
 
-                <div className="space-y-4">
-                    <Input
-                        type="email"
-                        placeholder="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="h-12 bg-white/50 border-transparent focus:border-[#46EC13]/50 rounded-xl text-base"
-                    />
-                </div>
+                <Input
+                    label="Email Address"
+                    type="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
 
                 <Button
-                    className="w-full h-14 bg-[#1d1d1f] hover:bg-[#1d1d1f]/90 text-white font-bold text-lg rounded-xl shadow-lg mt-4"
                     type="submit"
+                    variant="primary"
+                    size="lg"
+                    className="w-full !bg-black !text-white hover:!bg-black/90 !rounded-xl !h-12"
                     disabled={loading}
                 >
-                    {loading ? 'Sending Link...' : 'Send Reset Link'}
+                    {loading ? (
+                        <>
+                            <Icon name="Loader2" className="w-5 h-5 animate-spin" />
+                            Sending...
+                        </>
+                    ) : (
+                        'Send reset link'
+                    )}
                 </Button>
             </form>
 
-            <div className="mt-8 text-center text-sm text-[#1d1d1f]/60">
-                Remember your password?{' '}
-                <Link href="/auth/signin" className="text-[#1d1d1f] hover:underline font-bold">
-                    Sign in
+            <div className="mt-6 text-center">
+                <Link href="/signin" className="text-sm text-[#0D1D1E] hover:text-black font-medium transition-colors inline-flex items-center gap-1">
+                    <Icon name="ArrowLeft" className="w-4 h-4" />
+                    Back to sign in
                 </Link>
             </div>
-        </>
+        </SplitAuthLayout>
     );
 }

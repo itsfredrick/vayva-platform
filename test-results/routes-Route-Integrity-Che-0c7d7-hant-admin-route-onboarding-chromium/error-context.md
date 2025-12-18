@@ -1,0 +1,50 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e6]: V
+        - generic [ref=e7]: Setup Guide
+      - generic [ref=e8]:
+        - generic [ref=e10]: Step 0 of 11
+        - button "Save & Exit" [ref=e12] [cursor=pointer]
+    - main [ref=e13]:
+      - complementary [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - generic [ref=e17]: "1"
+            - generic [ref=e18]: Welcome
+          - generic [ref=e19]:
+            - generic [ref=e20]: "2"
+            - generic [ref=e21]: Identity
+          - generic [ref=e22]:
+            - generic [ref=e23]: "3"
+            - generic [ref=e24]: Store Details
+          - generic [ref=e25]:
+            - generic [ref=e26]: "4"
+            - generic [ref=e27]: Branding
+          - generic [ref=e28]:
+            - generic [ref=e29]: "5"
+            - generic [ref=e30]: Pickup Location
+          - generic [ref=e31]:
+            - generic [ref=e32]: "6"
+            - generic [ref=e33]: Template
+          - generic [ref=e34]:
+            - generic [ref=e35]: "7"
+            - generic [ref=e36]: Products
+          - generic [ref=e37]:
+            - generic [ref=e38]: "8"
+            - generic [ref=e39]: Payments
+          - generic [ref=e40]:
+            - generic [ref=e41]: "9"
+            - generic [ref=e42]: WhatsApp
+          - generic [ref=e43]:
+            - generic [ref=e44]: "10"
+            - generic [ref=e45]: KYC
+          - generic [ref=e46]:
+            - generic [ref=e47]: "11"
+            - generic [ref=e48]: Review
+  - alert [ref=e51]
+```

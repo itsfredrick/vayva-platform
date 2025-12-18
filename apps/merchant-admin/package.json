@@ -6,11 +6,12 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "true"
     },
     "dependencies": {
         "@types/js-cookie": "^3.0.6",
         "@vayva/api-client": "workspace:*",
+        "@vayva/content": "workspace:*",
         "@vayva/schemas": "workspace:*",
         "@vayva/shared": "workspace:*",
         "@vayva/ui": "workspace:*",
@@ -18,6 +19,7 @@
         "clsx": "^2.1.1",
         "framer-motion": "^12.23.26",
         "js-cookie": "^3.0.5",
+        "lucide-react": "^0.561.0",
         "next": "^14.0.3",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",

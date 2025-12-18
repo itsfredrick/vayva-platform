@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
+import { Button } from '@vayva/ui';
+import { Icon } from '@vayva/ui';
 
 type ActionType = 'delivery' | 'discount' | 'refund' | 'general';
 type RiskLevel = 'low' | 'med' | 'high';

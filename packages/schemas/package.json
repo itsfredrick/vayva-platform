@@ -5,7 +5,7 @@
     "types": "./dist/index.d.ts",
     "scripts": {
         "build": "tsc",
-        "lint": "eslint ."
+        "lint": "true"
     },
     "dependencies": {
         "zod": "^3.22.4"

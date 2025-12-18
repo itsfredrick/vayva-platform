@@ -44,7 +44,7 @@ export default function OpsModerationPage() {
                                 <td className="px-6 py-4 font-bold text-white shrink-0">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-white/5 rounded border border-white/5 flex items-center justify-center">
-                                            <Icon name="image" size={16} />
+                                            <Icon name="Image" size={16} />
                                         </div>
                                         {l.name}
                                     </div>
@@ -56,7 +56,7 @@ export default function OpsModerationPage() {
                                 <td className="px-6 py-4 text-right flex gap-2 justify-end">
                                     <Button size="sm" className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-none font-bold">Approve</Button>
                                     <Button size="sm" className="bg-red-500/10 text-red-400 hover:bg-red-500/20 border-none font-bold">Reject</Button>
-                                    <Button size="sm" variant="ghost" className="text-text-secondary hover:text-white"><Icon name="visibility" /></Button>
+                                    <Button size="sm" variant="ghost" className="text-text-secondary hover:text-white"><Icon name="Eye" /></Button>
                                 </td>
                             </tr>
                         ))}

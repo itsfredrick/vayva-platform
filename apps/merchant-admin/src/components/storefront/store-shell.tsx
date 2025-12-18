@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Icon } from '@/components/ui/icon';
-import { Button } from '@/components/ui/button';
+import { Icon } from '@vayva/ui';
+import { Button } from '@vayva/ui';
 
 interface StoreShellProps {
     children: React.ReactNode;
@@ -31,7 +31,7 @@ export function StoreShell({ children, storeName = 'Vayva Store', slug = 'demo-s
 
                     {/* Center: Search (Desktop) */}
                     <div className="hidden md:flex flex-1 max-w-md relative">
-                        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                        <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
                         <input
                             className="w-full h-10 bg-white/5 border border-white/10 rounded-full pl-10 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors placeholder:text-white/30"
                             placeholder="Search products..."
@@ -40,15 +40,15 @@ export function StoreShell({ children, storeName = 'Vayva Store', slug = 'demo-s
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-1 md:gap-2">
-                        <Button variant="ghost" size="icon" className="md:hidden text-white"><Icon name="search" /></Button>
+                        <Button variant="ghost" size="icon" className="md:hidden text-white"><Icon name="Search" /></Button>
                         <Link href={`/store/${slug}/track`}>
                             <Button variant="ghost" size="sm" className="hidden md:flex text-white/70 hover:text-white gap-2">
-                                <Icon name="local_shipping" size={18} /> <span className="text-xs">Track Order</span>
+                                <Icon name="Truck" size={18} /> <span className="text-xs">Track Order</span>
                             </Button>
                         </Link>
                         <Link href={`/store/${slug}/cart`}>
                             <Button variant="ghost" size="icon" className="text-white relative">
-                                <Icon name="shopping_bag" />
+                                <Icon name="ShoppingBag" />
                                 <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full" />
                             </Button>
                         </Link>
@@ -99,8 +99,8 @@ export function StoreShell({ children, storeName = 'Vayva Store', slug = 'demo-s
                             <br />Lagos, Nigeria.
                         </p>
                         <div className="flex gap-4">
-                            <Icon name="public" className="text-white/30 hover:text-white cursor-pointer" />
-                            <Icon name="photo_camera" className="text-white/30 hover:text-white cursor-pointer" />
+                            <Icon name="Globe" className="text-white/30 hover:text-white cursor-pointer" />
+                            <Icon name="Camera" className="text-white/30 hover:text-white cursor-pointer" />
                         </div>
                     </div>
                 </div>

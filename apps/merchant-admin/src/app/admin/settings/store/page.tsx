@@ -27,7 +27,7 @@ export default function StoreSettingsPage() {
                         <div className="col-span-1">
                             <label className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-2 block">Store Logo</label>
                             <div className="aspect-square rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 transition-colors group relative overflow-hidden">
-                                <Icon name="add_photo_alternate" size={32} className="text-white/20 group-hover:text-white/50 transition-colors" />
+                                <Icon name="ImagePlus" size={32} className="text-white/20 group-hover:text-white/50 transition-colors" />
                                 <span className="text-xs text-text-secondary mt-2">Upload Logo</span>
                                 <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleChange} />
                             </div>
@@ -57,7 +57,7 @@ export default function StoreSettingsPage() {
                                         <span>my-awesome-store.vayva.shop</span>
                                         <Link href="/admin/store/domains" className="text-primary hover:underline text-xs">Manage Domains</Link>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="text-text-secondary"><Icon name="content_copy" size={18} /></Button>
+                                    <Button variant="ghost" size="icon" className="text-text-secondary"><Icon name="Copy" size={18} /></Button>
                                 </div>
                             </div>
                         </div>

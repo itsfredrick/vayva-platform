@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppShell } from '@vayva/ui';
+import { AdminShell } from '@/components/admin-shell';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
@@ -29,7 +29,7 @@ export default function ConversationDetailPage({ params }: { params: { id: strin
     const [composerText, setComposerText] = useState('');
 
     return (
-        <AppShell title="Inbox" breadcrumb={`WhatsApp / Inbox / ${params.id}`}>
+        <AdminShell title="Inbox" breadcrumb={`WhatsApp / Inbox / ${params.id}`}>
             <div className="h-[calc(100vh-12rem)] flex rounded-xl overflow-hidden border border-white/5 bg-[#0b141a]">
 
                 {/* 1. Left: List (Hidden on mobile, visible on lg) */}
@@ -45,7 +45,7 @@ export default function ConversationDetailPage({ params }: { params: { id: strin
                     <div className="relative z-10 p-4 border-b border-white/5 bg-[#202c33]/50 backdrop-blur-sm flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <Button variant="ghost" size="icon" className="lg:hidden text-text-secondary" onClick={() => router.push('/admin/whatsapp/inbox')}>
-                                <Icon name="arrow_back" />
+                                <Icon name="ArrowLeft" />
                             </Button>
                             <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center font-bold text-purple-300">C</div>
                             <div>
@@ -54,8 +54,8 @@ export default function ConversationDetailPage({ params }: { params: { id: strin
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0"><Icon name="search" size={18} /></Button>
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0"><Icon name="more_vert" size={18} /></Button>
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0"><Icon name="Search" size={18} /></Button>
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0"><Icon name="MoreVertical" size={18} /></Button>
                         </div>
                     </div>
 
@@ -66,7 +66,7 @@ export default function ConversationDetailPage({ params }: { params: { id: strin
 
                     {/* Composer */}
                     <div className="relative z-10 p-3 bg-[#202c33] flex items-end gap-2">
-                        <Button variant="ghost" size="icon" className="text-text-secondary"><Icon name="add" /></Button>
+                        <Button variant="ghost" size="icon" className="text-text-secondary"><Icon name="Plus" /></Button>
                         <div className="flex-1 bg-[#2a3942] rounded-lg min-h-[40px] flex items-center px-4">
                             <input
                                 className="w-full bg-transparent border-none text-white focus:outline-none py-2 text-sm placeholder:text-text-secondary"
@@ -75,8 +75,8 @@ export default function ConversationDetailPage({ params }: { params: { id: strin
                                 onChange={(e) => setComposerText(e.target.value)}
                             />
                         </div>
-                        <Button variant="ghost" size="icon" className="text-text-secondary"><Icon name="mic" /></Button>
-                        {composerText && <Button size="icon" className="bg-[#00a884] hover:bg-[#008f6f] text-white border-none rounded-full"><Icon name="send" size={18} /></Button>}
+                        <Button variant="ghost" size="icon" className="text-text-secondary"><Icon name="Mic" /></Button>
+                        {composerText && <Button size="icon" className="bg-[#00a884] hover:bg-[#008f6f] text-white border-none rounded-full"><Icon name="Send" size={18} /></Button>}
                     </div>
                 </div>
 
@@ -86,7 +86,7 @@ export default function ConversationDetailPage({ params }: { params: { id: strin
                     {/* AI Suggestions Panel */}
                     <div className="p-4 border-b border-white/5">
                         <div className="flex items-center gap-2 mb-4">
-                            <Icon name="smart_toy" className="text-emerald-400" size={18} />
+                            <Icon name="Bot" className="text-emerald-400" size={18} />
                             <h3 className="font-bold text-white text-sm">AI Suggestions</h3>
                         </div>
 
@@ -127,14 +127,14 @@ export default function ConversationDetailPage({ params }: { params: { id: strin
                             </h3>
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded bg-white/5 text-text-secondary"><Icon name="person" size={16} /></div>
+                                    <div className="p-2 rounded bg-white/5 text-text-secondary"><Icon name="User" size={16} /></div>
                                     <div className="text-sm">
                                         <div className="text-white">Chidinma Okeke</div>
                                         <div className="text-xs text-text-secondary">Loyal Customer (5 orders)</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded bg-white/5 text-text-secondary"><Icon name="location_on" size={16} /></div>
+                                    <div className="p-2 rounded bg-white/5 text-text-secondary"><Icon name="MapPin" size={16} /></div>
                                     <div className="text-sm">
                                         <div className="text-white">Lekki Phase 1, Lagos</div>
                                         <div className="text-xs text-text-secondary">Delivery Address</div>
@@ -166,6 +166,6 @@ export default function ConversationDetailPage({ params }: { params: { id: strin
 
                 </div>
             </div>
-        </AppShell>
+        </AdminShell>
     );
 }

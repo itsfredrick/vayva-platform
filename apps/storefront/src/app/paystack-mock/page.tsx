@@ -1,68 +1,103 @@
 'use client';
 
+import React, { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import axios from 'axios';
 
-export default function PaystackMockPage() {
+function PaystackMockContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const reference = searchParams.get('reference');
     const amount = searchParams.get('amount');
-    const [processing, setProcessing] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const handleSuccess = async () => {
-        setProcessing(true);
+    const handleSimulate = async (status: 'success' | 'failed') => {
+        setLoading(true);
+        // Simulate webhook call to backend (Gateway -> Payments Service)
         try {
-            // Call Webhook manually to simulate server-side callback (optional local dev trick)
-            // Or rely on the verify endpoint the storefront would call.
-            // For V1, let's just redirect to success.
-            // In real Paystack, it redirects to callback_url with reference.
-
-            // Assume verification happens on the success page or via webhook.
-            // We'll redirect to the success page of the storefront.
-            // Storefront URL assumed localhost:3001
-
-            // Trigger webhook stub (Gateway -> Payments Service)
-            await axios.post('http://localhost:4000/v1/payments/webhook', {
-                event: 'charge.success',
-                data: { reference, amount: Number(amount), status: 'success' }
-            });
-
-            setTimeout(() => {
-                router.push(`/order/success?reference=${reference}`);
-            }, 1000);
-
-        } catch (err) {
-            console.error(err);
-            alert('Simulation failed');
+            if (status === 'success') {
+                await fetch('http://localhost:4000/webhooks/paystack', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event: 'charge.success',
+                        data: {
+                            reference,
+                            status: 'success',
+                            amount: Number(amount),
+                            id: Math.floor(Math.random() * 1000000000)
+                        }
+                    })
+                });
+            } else {
+                // Simulate failure (optional, based on requirements)
+                // Just redirecting back is enough to trigger verify fail
+            }
+        } catch (e) {
+            console.error('Webhook simulation failed', e);
         }
+
+        // Redirect back to confirmation
+        // Note: In real life, Paystack redirects back and we call Verify API.
+        // Our webhook simulation already updated the DB, so Verify will return SUCCESS.
+        router.push(`/order/confirmation?reference=${reference}&store=demo`); // slug demo for now
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans text-black">
-            <div className="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center">
-                <div className="mb-6">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Paystack.png" alt="Paystack" className="h-8 mx-auto" />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
+            <div className="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden">
+                <div className="bg-[#011b33] p-8 text-white flex justify-between items-center">
+                    <div>
+                        <h1 className="text-xl font-bold italic tracking-tighter">paystack</h1>
+                        <p className="text-[10px] opacity-70 uppercase tracking-widest mt-1">Checkout Simulation</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs opacity-70">Pay</p>
+                        <p className="text-xl font-bold">₦{(Number(amount) / 100).toLocaleString()}</p>
+                    </div>
                 </div>
-                <h2 className="text-xl font-bold mb-2">Test Payment</h2>
-                <div className="text-gray-500 mb-6">{reference}</div>
-                <div className="text-3xl font-bold mb-8">NGN {Number(amount).toLocaleString()}</div>
 
-                <button
-                    onClick={handleSuccess}
-                    disabled={processing}
-                    className="w-full bg-green-500 text-white font-bold py-4 rounded-lg hover:bg-green-600 transition-colors mb-4 disabled:opacity-50"
-                >
-                    {processing ? 'Processing...' : 'Simulate Success'}
-                </button>
-                <button
-                    onClick={() => router.push('/checkout')}
-                    className="w-full text-red-500 font-medium hover:text-red-700"
-                >
-                    Cancel Payment
-                </button>
+                <div className="p-10 space-y-8">
+                    <div className="text-center">
+                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-2xl font-bold">P</span>
+                        </div>
+                        <h2 className="text-lg font-bold">Transaction Reference</h2>
+                        <code className="bg-gray-100 px-3 py-1 rounded text-sm text-gray-600 mt-2 inline-block font-mono">
+                            {reference || 'N/A'}
+                        </code>
+                    </div>
+
+                    <div className="space-y-3">
+                        <button
+                            onClick={() => handleSimulate('success')}
+                            disabled={loading}
+                            className="w-full bg-[#3bb75e] text-white py-4 rounded-lg font-bold hover:bg-[#34a353] transition-colors disabled:opacity-50"
+                        >
+                            {loading ? 'Processing...' : 'Simulate Successful Payment'}
+                        </button>
+                        <button
+                            onClick={() => handleSimulate('failed')}
+                            disabled={loading}
+                            className="w-full bg-white text-red-500 border border-red-100 py-4 rounded-lg font-bold hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                            Simulate Payment Failure
+                        </button>
+                    </div>
+
+                    <p className="text-[10px] text-gray-400 text-center uppercase tracking-widest leading-loose">
+                        Securely processed by Paystack Mock<br />
+                        This is a simulated environment
+                    </p>
+                </div>
             </div>
         </div>
+    );
+}
+
+export default function PaystackMockPage() {
+    return (
+        <Suspense fallback={<div>Loading simulation...</div>}>
+            <PaystackMockContent />
+        </Suspense>
     );
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { Icon } from '@/components/ui/icon';
-import { Button } from '@/components/ui/button';
+import { Icon } from '@vayva/ui';
+import { Button } from '@vayva/ui';
 
 export interface MarketProduct {
     id: string;
@@ -28,7 +28,7 @@ export function MarketProductCard({ product }: MarketProductCardProps) {
                         {product.image ? (
                             <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${product.image})` }} />
                         ) : (
-                            <Icon name="image" size={48} />
+                            <Icon name="Image" size={48} />
                         )}
                     </div>
 
@@ -36,7 +36,7 @@ export function MarketProductCard({ product }: MarketProductCardProps) {
                     <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full border border-white/10">
                         <div className="w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center text-[8px] font-bold text-white">{product.sellerName.charAt(0)}</div>
                         <span className="text-[10px] text-white font-medium">{product.sellerName}</span>
-                        {product.sellerVerified && <Icon name="verified" size={12} className="text-blue-400" />}
+                        {product.sellerVerified && <Icon name="ShieldCheck" size={12} className="text-blue-400" />}
                     </div>
 
                     {!product.inStock && (
@@ -54,7 +54,7 @@ export function MarketProductCard({ product }: MarketProductCardProps) {
                                 alert('Added to cart!');
                             }}
                         >
-                            <Icon name="add_shopping_cart" size={16} className="mr-1" /> Add
+                            <Icon name="ShoppingCart" size={16} className="mr-1" /> Add
                         </Button>
                     </div>
                 </div>
@@ -64,7 +64,7 @@ export function MarketProductCard({ product }: MarketProductCardProps) {
                         <span className="font-bold text-white">{product.price}</span>
                         {product.rating && (
                             <div className="flex items-center gap-1 text-[10px] text-text-secondary">
-                                <Icon name="star" size={12} className="text-yellow-400" />
+                                <Icon name="Star" size={12} className="text-yellow-400" />
                                 <span>{product.rating}</span>
                             </div>
                         )}

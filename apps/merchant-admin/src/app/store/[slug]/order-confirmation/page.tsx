@@ -11,7 +11,7 @@ export default function OrderConfirmationPage({ params }: { params: { slug: stri
         <StoreShell slug={params.slug}>
             <div className="max-w-3xl mx-auto px-4 py-16 text-center">
                 <div className="w-20 h-20 bg-state-success rounded-full flex items-center justify-center text-black mx-auto mb-6">
-                    <Icon name="check" size={40} />
+                    <Icon name="Check" size={40} />
                 </div>
 
                 <h1 className="text-3xl font-bold text-white mb-2">Order Confirmed!</h1>
@@ -32,7 +32,7 @@ export default function OrderConfirmationPage({ params }: { params: { slug: stri
                         </div>
                         <div>
                             <div className="text-text-secondary mb-1">Payment Method</div>
-                            <div className="text-white flex items-center gap-2"><Icon name="credit_card" size={14} /> Ending in 4242</div>
+                            <div className="text-white flex items-center gap-2"><Icon name="CreditCard" size={14} /> Ending in 4242</div>
                         </div>
                         <div>
                             <div className="text-text-secondary mb-1">Expected Delivery</div>
@@ -52,7 +52,7 @@ export default function OrderConfirmationPage({ params }: { params: { slug: stri
 
                 <div className="mt-12 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20 max-w-lg mx-auto">
                     <div className="flex items-center gap-3 justify-center mb-2">
-                        <Icon name="chat" className="text-emerald-400" />
+                        <Icon name="MessageCircle" className="text-emerald-400" />
                         <span className="font-bold text-emerald-400">Need updates?</span>
                     </div>
                     <p className="text-emerald-200/70 text-sm mb-3">Get real-time delivery updates on WhatsApp.</p>

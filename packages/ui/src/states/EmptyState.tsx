@@ -14,7 +14,7 @@ interface EmptyStateProps {
     icon?: IconName;
 }
 
-export function EmptyState({ title, description, actionLabel, onAction, icon = 'info' }: EmptyStateProps) {
+export function EmptyState({ title, description, actionLabel, onAction, icon = 'Info' }: EmptyStateProps) {
     return (
         <motion.div
             initial="initial"

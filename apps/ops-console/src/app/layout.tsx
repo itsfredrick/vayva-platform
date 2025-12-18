@@ -1,13 +1,14 @@
-import '@vayva/theme/css';
 import './globals.css';
+
 import type { Metadata } from 'next';
 import { Manrope } from 'next/font/google';
+import { OpsShell } from '@/components/OpsShell';
 
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' });
 
 export const metadata: Metadata = {
-  title: 'Vayva ops-console',
-  description: 'Vayva Platform',
+  title: 'Vayva Ops Console',
+  description: 'Internal Operations Platform',
 };
 
 export default function RootLayout({
@@ -17,7 +18,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} font-sans antialiased min-h-screen`}>{children}</body>
+      <body className={`${manrope.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
+        <OpsShell>
+          {children}
+        </OpsShell>
+      </body>
     </html>
   );
 }

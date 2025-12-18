@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AppShell } from '@vayva/ui';
+import { AdminShell } from '@/components/admin-shell';
 import { GlassPanel } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
 import { ConversationList } from '@/components/whatsapp/conversation-list';
@@ -18,7 +18,7 @@ const MOCK_CONVERSATIONS = [
 
 export default function WhatsAppInboxPage() {
     return (
-        <AppShell title="Inbox" breadcrumb="WhatsApp / Inbox">
+        <AdminShell title="Inbox" breadcrumb="WhatsApp / Inbox">
             <div className="h-[calc(100vh-12rem)] flex rounded-xl overflow-hidden border border-white/5 bg-[#0b141a]">
                 {/* Left: List */}
                 <div className="w-full md:w-[350px] shrink-0">
@@ -30,13 +30,13 @@ export default function WhatsAppInboxPage() {
                     <div className="absolute inset-0 bg-[#0b141a]/95" />
                     <div className="relative z-10 text-center p-8">
                         <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6 text-text-secondary">
-                            <Icon name="chat" size={40} />
+                            <Icon name="MessageSquare" size={40} />
                         </div>
                         <h2 className="text-xl font-bold text-white mb-2">WhatsApp Inbox</h2>
                         <p className="text-text-secondary max-w-sm">Select a conversation from the list to view details, reply, or approve AI actions.</p>
                     </div>
                 </div>
             </div>
-        </AppShell>
+        </AdminShell>
     );
 }

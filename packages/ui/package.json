@@ -8,6 +8,8 @@
     },
     "dependencies": {
         "@vayva/theme": "workspace:*",
+        "@vayva/content": "workspace:*",
+        "class-variance-authority": "^0.7.1",
         "clsx": "^2.0.0",
         "framer-motion": "^12.23.26",
         "lucide-react": "^0.294.0",

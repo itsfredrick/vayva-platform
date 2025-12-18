@@ -5,14 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@vayva/ui';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
-import { Icon } from '@vayva/ui';
+import { Icon, IconName } from '@vayva/ui';
 
-const BLOCKS = [
-    { id: 'heading', name: 'Heading', icon: 'title' },
-    { id: 'text', name: 'Text Block', icon: 'description' },
-    { id: 'image', name: 'Image', icon: 'image' },
-    { id: 'accordion', name: 'FAQ / Accordion', icon: 'expand_more' },
-    { id: 'contact', name: 'Contact Form', icon: 'mail' },
+const BLOCKS: { id: string; name: string; icon: IconName }[] = [
+    { id: 'heading', name: 'Heading', icon: 'Heading' },
+    { id: 'text', name: 'Text Block', icon: 'FileText' },
+    { id: 'image', name: 'Image', icon: 'Image' },
+    { id: 'accordion', name: 'FAQ / Accordion', icon: 'ChevronDown' },
+    { id: 'contact', name: 'Contact Form', icon: 'Mail' },
 ];
 
 export default function PageEditor() {
@@ -33,14 +33,14 @@ export default function PageEditor() {
             <div className="h-16 border-b border-white/5 bg-[#142210]/50 backdrop-blur-xl flex items-center justify-between px-4 z-50">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                        <Icon name="arrow_back" />
+                        <Icon name="ArrowLeft" />
                     </Button>
                     <span className="font-bold text-lg">{isNew ? 'Create Page' : `Edit Page: ${title}`}</span>
                     <span className="px-2 py-0.5 rounded bg-white/10 text-xs font-bold uppercase tracking-wider text-text-secondary">Draft</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm">
-                        <Icon name="visibility" size={18} className="mr-2" />
+                        <Icon name="Eye" size={18} className="mr-2" />
                         Preview
                     </Button>
                     <Button size="sm">Save Page</Button>
@@ -65,11 +65,11 @@ export default function PageEditor() {
                             <div key={block.id} className="bg-[#142210] border border-white/10 rounded-xl overflow-hidden group hover:border-white/30 transition-colors">
                                 <div className="bg-white/5 px-4 py-2 flex items-center justify-between border-b border-white/5">
                                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-text-secondary">
-                                        <Icon name="drag_indicator" size={16} className="cursor-grab" />
+                                        <Icon name="GripVertical" size={16} className="cursor-grab" />
                                         {block.type}
                                     </div>
                                     <button className="text-text-secondary hover:text-state-danger transition-colors">
-                                        <Icon name="delete" size={16} />
+                                        <Icon name="Trash" size={16} />
                                     </button>
                                 </div>
                                 <div className="p-4">

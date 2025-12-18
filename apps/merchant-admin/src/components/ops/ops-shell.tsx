@@ -3,8 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Icon } from '@/components/ui/icon';
-import { Button } from '@/components/ui/button';
+import { Icon } from '@vayva/ui';
+import { Button } from '@vayva/ui';
 
 interface OpsShellProps {
     children: React.ReactNode;
@@ -14,12 +14,12 @@ interface OpsShellProps {
 }
 
 const NAV_ITEMS = [
-    { name: 'Merchants', path: '/ops/merchants', icon: 'store' },
-    { name: 'Moderation', path: '/ops/moderation', icon: 'gavel' },
-    { name: 'Disputes', path: '/ops/disputes', icon: 'warning' },
-    { name: 'Payouts', path: '/ops/payouts', icon: 'payments' },
-    { name: 'Compliance', path: '/ops/compliance', icon: 'security' },
-    { name: 'Support', path: '/ops/support', icon: 'support_agent' },
+    { name: 'Merchants', path: '/ops/merchants', icon: 'Store' },
+    { name: 'Moderation', path: '/ops/moderation', icon: 'Gavel' },
+    { name: 'Disputes', path: '/ops/disputes', icon: 'AlertTriangle' },
+    { name: 'Payouts', path: '/ops/payouts', icon: 'CreditCard' },
+    { name: 'Compliance', path: '/ops/compliance', icon: 'Shield' },
+    { name: 'Support', path: '/ops/support', icon: 'Headphones' },
 ];
 
 export function OpsShell({ children, title, description, actions }: OpsShellProps) {
@@ -44,7 +44,7 @@ export function OpsShell({ children, title, description, actions }: OpsShellProp
                                 <div className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
                                     ${isActive ? 'bg-white/10 text-white' : 'text-text-secondary hover:text-white hover:bg-white/5'}
                                 `}>
-                                    <Icon name={item.icon} size={20} className={isActive ? 'text-white' : 'text-text-secondary'} />
+                                    <Icon name={item.icon as any} size={20} className={isActive ? 'text-white' : 'text-text-secondary'} />
                                     {item.name}
                                 </div>
                             </Link>
@@ -59,7 +59,7 @@ export function OpsShell({ children, title, description, actions }: OpsShellProp
                             <div className="text-sm font-bold truncate">John Doe</div>
                             <div className="text-xs text-text-secondary truncate">Senior Risk Analyst</div>
                         </div>
-                        <Icon name="logout" size={18} className="text-text-secondary hover:text-white cursor-pointer" />
+                        <Icon name="LogOut" size={18} className="text-text-secondary hover:text-white cursor-pointer" />
                     </div>
                 </div>
             </aside>
@@ -71,7 +71,7 @@ export function OpsShell({ children, title, description, actions }: OpsShellProp
                 <header className="h-[72px] border-b border-white/5 bg-[#142210]/90 backdrop-blur sticky top-0 z-40 px-8 flex items-center justify-between gap-8">
                     {/* Search */}
                     <div className="flex-1 max-w-2xl relative">
-                        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
+                        <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
                         <input
                             className="w-full bg-white/5 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-white/20 placeholder:text-text-secondary transition-all"
                             placeholder="Search merchant, order ID, transaction reference..."
@@ -84,7 +84,7 @@ export function OpsShell({ children, title, description, actions }: OpsShellProp
 
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" size="icon" className="text-text-secondary hover:text-white relative">
-                            <Icon name="notifications" />
+                            <Icon name="Bell" />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
                         </Button>
                     </div>

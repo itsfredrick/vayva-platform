@@ -11,8 +11,50 @@ export interface ApiResponse<T> {
 
 export enum UserRole {
     OWNER = 'OWNER',
-    STAFF = 'STAFF'
+    ADMIN = 'ADMIN',
+    SUPPORT = 'SUPPORT',
+    FINANCE = 'FINANCE',
+    OPS = 'OPS'
 }
+
+export enum OnboardingStatus {
+    NOT_STARTED = 'NOT_STARTED',
+    IN_PROGRESS = 'IN_PROGRESS',
+    COMPLETE = 'COMPLETE'
+}
+
+export enum SubscriptionPlan {
+    STARTER = 'STARTER',
+    GROWTH = 'GROWTH',
+    PRO = 'PRO'
+}
+
+export interface User {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    emailVerified: boolean;
+    phoneVerified: boolean;
+    role: UserRole;
+    createdAt: string;
+}
+
+export interface MerchantContext {
+    merchantId: string;
+    storeId: string;
+    onboardingStatus: OnboardingStatus;
+    onboardingLastStep: string;
+    onboardingUpdatedAt: string;
+    plan: SubscriptionPlan;
+}
+
+export interface AuthMeResponse {
+    user: User;
+    merchant?: MerchantContext;
+}
+
 
 export enum OrderStatus {
     DRAFT = 'DRAFT',

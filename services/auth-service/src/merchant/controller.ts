@@ -1,9 +1,17 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
-import { hashPassword, verifyPassword } from '../../utils/hash';
-import jwt from 'jsonwebtoken'; // Using standard lib or fastify-jwt properly
+import { prisma } from '@vayva/db';
+import { z } from 'zod'; // Import zod
+import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+const hashPassword = async (password: string) => {
+    return bcrypt.hash(password, 10);
+};
+
+const verifyPassword = async (password: string, hash: string) => {
+    return bcrypt.compare(password, hash);
+};
+
+
 
 // ... login/register handlers ...
 
@@ -12,16 +20,82 @@ const prisma = new PrismaClient();
 // But I need to view the file first to append properly or overwrite safely.
 // I'll replace the file content with the updated full content.
 
-export const loginHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { email, password } = req.body as any;
+const registerSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    firstName: z.string(),
+    lastName: z.string(),
+    phone: z.string().optional()
+});
 
-    const user = await prisma.merchantUser.findUnique({
-        where: { email },
-        include: { memberships: true }, // Include memberships
+const loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string()
+});
+
+const verifyOtpSchema = z.object({
+    email: z.string().email(),
+    code: z.string().length(6)
+});
+
+const forgotPasswordSchema = z.object({
+    email: z.string().email()
+});
+
+const resetPasswordSchema = z.object({
+    email: z.string().email(),
+    code: z.string().length(6),
+    newPassword: z.string().min(8)
+});
+
+export const registerHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { email, password, firstName, lastName, phone } = registerSchema.parse(req.body);
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) return reply.status(409).send({ error: 'Email already exists' });
+
+    const hashedPassword = await hashPassword(password);
+
+    const user = await prisma.user.create({
+        data: {
+            email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            phone,
+            isEmailVerified: false,
+        }
     });
 
-    if (!user || !(await verifyPassword(password, user.passwordHash))) {
-        return reply.status(401).send({ error: 'Invalid credentials' });
+    // Create a 6-digit OTP for email verification
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    await prisma.otpCode.create({
+        data: {
+            identifier: email,
+            code: otp,
+            type: 'VERIFY',
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 mins
+        }
+    });
+
+    // Mock sending email
+    console.log(`[AUTH] OTP for ${email}: ${otp}`);
+
+    return reply.status(201).send({
+        message: 'Registration successful. Please verify your email.',
+        email
+    });
+};
+
+export const loginHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { email, password } = loginSchema.parse(req.body);
+    const user = await prisma.user.findUnique({
+        where: { email },
+        include: { memberships: { include: { store: true } } },
+    });
+
+    if (!user || !(await verifyPassword(password, user.password))) {
+        return reply.status(401).send({ error: 'UNAUTHENTICATED' });
     }
 
     // Generate JWT
@@ -29,78 +103,180 @@ export const loginHandler = async (req: FastifyRequest, reply: FastifyReply) => 
         sub: user.id,
         email: user.email,
         aud: 'merchant',
-        memberships: user.memberships.map((m: any) => m.storeId), // Use 'any' or proper type
     });
 
-    // Store session in DB
+    // Create session
     await prisma.merchantSession.create({
         data: {
             userId: user.id,
             token,
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
         },
     });
+
+    // Determine onboarding status
+    const store = user.memberships[0]?.store;
 
     return reply.send({
         token,
         user: {
             id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
             email: user.email,
-            name: user.name,
-            memberships: user.memberships.map((m: any) => m.storeId)
-        }
+            role: user.memberships[0]?.role || 'OWNER',
+            emailVerified: user.isEmailVerified,
+            phoneVerified: user.isPhoneVerified,
+            createdAt: user.createdAt.toISOString()
+        },
+        merchant: store ? {
+            merchantId: user.id,
+            storeId: store.id,
+            onboardingStatus: store.onboardingStatus,
+            onboardingLastStep: store.onboardingLastStep,
+            onboardingUpdatedAt: store.onboardingUpdatedAt.toISOString(),
+            plan: store.plan
+        } : null
     });
 };
 
-export const registerHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { email, password, name } = req.body as any;
+export const verifyOtpHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { email, code } = verifyOtpSchema.parse(req.body);
 
-    const existing = await prisma.merchantUser.findUnique({ where: { email } });
-    if (existing) return reply.status(400).send({ error: 'Email already exists' });
-
-    const hashedPassword = await hashPassword(password);
-
-    const user = await prisma.merchantUser.create({
-        data: {
-            email,
-            passwordHash: hashedPassword,
-            name
+    const otp = await prisma.otpCode.findFirst({
+        where: {
+            identifier: email,
+            code,
+            isUsed: false,
+            expiresAt: { gt: new Date() }
         }
     });
 
-    return reply.send({ status: 'ok', userId: user.id });
+    if (!otp) {
+        return reply.status(400).send({ error: 'Invalid or expired OTP' });
+    }
+
+    await prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { isUsed: true }
+    });
+
+    await prisma.user.update({
+        where: { email },
+        data: { isEmailVerified: true }
+    });
+
+    return reply.send({ message: 'Email verified successfully' });
 };
 
-export const createStoreHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    // Expect Authorization header with user ID (verified by middleware in Gateway)
-    // But here in microservice, we might need to trust gateway or verify token.
-    // Ideally Gateway sends x-user-id header. For V1 simple, we might parse token or rely on Gateway.
-    // Let's assume req.user is populated by @fastify/jwt if registered, PROBABLY.
-    // Services use fastify-jwt, so if Gateway passes Authorization header, service can verify it.
+export const resendOtpHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { email } = forgotPasswordSchema.parse(req.body);
 
-    // Check if req.user exists (from verifyJwt middleware if applied)
-    // I need to ensure Routes apply onRequest: [server.authenticate]
-
-    const user = req.user as any;
-    if (!user) return reply.status(401).send({ error: 'Unauthorized' });
-
-    const { name, slug } = req.body as any;
-
-    // Create Store
-    const store = await prisma.store.create({
+    // Create new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    await prisma.otpCode.create({
         data: {
-            name,
-            subdomain: slug, // Map slug to subdomain or custom field logic
-            status: 'DRAFT',
-            currency: 'NGN', // Default
-            memberships: {
-                create: {
-                    userId: user.sub, // JWT sub
-                    role: 'OWNER'
-                }
+            identifier: email,
+            code: otp,
+            type: 'VERIFY',
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        }
+    });
+
+    console.log(`[AUTH] Resent OTP for ${email}: ${otp}`);
+    return reply.send({ message: 'OTP resent' });
+};
+
+export const logoutHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.replace('Bearer ', '');
+        await prisma.merchantSession.deleteMany({ where: { token } });
+    }
+    return reply.send({ message: 'Logged out successfully' });
+};
+
+export const getMeHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const decoded = req.user as any;
+    const user = await prisma.user.findUnique({
+        where: { id: decoded.sub },
+        include: { memberships: { include: { store: true } } }
+    });
+
+    if (!user) return reply.status(404).send({ error: 'User not found' });
+
+    const store = user.memberships[0]?.store;
+
+    return reply.send({
+        user: {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.memberships[0]?.role || 'OWNER',
+            emailVerified: user.isEmailVerified,
+            phoneVerified: user.isPhoneVerified,
+            createdAt: user.createdAt.toISOString()
+        },
+        merchant: store ? {
+            merchantId: user.id,
+            storeId: store.id,
+            onboardingStatus: store.onboardingStatus,
+            onboardingLastStep: store.onboardingLastStep,
+            onboardingUpdatedAt: store.onboardingUpdatedAt.toISOString(),
+            plan: store.plan
+        } : null
+    });
+};
+
+export const forgotPasswordHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { email } = forgotPasswordSchema.parse(req.body);
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await prisma.otpCode.create({
+            data: {
+                identifier: email,
+                code: otp,
+                type: 'RESET',
+                expiresAt: new Date(Date.now() + 15 * 60 * 1000),
             }
+        });
+        console.log(`[AUTH] Reset OTP for ${email}: ${otp}`);
+    }
+
+    // Always return success to avoid email enumeration
+    return reply.send({ message: 'If an account exists, a reset code has been sent.' });
+};
+
+export const resetPasswordHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { email, code, newPassword } = resetPasswordSchema.parse(req.body);
+
+    const otp = await prisma.otpCode.findFirst({
+        where: {
+            identifier: email,
+            code,
+            type: 'RESET',
+            isUsed: false,
+            expiresAt: { gt: new Date() }
         }
     });
 
-    return reply.send(store);
+    if (!otp) return reply.status(400).send({ error: 'Invalid or expired code' });
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    await prisma.user.update({
+        where: { email },
+        data: { password: hashedPassword }
+    });
+
+    await prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { isUsed: true }
+    });
+
+    return reply.send({ message: 'Password reset successful' });
 };
+

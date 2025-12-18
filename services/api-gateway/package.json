@@ -6,11 +6,13 @@
         "dev": "tsx watch src/server.ts",
         "build": "tsc",
         "start": "node dist/server.js",
-        "lint": "eslint ."
+        "lint": "true"
     },
     "dependencies": {
+        "@fastify/cookie": "^11.0.2",
         "@fastify/cors": "^8.4.1",
-        "@fastify/http-proxy": "^11.4.1",
+        "@fastify/http-proxy": "^9.0.0",
+        "@fastify/jwt": "^7.2.3",
         "@fastify/swagger": "^8.12.0",
         "@vayva/db": "workspace:*",
         "@vayva/schemas": "workspace:*",

@@ -1,109 +1,186 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { AppShell } from '@vayva/ui';
-import { GlassPanel } from '@vayva/ui';
-import { Button } from '@vayva/ui';
-import { Stepper } from '@vayva/ui';
-import { Icon } from '@vayva/ui';
+import { Button, Input, Icon, GlassPanel } from '@vayva/ui';
+import { useOnboarding } from '@/context/OnboardingContext';
+import { useAuth } from '@/context/AuthContext';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 
 export default function WhatsAppPage() {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
-    const [step, setStep] = useState(1); // 1: Info, 2: Connect, 3: Success
+    const { state, updateState, goToStep } = useOnboarding();
+    const { user } = useAuth();
 
-    const handleConnect = async () => {
-        setIsLoading(true);
-        // Simulate QR scan / auth
-        await new Promise(r => setTimeout(r, 2000));
-        setIsLoading(false);
-        setStep(3);
+    const [mode, setMode] = useState<'own' | 'vayva'>('own');
+    const [ownNumber, setOwnNumber] = useState(state?.identity?.phone || '');
+    const [loading, setLoading] = useState(false);
+
+    const isStarter = user?.plan === 'starter';
+
+    const handleSelectMode = (m: 'own' | 'vayva') => {
+        if (m === 'vayva' && isStarter) {
+            alert("Vayva dedicated numbers are available on Growth and Pro plans.");
+            return;
+        }
+        setMode(m);
     };
 
-    const handleContinue = () => {
-        router.push('/onboarding/review');
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        // Simulate connection check
+        await new Promise(r => setTimeout(r, 1000));
+
+        await updateState({
+            whatsapp: {
+                mode,
+                number: mode === 'own' ? ownNumber : 'PENDING_ASSIGNMENT',
+                status: 'pending' // pending manual QR scan usually
+            }
+        });
+
+        setLoading(false);
+        await goToStep('kyc');
     };
 
     return (
-        <AppShell mode="onboarding" breadcrumb="Onboarding / WhatsApp AI">
-            <div className="flex flex-col gap-6 max-w-5xl mx-auto h-full">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">WhatsApp AI Agent</h1>
-                        <p className="text-text-secondary">Automate your sales and support.</p>
-                    </div>
-                    <Stepper currentStep={7} />
-                </div>
-
-                <div className="flex justify-center mt-8">
-                    <GlassPanel className="w-full max-w-2xl p-10 flex flex-col gap-8 text-center items-center relative overflow-hidden">
-                        {/* Background Splat */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10" />
-
-                        {step === 1 && (
-                            <>
-                                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10 shadow-glow">
-                                    <Icon name="smart_toy" className="text-4xl text-primary" />
-                                </div>
-
-                                <div>
-                                    <h2 className="text-2xl font-bold text-white mb-4">Meet your new AI assistant</h2>
-                                    <p className="text-text-secondary max-w-md mx-auto">
-                                        Vayva&apos;s AI agent connects to your WhatsApp Business number to answer customer questions, take orders, and send updates 24/7.
-                                    </p>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4 text-left w-full max-w-md">
-                                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                                        <div className="font-bold text-white mb-1"><Icon name="schedule" className="inline mr-2 text-primary" size={16} /> 24/7 Availability</div>
-                                        <p className="text-xs text-text-secondary">Never miss a late-night order</p>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                                        <div className="font-bold text-white mb-1"><Icon name="verified_user" className="inline mr-2 text-primary" size={16} /> Human Review</div>
-                                        <p className="text-xs text-text-secondary">You approve big decisions</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col gap-3 w-full max-w-xs">
-                                    <Button onClick={() => setStep(2)}>Connect WhatsApp</Button>
-                                    <Button variant="ghost" onClick={handleContinue}>Skip for now</Button>
-                                </div>
-                            </>
-                        )}
-
-                        {step === 2 && (
-                            <>
-                                <h2 className="text-xl font-bold text-white">Scan to Connect</h2>
-                                <div className="w-48 h-48 bg-white rounded-xl flex items-center justify-center">
-                                    {/* Mock QR */}
-                                    <div className="w-40 h-40 bg-black/10 grid grid-cols-4 gap-1 p-2">
-                                        {/* Fake squares */}
-                                        {Array.from({ length: 16 }).map((_, i) => (
-                                            <div key={i} className={`rounded-sm ${Math.random() > 0.5 ? 'bg-black' : 'bg-transparent'}`} />
-                                        ))}
-                                    </div>
-                                </div>
-                                <p className="text-sm text-text-secondary">
-                                    Open WhatsApp on your phone &gt; Linked Devices &gt; Link a Device
-                                </p>
-                                <Button onClick={handleConnect} isLoading={isLoading}>Simulate Scan Success</Button>
-                            </>
-                        )}
-
-                        {step === 3 && (
-                            <>
-                                <div className="w-20 h-20 rounded-full bg-state-success/20 flex items-center justify-center border border-state-success/30 animate-scale-in">
-                                    <Icon name="check" className="text-4xl text-state-success" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-white">Connected Successfully!</h2>
-                                <p className="text-text-secondary">Your AI agent is now active and ready to learn.</p>
-                                <Button onClick={handleContinue} className="w-full max-w-xs">Continue</Button>
-                            </>
-                        )}
-                    </GlassPanel>
-                </div>
+        <div className="max-w-xl mx-auto">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-black mb-2">WhatsApp AI Setup</h1>
+                <p className="text-gray-600">Connect a number to start automating sales and support.</p>
             </div>
-        </AppShell>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Mode Selection */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div
+                        onClick={() => handleSelectMode('own')}
+                        className={`
+                            cursor-pointer p-6 rounded-2xl border-2 transition-all relative
+                            ${mode === 'own' ? 'border-black bg-white shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}
+                        `}
+                    >
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                            <Icon name="Smartphone" className="text-green-600" />
+                        </div>
+                        <h3 className="font-bold text-black mb-1">Use my number</h3>
+                        <p className="text-xs text-gray-500">Connect your existing WhatsApp Business number.</p>
+                        {mode === 'own' && <div className="absolute top-4 right-4"><Icon name="CheckCircle" className="text-black" size={20} /></div>}
+                    </div>
+
+                    <div
+                        onClick={() => handleSelectMode('vayva')}
+                        className={`
+                            cursor-pointer p-6 rounded-2xl border-2 transition-all relative
+                            ${mode === 'vayva' ? 'border-black bg-white shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}
+                            ${isStarter ? 'opacity-75 bg-gray-50' : ''}
+                        `}
+                    >
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                            <Icon name="Phone" className="text-blue-600" />
+                        </div>
+                        <h3 className="font-bold text-black mb-1">Get Vayva Number</h3>
+                        <p className="text-xs text-gray-500">We assign a dedicated business number for you.</p>
+
+                        {isStarter ? (
+                            <span className="absolute top-4 right-4 bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-1 rounded">GROWTH+</span>
+                        ) : (
+                            mode === 'vayva' && <div className="absolute top-4 right-4"><Icon name="CheckCircle" className="text-black" size={20} /></div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Configuration */}
+                <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                    {mode === 'own' ? (
+                        <div className="space-y-4">
+                            <h3 className="font-bold text-black">Enter your WhatsApp Number</h3>
+                            <PhoneInput
+                                label="Phone Number"
+                                value={ownNumber}
+                                onChange={setOwnNumber}
+                                required
+                            />
+                            <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-100 text-sm text-yellow-800">
+                                <p><strong>Note:</strong> You will need to scan a QR code in the dashboard to finish connecting this number.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4 text-center py-4">
+                            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                                <Icon name="Hash" className="text-blue-500" size={32} />
+                            </div>
+                            <h3 className="font-bold text-black">Number Assignment</h3>
+                            <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                                We will assign a local business number to your account immediately after onboarding.
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Consents and Compliance */}
+                <div className="space-y-4 py-4 border-t border-gray-100">
+                    <h4 className="text-sm font-bold text-black uppercase tracking-wider">Consent & Compliance</h4>
+
+                    <div className="space-y-3">
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                            <input
+                                type="checkbox"
+                                required
+                                className="mt-1 w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                            />
+                            <span className="text-sm text-gray-600 group-hover:text-black transition-colors">
+                                I confirm I have customer consent to message them via WhatsApp where required.
+                            </span>
+                        </label>
+
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                            <input
+                                type="checkbox"
+                                required
+                                className="mt-1 w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                            />
+                            <span className="text-sm text-gray-600 group-hover:text-black transition-colors">
+                                I confirm I am authorized to connect this number for business use.
+                            </span>
+                        </label>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-xl space-y-2">
+                        <p className="text-xs text-gray-500 leading-relaxed">
+                            Vayva does not send unsolicited messages. You are responsible for ensuring your use of WhatsApp
+                            complies with our <a href="/legal/acceptable-use" target="_blank" className="text-black font-bold underline">Acceptable Use Policy</a> and
+                            <a href="/legal/prohibited-items" target="_blank" className="text-black font-bold underline"> Prohibited Items Policy</a>.
+                        </p>
+                    </div>
+                </div>
+
+                {isStarter && (
+                    <p className="text-center text-xs text-gray-400">
+                        Your plan includes a 4-day free trial of WhatsApp AI.
+                    </p>
+                )}
+
+                <div className="flex items-center gap-4 pt-4">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => goToStep('payments')}
+                        className="flex-1 text-gray-500 hover:text-black"
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        className="flex-[2] !bg-black !text-white h-12 rounded-xl"
+                        isLoading={loading}
+                    >
+                        Continue
+                        <Icon name="ArrowRight" className="ml-2 w-4 h-4" />
+                    </Button>
+                </div>
+            </form>
+        </div>
     );
 }

@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Drawer } from '@/components/ui/drawer';
-import { Icon } from '@/components/ui/icon';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/components/ui/glass-panel';
+import { Drawer } from '@vayva/ui';
+import { Icon } from '@vayva/ui';
+import { Button } from '@vayva/ui';
+import { cn } from '@vayva/ui';
 
 interface NotificationsDrawerProps {
     isOpen: boolean;
@@ -39,10 +39,10 @@ export const NotificationsDrawer = ({ isOpen, onClose }: NotificationsDrawerProp
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'order': return 'shopping_bag';
-            case 'ai': return 'smart_toy';
-            case 'payment': return 'payments';
-            default: return 'info';
+            case 'order': return 'ShoppingBag';
+            case 'ai': return 'Bot';
+            case 'payment': return 'CreditCard';
+            default: return 'Info';
         }
     };
 
@@ -88,7 +88,7 @@ export const NotificationsDrawer = ({ isOpen, onClose }: NotificationsDrawerProp
                 <div className="flex-1 overflow-y-auto">
                     {filtered.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-48 text-text-secondary">
-                            <Icon name="notifications_off" className="mb-2 opacity-50" size={32} />
+                            <Icon name="BellOff" className="mb-2 opacity-50" size={32} />
                             <p className="text-sm">You&apos;re all caught up.</p>
                         </div>
                     ) : (
@@ -96,7 +96,7 @@ export const NotificationsDrawer = ({ isOpen, onClose }: NotificationsDrawerProp
                             {filtered.map(item => (
                                 <div key={item.id} className="p-4 flex gap-4 hover:bg-white/5 transition-colors cursor-pointer group">
                                     <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", getColor(item.type))}>
-                                        <Icon name={getIcon(item.type)} size={20} />
+                                        <Icon name={getIcon(item.type) as any} size={20} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className={cn("text-sm mb-1 line-clamp-2", item.unread ? "text-white font-medium" : "text-text-secondary")}>

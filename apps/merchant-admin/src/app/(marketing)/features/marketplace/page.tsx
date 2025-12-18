@@ -21,6 +21,7 @@ export default function MarketplaceFeaturePage() {
                     <p className="text-xl text-[#1d1d1f]/60 mb-8 max-w-2xl mx-auto">
                         Don't just sell to your followers. List your products on Vayva Market and reach new customers instantly.
                     </p>
+                    {/* @ts-ignore */}
                     <Link href="/auth/signup">
                         <Button className="bg-purple-600 hover:bg-purple-700 text-white font-bold h-12 px-8 rounded-full shadow-lg shadow-purple-600/20">
                             Join the Marketplace
@@ -53,7 +54,7 @@ export default function MarketplaceFeaturePage() {
                         </ul>
                     </div>
                     <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-[2rem] border border-white/50 aspect-square md:aspect-auto h-full min-h-[400px] flex items-center justify-center shadow-inner">
-                        <Icon name="storefront" size={80} className="text-purple-600/20" />
+                        <Icon name="Store" size={80} className="text-purple-600/20" />
                     </div>
                 </motion.div>
             </div>

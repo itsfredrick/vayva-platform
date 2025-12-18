@@ -1,7 +1,9 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@vayva/db';
 
-const prisma = new PrismaClient();
+
+// const prisma = new PrismaClient(); // Removed
+
 
 // Only for POST/PUT/PATCH
 export const idempotency = async (req: FastifyRequest, reply: FastifyReply) => {

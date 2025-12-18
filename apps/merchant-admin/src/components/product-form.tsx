@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { GlassPanel } from '@/components/ui/glass-panel';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Icon } from '@/components/ui/icon';
+import { GlassPanel } from '@vayva/ui';
+import { Button } from '@vayva/ui';
+import { Input } from '@vayva/ui';
+import { Icon } from '@vayva/ui';
 
 interface ProductFormProps {
     initialData?: any;
@@ -44,7 +44,7 @@ export const ProductForm = ({ initialData, isEdit = false }: ProductFormProps) =
                     <GlassPanel className="p-6">
                         <h3 className="font-bold text-white mb-4">Media</h3>
                         <div className="border border-dashed border-white/20 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer">
-                            <Icon name="add_photo_alternate" size={32} className="text-text-secondary mb-2" />
+                            <Icon name="ImagePlus" size={32} className="text-text-secondary mb-2" />
                             <p className="text-sm font-bold text-white">Add images</p>
                             <p className="text-xs text-text-secondary">Drag and drop or click to upload</p>
                         </div>

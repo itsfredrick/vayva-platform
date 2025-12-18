@@ -1,118 +1,133 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { AppShell } from '@vayva/ui';
-import { GlassPanel } from '@vayva/ui';
-import { Button } from '@vayva/ui';
-import { Input } from '@vayva/ui';
-import { Stepper } from '@vayva/ui';
-import { Icon } from '@vayva/ui';
+import { Button, Input, Icon } from '@vayva/ui';
+import { useOnboarding } from '@/context/OnboardingContext';
 
+// Step 8: Payments Setup (Paystack)
 export default function PaymentsPage() {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
+    const { updateState, goToStep } = useOnboarding();
+    const [loading, setLoading] = useState(false);
 
-    const [isConnected, setIsConnected] = useState(false);
-    const [account, setAccount] = useState({ name: '', number: '', bank: '' });
+    // Simplistic form for now - assuming we just collect bank details to create subaccount later
+    // or simulate OAuth flow
+    const [account, setAccount] = useState({
+        bankName: '',
+        accountNumber: '',
+        accountName: ''
+    });
 
-    const handleConnect = () => {
-        // Simulate Paystack popup
-        setTimeout(() => setIsConnected(true), 1500);
+    const [verifiedName, setVerifiedName] = useState<string | null>(null);
+
+    const checkAccount = async () => {
+        if (account.accountNumber.length === 10) {
+            // Mock verification
+            setLoading(true);
+            await new Promise(r => setTimeout(r, 1000));
+            setVerifiedName("ALI MERCHANT LTD"); // Mock
+            setLoading(false);
+        }
     };
 
-    const handleSave = async () => {
-        setIsLoading(true);
-        await new Promise(r => setTimeout(r, 1000));
-        setIsLoading(false);
-        router.push('/onboarding/delivery');
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        await updateState({
+            payments: {
+                isConfigured: true,
+                paystackCustomerId: 'cus_mock_123'
+            }
+        });
+        await goToStep('whatsapp'); // or KYC depending on flow order in types. Step 9 is Whatsapp
     };
 
     return (
-        <AppShell mode="onboarding" breadcrumb="Onboarding / Payments">
-            <div className="flex flex-col gap-6 max-w-5xl mx-auto">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">Set up payments</h1>
-                        <p className="text-text-secondary">Connect a provider to accept payments.</p>
+        <div className="max-w-xl mx-auto">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-black mb-2">Get Paid</h1>
+                <p className="text-gray-600">Enter your bank details to receive payouts from sales.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-blue-100">
+                        <Icon name="ShieldCheck" className="text-blue-600" size={20} />
                     </div>
-                    <Stepper currentStep={5} />
+                    <div>
+                        <p className="text-sm font-bold text-blue-900">Secure Payments via Paystack</p>
+                        <p className="text-xs text-blue-600">Your details are encrypted and secure.</p>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Provider */}
-                    <GlassPanel className="p-8 flex flex-col gap-6">
-                        <h3 className="font-bold text-white">Payment Provider</h3>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-black">Bank Name</label>
+                        <select
+                            className="w-full h-12 rounded-xl border border-gray-200 px-3 text-sm"
+                            value={account.bankName}
+                            onChange={e => setAccount({ ...account, bankName: e.target.value })}
+                            required
+                        >
+                            <option value="">Select Bank</option>
+                            <option value="gtbank">GTBank</option>
+                            <option value="zenith">Zenith Bank</option>
+                            <option value="access">Access Bank</option>
+                            <option value="kuda">Kuda Microfinance</option>
+                            <option value="opay">OPay</option>
+                        </select>
+                    </div>
 
-                        <div className="p-6 rounded-xl border border-white/10 bg-white/5 flex flex-col gap-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded bg-[#09A5DB] flex items-center justify-center font-bold text-white text-xs">P</div>
-                                    <h4 className="font-bold text-white">Paystack</h4>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-black">Account Number</label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                className="w-full h-12 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-black"
+                                value={account.accountNumber}
+                                onChange={e => {
+                                    setAccount({ ...account, accountNumber: e.target.value });
+                                }}
+                                onBlur={checkAccount}
+                                maxLength={10}
+                                placeholder="0123456789"
+                                required
+                            />
+                            {loading && (
+                                <div className="absolute right-3 top-3">
+                                    <Icon name="Loader2" className="animate-spin text-gray-400" size={20} />
                                 </div>
-                                {isConnected ? (
-                                    <span className="text-[10px] font-bold bg-primary/20 text-primary px-2 py-0.5 rounded pill">CONNECTED</span>
-                                ) : (
-                                    <span className="text-[10px] font-bold bg-white/10 text-text-secondary px-2 py-0.5 rounded pill">RECOMMENDED</span>
-                                )}
-                            </div>
-                            <p className="text-sm text-text-secondary">Accept cards, bank transfers, and USSD.</p>
-
-                            {!isConnected ? (
-                                <Button onClick={handleConnect}>Connect Paystack</Button>
-                            ) : (
-                                <Button variant="outline" className="border-state-success text-state-success bg-state-success/10">Connected</Button>
                             )}
                         </div>
+                    </div>
 
-                        <div className="p-6 rounded-xl border border-white/5 bg-white/5 opacity-50 cursor-not-allowed">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="w-10 h-10 rounded bg-[#F5A623] flex items-center justify-center font-bold text-white text-xs">F</div>
-                                <h4 className="font-bold text-white">Flutterwave</h4>
-                            </div>
-                            <p className="text-sm text-text-secondary">Coming soon</p>
+                    {verifiedName && (
+                        <div className="p-3 bg-green-50 border border-green-100 rounded-lg flex items-center gap-2 animate-fade-in">
+                            <Icon name="CheckCircle" className="text-green-600" size={16} />
+                            <span className="text-sm font-bold text-green-800">{verifiedName}</span>
                         </div>
-                    </GlassPanel>
-
-                    {/* Payout Details */}
-                    <GlassPanel className="p-8 flex flex-col gap-6">
-                        <h3 className="font-bold text-white">Payout Details</h3>
-                        <p className="text-sm text-text-secondary -mt-4">Where should we send your money?</p>
-
-                        <div className="flex flex-col gap-4">
-                            <Input
-                                label="Account Holder Name"
-                                placeholder="e.g. Amina Yusuf"
-                                value={account.name}
-                                onChange={e => setAccount({ ...account, name: e.target.value })}
-                            />
-
-                            <Input
-                                label="Bank"
-                                placeholder="Select Bank..."
-                                value={account.bank}
-                                onChange={e => setAccount({ ...account, bank: e.target.value })}
-                            />
-
-                            <Input
-                                label="Account Number"
-                                placeholder="0000 0000 00"
-                                value={account.number}
-                                onChange={e => setAccount({ ...account, number: e.target.value })}
-                            />
-
-                            <div className="text-xs text-text-secondary p-3 bg-white/5 rounded-lg border border-white/5">
-                                Settlement schedule: <span className="text-white font-medium">Next Day (T+1)</span>
-                            </div>
-                        </div>
-                    </GlassPanel>
+                    )}
                 </div>
 
-                <div className="flex justify-between">
-                    <Button variant="ghost" onClick={() => router.back()}>Back</Button>
-                    <Button onClick={handleSave} disabled={!isConnected && !account.number} isLoading={isLoading}>Save & Continue</Button>
+                <div className="flex items-center gap-4 pt-4">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => goToStep('products')}
+                        className="flex-1 text-gray-500 hover:text-black"
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        className="flex-[2] !bg-black !text-white h-12 rounded-xl"
+                        disabled={!verifiedName}
+                    >
+                        Continue
+                        <Icon name="ArrowRight" className="ml-2 w-4 h-4" />
+                    </Button>
                 </div>
-            </div>
-        </AppShell>
+            </form>
+        </div>
     );
 }

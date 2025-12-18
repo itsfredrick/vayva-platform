@@ -10,4 +10,7 @@ export * from './components/Icon';
 export * from './components/Stepper';
 export * from './states/EmptyState';
 export * from './utils';
-export * from './motion';
+export * from './motion/index';
+export * from './components/legal/LegalContentRenderer';
+export * from './components/legal/LegalPageLayout';
+export * from './states/ErrorState';

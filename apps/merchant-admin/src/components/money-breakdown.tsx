@@ -1,5 +1,5 @@
 import React from 'react';
-import { GlassPanel } from '@/components/ui/glass-panel';
+import { GlassPanel } from '@vayva/ui';
 
 interface MoneyBreakdownProps {
     subtotal: string;

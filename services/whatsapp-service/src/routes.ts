@@ -1,9 +1,19 @@
 import { FastifyInstance } from 'fastify';
-import { webhookHandler, sendHandler, listConversationsHandler, listMessagesHandler } from './controller';
+import {
+    webhookHandler,
+    verifyWebhook,
+    listThreads,
+    getThread,
+    sendMessage
+} from './controller';
 
 export const whatsappRoutes = async (server: FastifyInstance) => {
-    server.post('/webhook', webhookHandler);
-    server.post('/send', sendHandler);
-    server.get('/conversations', listConversationsHandler);
-    server.get('/conversations/:id/messages', listMessagesHandler);
+    // Webhooks
+    server.get('/webhooks/whatsapp', verifyWebhook);
+    server.post('/webhooks/whatsapp', webhookHandler);
+
+    // Merchant API
+    server.get('/threads', listThreads);
+    server.get('/threads/:id', getThread);
+    server.post('/threads/:conversationId/messages', sendMessage);
 };

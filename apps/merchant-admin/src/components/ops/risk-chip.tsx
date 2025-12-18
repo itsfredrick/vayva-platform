@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@vayva/ui';
 
 type RiskLevel = 'Low' | 'Medium' | 'High';
 

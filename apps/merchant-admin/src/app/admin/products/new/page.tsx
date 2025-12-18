@@ -1,92 +1,239 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { AppShell, Button, GlassPanel, Input } from '@vayva/ui';
-import { ProductService } from '@/services/products';
-import { useAuth } from '@/context/AuthContext';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { AdminShell } from '@/components/admin-shell';
+import { ProductsService, Product } from '@/services/products';
+import { Button, Icon, cn } from '@vayva/ui';
 
-export default function ProductFormPage() {
+export default function AddProductPage() {
     const router = useRouter();
-    const params = useParams();
-    const { user } = useAuth();
-    const id = params?.id as string;
-    const isEdit = !!id && id !== 'new';
+    const [isLoading, setIsLoading] = useState(false);
 
+    // Form State
     const [name, setName] = useState('');
-    const [price, setPrice] = useState('');
-    const [stock, setStock] = useState('');
     const [description, setDescription] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [fetching, setFetching] = useState(isEdit);
+    const [price, setPrice] = useState('');
+    const [inventory, setInventory] = useState('');
+    const [status, setStatus] = useState<'active' | 'draft'>('active');
 
-    useEffect(() => {
-        if (isEdit) {
-            ProductService.list().then(products => {
-                // Ideally get(id), but for now quick list filter or I add get to client
-                // Actually I should add get to client.
-                const product = products.find((p: any) => p.id === id);
-                if (product) {
-                    setName(product.name);
-                    setDescription(product.description || '');
-                    const v = product.variants?.[0];
-                    if (v) {
-                        setPrice(v.price.toString());
-                        setStock(v.stock.toString());
-                    }
-                }
-                setFetching(false);
-            });
-            // Better: use get endpoint I just added to backend. Client update needed.
-        }
-    }, [id, isEdit]);
+    // Simple Variant UI State
+    const [hasVariants, setHasVariants] = useState(false);
+    const [variants, setVariants] = useState<{ name: string, price: string, qty: string }[]>([]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const payload = { name, price, stock, description };
-            if (isEdit) {
-                await ProductService.update(id, payload);
-            } else {
-                await ProductService.create(payload);
-            }
+    const handleSave = async () => {
+        setIsLoading(true);
+        const productData: Partial<Product> = {
+            name,
+            description,
+            price: Number(price),
+            inventory: Number(inventory),
+            status,
+            variants: variants.map(v => ({
+                id: Math.random().toString(36),
+                name: v.name,
+                price: Number(v.price),
+                inventory: Number(v.qty),
+                sku: ''
+            }))
+        };
+
+        const res = await ProductsService.createProduct(productData);
+        if (res.success) {
             router.push('/admin/products');
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
+        } else {
+            alert(res.error); // Simple error handling for prototype
         }
+        setIsLoading(false);
     };
 
-    if (fetching) return <div className="p-8 text-center text-white">Loading...</div>;
+    const addVariant = () => {
+        setVariants([...variants, { name: '', price: price, qty: '0' }]);
+    };
 
     return (
-        <AppShell
-            title={isEdit ? 'Edit Product' : 'New Product'}
-            breadcrumbs={[
-                { label: 'Products', href: '/admin/products' },
-                { label: isEdit ? 'Edit' : 'New', href: '#' }
-            ]}
-            profile={{ name: user?.name || '', email: user?.email || '' }}
-            storeName="Store"
-            onLogout={() => router.push('/signin')}
-        >
-            <GlassPanel className="max-w-2xl mx-auto p-8">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <Input label="Name" value={name} onChange={e => setName(e.target.value)} required />
-                    <Input label="Description" value={description} onChange={e => setDescription(e.target.value)} />
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input label="Price" type="number" value={price} onChange={e => setPrice(e.target.value)} required />
-                        <Input label="Stock" type="number" value={stock} onChange={e => setStock(e.target.value)} required />
+        <AdminShell title="Add Product" breadcrumb="Products">
+            <div className="flex flex-col lg:flex-row gap-8 max-w-6xl mx-auto pb-24 items-start">
+
+                {/* Main Content */}
+                <div className="flex-1 w-full space-y-6">
+
+                    {/* Basics */}
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                        <h3 className="font-bold text-[#0B0B0B]">Basic Information</h3>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                            <input
+                                type="text"
+                                className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/5"
+                                placeholder="e.g. Vintage Denim Jacket"
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea
+                                className="w-full h-32 p-3 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-black/5"
+                                placeholder="Describe your product..."
+                                value={description}
+                                onChange={e => setDescription(e.target.value)}
+                            />
+                        </div>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4">
-                        <Button type="button" variant="ghost" onClick={() => router.back()}>Cancel</Button>
-                        <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save Product'}</Button>
+                    {/* Media */}
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                        <h3 className="font-bold text-[#0B0B0B]">Media</h3>
+                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                            <Icon name="UploadCloud" size={24} className="text-gray-400 mb-2" />
+                            <p className="text-sm font-medium text-gray-600">Click to upload images</p>
+                            <p className="text-xs text-gray-400">or drag and drop</p>
+                        </div>
                     </div>
-                </form>
-            </GlassPanel>
-        </AppShell>
+
+                    {/* Pricing & Inventory */}
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                        <h3 className="font-bold text-[#0B0B0B]">Pricing & Inventory</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₦</span>
+                                    <input
+                                        type="number"
+                                        className="w-full h-10 pl-8 pr-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/5"
+                                        placeholder="0.00"
+                                        value={price}
+                                        onChange={e => setPrice(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Inventory</label>
+                                <input
+                                    type="number"
+                                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/5"
+                                    placeholder="0"
+                                    value={inventory}
+                                    onChange={e => setInventory(e.target.value)}
+                                    disabled={hasVariants}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 pt-2">
+                            <input
+                                type="checkbox"
+                                id="hasVariants"
+                                className="w-4 h-4 accent-black"
+                                checked={hasVariants}
+                                onChange={e => setHasVariants(e.target.checked)}
+                            />
+                            <label htmlFor="hasVariants" className="text-sm text-gray-700 font-medium cursor-pointer">This product has variants (e.g. size, color)</label>
+                        </div>
+                    </div>
+
+                    {/* Variants */}
+                    {hasVariants && (
+                        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-bold text-[#0B0B0B]">Variants</h3>
+                                <Button size="sm" variant="outline" onClick={addVariant}>Add Option</Button>
+                            </div>
+                            {variants.length === 0 ? (
+                                <p className="text-sm text-gray-400 text-center py-4">Add variants to manage stock individually.</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {variants.map((v, i) => (
+                                        <div key={i} className="flex gap-4 items-center">
+                                            <input
+                                                type="text"
+                                                placeholder="Option Name (e.g. Size M)"
+                                                className="flex-1 h-10 px-3 border border-gray-200 rounded-lg text-sm"
+                                                value={v.name}
+                                                onChange={e => {
+                                                    const newV = [...variants];
+                                                    newV[i].name = e.target.value;
+                                                    setVariants(newV);
+                                                }}
+                                            />
+                                            <input
+                                                type="number"
+                                                placeholder="Price"
+                                                className="w-24 h-10 px-3 border border-gray-200 rounded-lg text-sm"
+                                                value={v.price}
+                                                onChange={e => {
+                                                    const newV = [...variants];
+                                                    newV[i].price = e.target.value;
+                                                    setVariants(newV);
+                                                }}
+                                            />
+                                            <input
+                                                type="number"
+                                                placeholder="Qty"
+                                                className="w-20 h-10 px-3 border border-gray-200 rounded-lg text-sm"
+                                                value={v.qty}
+                                                onChange={e => {
+                                                    const newV = [...variants];
+                                                    newV[i].qty = e.target.value;
+                                                    setVariants(newV);
+                                                }}
+                                            />
+                                            <button
+                                                className="text-red-500 hover:text-red-700"
+                                                onClick={() => setVariants(variants.filter((_, idx) => idx !== i))}
+                                            >
+                                                <Icon name="Trash" size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                </div>
+
+                {/* Sidebar */}
+                <div className="w-full lg:w-80 shrink-0 space-y-6">
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                        <h3 className="font-bold text-[#0B0B0B]">Publishing</h3>
+                        <div className="flex flex-col gap-2">
+                            <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                <input
+                                    type="radio"
+                                    name="status"
+                                    checked={status === 'active'}
+                                    onChange={() => setStatus('active')}
+                                    className="accent-black w-4 h-4"
+                                />
+                                <span className="text-sm font-medium">Active</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                <input
+                                    type="radio"
+                                    name="status"
+                                    checked={status === 'draft'}
+                                    onChange={() => setStatus('draft')}
+                                    className="accent-black w-4 h-4"
+                                />
+                                <span className="text-sm font-medium">Draft</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sticky Action Footer */}
+                <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-40 lg:pl-20">
+                    <div className="max-w-6xl mx-auto flex justify-end gap-4">
+                        <Button variant="ghost" onClick={() => router.back()}>Cancel</Button>
+                        <Button className="bg-black text-white hover:bg-gray-800" onClick={handleSave} disabled={!name}>
+                            {isLoading ? 'Saving...' : 'Save Product'}
+                        </Button>
+                    </div>
+                </div>
+
+            </div>
+        </AdminShell>
     );
 }
