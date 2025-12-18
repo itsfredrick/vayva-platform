@@ -13,7 +13,13 @@ const NAV_ITEMS = [
     { name: 'Orders', icon: 'ShoppingBag', href: '/admin/orders' },
     { name: 'Customers', icon: 'Users', href: '/admin/customers' },
     { name: 'Wallet', icon: 'Wallet', href: '/admin/wallet' },
-    { name: 'Inbox', icon: 'MessageSquare', href: '/admin/inbox' },
+    { name: 'Inbox', icon: 'MessageSquare', href: '/dashboard/inbox' },
+    { name: 'Returns', icon: 'RotateCcw', href: '/admin/returns' },
+    { name: 'Disputes', icon: 'Scale', href: '/admin/disputes' },
+    { name: 'Risk', icon: 'Shield', href: '/admin/risk' },
+    { name: 'Team', icon: 'UserCog', href: '/dashboard/settings/team' },
+    { name: 'Reports', icon: 'BarChart', href: '/dashboard/reports' },
+    { name: 'Support', icon: 'LifeBuoy', href: '/dashboard/support' }, // Added
 ];
 
 interface AdminShellProps {

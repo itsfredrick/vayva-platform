@@ -1,3 +1,5 @@
+import { PLANS, formatNGN } from "@/config/pricing";
+
 export type PlanTier = 'STARTER' | 'GROWTH' | 'PRO';
 
 export interface PlanDetails {
@@ -57,7 +59,16 @@ export interface AddOn {
     featureKey: string; // e.g. 'custom_domain'
 }
 
-export const PLANS: Record<PlanTier, PlanDetails> = {
+const growthPlan = PLANS.find(p => p.key === "growth");
+const proPlan = PLANS.find(p => p.key === "pro");
+
+export const GROWTH_PRICE_NUM = growthPlan?.monthlyAmount || 25000;
+export const PRO_PRICE_NUM = proPlan?.monthlyAmount || 40000;
+
+export const GROWTH_PRICE = formatNGN(GROWTH_PRICE_NUM);
+export const PRO_PRICE = formatNGN(PRO_PRICE_NUM);
+
+export const PLANS_DETAILS: Record<PlanTier, PlanDetails> = {
     STARTER: {
         id: 'STARTER',
         name: 'Starter',
@@ -79,8 +90,8 @@ export const PLANS: Record<PlanTier, PlanDetails> = {
     GROWTH: {
         id: 'GROWTH',
         name: 'Growth',
-        price: 25000,
-        formattedPrice: '₦25,000/mo',
+        price: GROWTH_PRICE_NUM,
+        formattedPrice: `${GROWTH_PRICE}/mo`,
         transactionFee: 2,
         productLimit: 20,
         staffLimit: 2, // Assumption
@@ -99,8 +110,8 @@ export const PLANS: Record<PlanTier, PlanDetails> = {
     PRO: {
         id: 'PRO',
         name: 'Pro',
-        price: 40000,
-        formattedPrice: '₦40,000/mo',
+        price: PRO_PRICE_NUM,
+        formattedPrice: `${PRO_PRICE}/mo`,
         transactionFee: 1,
         productLimit: -1,
         staffLimit: 5,

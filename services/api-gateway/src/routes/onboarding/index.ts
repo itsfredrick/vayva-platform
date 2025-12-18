@@ -49,6 +49,29 @@ const onboardingRoute: FastifyPluginAsync = async (fastify) => {
             },
         });
 
+        // 3. Assign Default Template
+        try {
+            const defaultTemplate = await prisma.template.findUnique({
+                where: { slug: 'vayva-default' }
+            });
+
+            if (defaultTemplate) {
+                await prisma.merchantTheme.create({
+                    data: {
+                        storeId: store.id,
+                        templateId: defaultTemplate.id,
+                        status: 'PUBLISHED',
+                        config: {},
+                        publishedAt: new Date()
+                    }
+                });
+            } else {
+                console.warn('Default template "vayva-default" not found. Skipping theme assignment.');
+            }
+        } catch (err) {
+            console.error('Failed to assign default template:', err);
+        }
+
         return {
             message: 'Store created successfully',
             storeId: store.id,

@@ -7,6 +7,7 @@ import { GlassPanel } from '@vayva/ui';
 import { AnalyticsFilterBar } from '@/components/analytics-filter-bar';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
+import { formatNGN } from '@/config/pricing';
 
 export default function ProductPerformancePage() {
     return (
@@ -22,7 +23,7 @@ export default function ProductPerformancePage() {
                             <span className="text-xs font-bold uppercase tracking-wider text-primary">Best Seller</span>
                         </div>
                         <div className="text-lg font-bold text-white">Ultra-Soft T-Shirt</div>
-                        <div className="text-sm text-text-secondary">₦ 840,000 revenue</div>
+                        <div className="text-sm text-text-secondary">₦ 850,000 revenue</div>
                     </GlassPanel>
                     <GlassPanel className="p-4">
                         <div className="flex items-center gap-2 mb-2">
@@ -57,8 +58,8 @@ export default function ProductPerformancePage() {
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {[
-                                { name: 'Ultra-Soft T-Shirt', sku: 'TS-001', sold: 84, rev: '₦ 840,000', refunds: '₦ 0', stock: 'In Stock' },
-                                { name: 'Classic Leather Watch', sku: 'WA-005', sold: 24, rev: '₦ 600,000', refunds: '₦ 25,000', stock: 'Low Stock' },
+                                { name: 'Ultra-Soft T-Shirt', sku: 'TS-001', sold: 84, rev: '₦ 850,000', refunds: '₦ 0', stock: 'In Stock' },
+                                { name: 'Classic Leather Watch', sku: 'WA-005', sold: 24, rev: formatNGN(600000), refunds: formatNGN(25000), stock: 'Low Stock' },
                                 { name: 'Denim Jacket', sku: 'JA-002', sold: 15, rev: '₦ 450,000', refunds: '₦ 0', stock: 'In Stock' },
                             ].map((prod, i) => (
                                 <tr key={i} className="group hover:bg-white/5">

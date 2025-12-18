@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { OrdersController } from './controller';
+import { createReturnHandler, updateReturnStatusHandler, listReturnsHandler } from './controllers/return.controller';
 
 export const orderRoutes = async (server: FastifyInstance) => {
     // Basic Routes
@@ -13,4 +14,9 @@ export const orderRoutes = async (server: FastifyInstance) => {
 
     // Legacy mapping (keep if needed or remove)
     // server.post('/publish', ...); 
+
+    // Returns (Integration 22A)
+    server.post('/returns', createReturnHandler);
+    server.post('/returns/:id/status', updateReturnStatusHandler);
+    server.get('/returns', listReturnsHandler);
 };

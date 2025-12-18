@@ -6,8 +6,9 @@ import { StorefrontService } from '@/services/storefront.service';
 import { StoreShell } from '@/components/StoreShell';
 import NextLink from 'next/link';
 const Link = NextLink as any;
-import { ChevronRight as ChevronRightIcon, AlertCircle } from 'lucide-react';
+import { ChevronRight as ChevronRightIcon, AlertCircle as AlertCircleIcon } from 'lucide-react';
 const ChevronRight = ChevronRightIcon as any;
+const AlertCircle = AlertCircleIcon as any;
 import { useRouter } from 'next/navigation';
 
 export default function CheckoutPage() {

@@ -5,6 +5,7 @@ import { AppShell } from '@vayva/ui';
 import { GlassPanel } from '@vayva/ui';
 import { AnalyticsFilterBar } from '@/components/analytics-filter-bar';
 import { Icon } from '@vayva/ui';
+import { formatNGN } from '@/config/pricing';
 
 export default function WhatsappAnalyticsPage() {
     return (
@@ -18,7 +19,7 @@ export default function WhatsappAnalyticsPage() {
                         { label: 'Conversations', value: '1,240', sub: 'Last 30 days', color: 'text-white' },
                         { label: 'Containment Rate', value: '88%', sub: 'Resolved by AI', color: 'text-state-success' },
                         { label: 'Avg Response', value: '2s', sub: 'Instant', color: 'text-primary' },
-                        { label: 'Sales Assisted', value: '₦ 840k', sub: 'Attributed', color: 'text-white' },
+                        { label: 'Sales Assisted', value: formatNGN(840000), sub: 'Attributed', color: 'text-white' },
                     ].map((stat, i) => (
                         <GlassPanel key={i} className="p-4">
                             <div className="text-xs text-text-secondary font-bold uppercase tracking-wider mb-1">{stat.label}</div>

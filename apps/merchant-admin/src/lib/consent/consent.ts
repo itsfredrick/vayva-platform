@@ -1,0 +1,153 @@
+import { prisma } from '@vayva/db';
+import { CommunicationConsent, ConsentEventType, ConsentChannel, ConsentSource, MessageIntent } from '@vayva/db';
+
+// -----------------------------------------------------------------------------
+// Phone Normalization
+// -----------------------------------------------------------------------------
+export function normalizePhoneToE164(input: string, country = 'NG'): string | null {
+    let digits = input.replace(/\D/g, '');
+
+    if (country === 'NG') {
+        if (digits.startsWith('0') && digits.length === 11) {
+            digits = '234' + digits.substring(1);
+        }
+        else if (digits.length === 10 && ['7', '8', '9'].includes(digits[0])) {
+            digits = '234' + digits;
+        }
+    }
+
+    if (digits.length < 10) return null;
+
+    return '+' + digits;
+}
+
+// -----------------------------------------------------------------------------
+// Get Consent (with defaults)
+// -----------------------------------------------------------------------------
+export async function getConsent(merchantId: string, phoneE164: string): Promise<CommunicationConsent> {
+    const consent = await prisma.communicationConsent.findUnique({
+        where: {
+            merchantId_phoneE164: {
+                merchantId,
+                phoneE164
+            }
+        }
+    });
+
+    if (consent) return consent;
+
+    return {
+        merchantId,
+        phoneE164,
+        marketingOptIn: false,
+        marketingOptInSource: 'unknown',
+        transactionalAllowed: true,
+        fullyBlocked: false,
+        customerId: null,
+    } as any;
+}
+
+// -----------------------------------------------------------------------------
+// Update Consent + Log Event
+// -----------------------------------------------------------------------------
+interface ConsentPatch {
+    marketingOptIn?: boolean;
+    marketingOptInSource?: string;
+    transactionalAllowed?: boolean;
+    fullyBlocked?: boolean;
+}
+
+export async function applyConsentUpdate(
+    merchantId: string,
+    phoneE164: string,
+    patch: ConsentPatch,
+    meta: {
+        channel: ConsentChannel;
+        source: ConsentSource;
+        reason?: string;
+    }
+): Promise<CommunicationConsent> {
+    const existing = await getConsent(merchantId, phoneE164);
+
+    let marketingOptInAt = (existing as any).marketingOptInAt;
+    let marketingOptOutAt = (existing as any).marketingOptOutAt;
+
+    if (patch.marketingOptIn === true && !existing.marketingOptIn) {
+        marketingOptInAt = new Date();
+    } else if (patch.marketingOptIn === false && existing.marketingOptIn) {
+        marketingOptOutAt = new Date();
+    }
+
+    let eventType: ConsentEventType = ConsentEventType.OPT_IN;
+
+    if (patch.fullyBlocked === true) eventType = ConsentEventType.BLOCK_ALL;
+    else if (patch.fullyBlocked === false && existing.fullyBlocked) eventType = ConsentEventType.UNBLOCK;
+    else if (patch.marketingOptIn === true) eventType = ConsentEventType.OPT_IN;
+    else if (patch.marketingOptIn === false) eventType = ConsentEventType.OPT_OUT;
+    else if (patch.transactionalAllowed === true) eventType = ConsentEventType.TRANSACTIONAL_ON;
+    else if (patch.transactionalAllowed === false) eventType = ConsentEventType.TRANSACTIONAL_OFF;
+
+    const [updated] = await prisma.$transaction([
+        prisma.communicationConsent.upsert({
+            where: {
+                merchantId_phoneE164: { merchantId, phoneE164 }
+            },
+            create: {
+                merchantId,
+                phoneE164,
+                marketingOptIn: patch.marketingOptIn ?? false,
+                marketingOptInSource: patch.marketingOptInSource || 'unknown',
+                marketingOptInAt: patch.marketingOptIn === true ? new Date() : null,
+                transactionalAllowed: patch.transactionalAllowed ?? true,
+                fullyBlocked: patch.fullyBlocked ?? false,
+            },
+            update: {
+                marketingOptIn: patch.marketingOptIn,
+                marketingOptInSource: patch.marketingOptInSource,
+                marketingOptInAt,
+                marketingOptOutAt,
+                transactionalAllowed: patch.transactionalAllowed,
+                fullyBlocked: patch.fullyBlocked,
+                updatedAt: new Date()
+            }
+        }),
+        prisma.complianceEvent.create({
+            data: {
+                merchantId,
+                phoneE164,
+                eventType,
+                channel: meta.channel,
+                source: meta.source,
+                metadata: { reason: meta.reason, patch }
+            }
+        })
+    ]);
+
+    return updated;
+}
+
+// -----------------------------------------------------------------------------
+// Send-Time Enforcement
+// -----------------------------------------------------------------------------
+export function shouldSendMessage(
+    messageIntent: MessageIntent,
+    consent: CommunicationConsent
+): { allowed: boolean; reason?: string } {
+    if (consent.fullyBlocked) {
+        return { allowed: false, reason: 'blocked_all' };
+    }
+
+    if (messageIntent === MessageIntent.MARKETING) {
+        if (!consent.marketingOptIn) {
+            return { allowed: false, reason: 'no_marketing_consent' };
+        }
+    }
+
+    if (messageIntent === MessageIntent.TRANSACTIONAL) {
+        if (!consent.transactionalAllowed) {
+            return { allowed: false, reason: 'transactional_disabled' };
+        }
+    }
+
+    return { allowed: true };
+}

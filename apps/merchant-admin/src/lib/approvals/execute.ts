@@ -1,0 +1,128 @@
+import { prisma } from '@vayva/db';
+import { EventBus } from '@/lib/events/eventBus';
+
+// Stubbing external services for V1
+const Services = {
+    Refund: {
+        issue: async (payload: any) => {
+            console.log('[MOCK] RefundService.issue', payload);
+            return { refundId: 'ref_mock_123' };
+        }
+    },
+    Campaign: {
+        send: async (payload: any) => {
+            console.log('[MOCK] CampaignService.send', payload);
+            return { jobId: 'job_camp_123' };
+        }
+    },
+    Policies: {
+        publish: async (payload: any) => {
+            console.log('[MOCK] PolicyService.publish', payload);
+            return { version: 'v2' };
+        }
+    }
+};
+
+export async function executeApproval(requestId: string, actorId: string, correlationId: string) {
+    const request = await prisma.approvalRequest.findUnique({
+        where: { id: requestId }
+    });
+
+    if (!request) throw new Error('Request not found');
+    if (request.status !== 'approved') throw new Error('Request not approved');
+
+    // Idempotency Check in Logs
+    const existingLog = await prisma.approvalExecutionLog.findFirst({
+        where: { approvalRequestId: requestId, status: 'success' }
+    });
+
+    if (existingLog) {
+        return existingLog.output; // Already done
+    }
+
+    // Start Execution Log
+    await prisma.approvalExecutionLog.create({
+        data: {
+            approvalRequestId: requestId,
+            status: 'running',
+            startedAt: new Date()
+        }
+    });
+
+    let output;
+    try {
+        switch (request.actionType) {
+            case 'refund.issue':
+                output = await Services.Refund.issue(request.payload);
+                break;
+            case 'campaign.send':
+                output = await Services.Campaign.send(request.payload);
+                break;
+            case 'policies.publish':
+                output = await Services.Policies.publish(request.payload);
+                break;
+            default:
+                throw new Error(`Unknown action type: ${request.actionType}`);
+        }
+
+        // Update Request & Log on Success
+        await prisma.$transaction([
+            prisma.approvalRequest.update({
+                where: { id: requestId },
+                data: { status: 'executed' }
+            }),
+            prisma.approvalExecutionLog.create({ // Create new finished log or update running one?
+                // For simplicity, we create a success record.
+                data: {
+                    approvalRequestId: requestId,
+                    status: 'success',
+                    output: output as any,
+                    finishedAt: new Date()
+                }
+            })
+        ]);
+
+        // Publish Event
+        await EventBus.publish({
+            merchantId: request.merchantId,
+            type: 'approvals.executed',
+            payload: { requestId, actionType: request.actionType, output },
+            ctx: {
+                actorId: 'system',
+                actorType: 'system',
+                actorLabel: 'ApprovalEngine',
+                correlationId
+            }
+        });
+
+    } catch (error: any) {
+        // Fail
+        await prisma.approvalRequest.update({
+            where: { id: requestId },
+            data: { status: 'failed' }
+        });
+
+        await prisma.approvalExecutionLog.create({
+            data: {
+                approvalRequestId: requestId,
+                status: 'failed',
+                error: error.message,
+                finishedAt: new Date()
+            }
+        });
+
+        await EventBus.publish({
+            merchantId: request.merchantId,
+            type: 'approvals.failed',
+            payload: { requestId, error: error.message },
+            ctx: {
+                actorId: 'system',
+                actorType: 'system',
+                actorLabel: 'ApprovalEngine',
+                correlationId
+            }
+        });
+
+        throw error;
+    }
+}

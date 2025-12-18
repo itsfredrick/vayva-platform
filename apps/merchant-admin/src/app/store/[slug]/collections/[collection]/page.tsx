@@ -5,14 +5,15 @@ import { StoreShell } from '@/components/storefront/store-shell';
 import { ProductCard, Product } from '@/components/storefront/product-card';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
+import { formatNGN } from '@/config/pricing';
 
 const MOCK_PRODUCTS: Product[] = [
-    { id: '1', name: 'Premium Cotton Tee', price: '₦ 12,000', image: '', slug: 'premium-cotton-tee', inStock: true },
-    { id: '2', name: 'Slim Fit Chinos', price: '₦ 18,500', image: '', slug: 'slim-fit-chinos', inStock: true },
-    { id: '3', name: 'Vintage Denim Jacket', price: '₦ 45,000', image: '', slug: 'vintage-denim-jacket', inStock: false },
-    { id: '4', name: 'Leather Sneakers', price: '₦ 35,000', image: '', slug: 'leather-sneakers', inStock: true },
-    { id: '5', name: 'Summer Shorts', price: '₦ 10,000', image: '', slug: 'summer-shorts', inStock: true },
-    { id: '6', name: 'Graphic Hoodie', price: '₦ 25,000', image: '', slug: 'graphic-hoodie', inStock: true },
+    { id: '1', name: 'Premium Cotton Tee', price: formatNGN(12000), image: '', slug: 'premium-cotton-tee', inStock: true },
+    { id: '2', name: 'Slim Fit Chinos', price: formatNGN(18500), image: '', slug: 'slim-fit-chinos', inStock: true },
+    { id: '3', name: 'Vintage Denim Jacket', price: formatNGN(45000), image: '', slug: 'vintage-denim-jacket', inStock: false },
+    { id: '4', name: 'Leather Sneakers', price: formatNGN(35000), image: '', slug: 'leather-sneakers', inStock: true },
+    { id: '5', name: 'Summer Shorts', price: formatNGN(10000), image: '', slug: 'summer-shorts', inStock: true },
+    { id: '6', name: 'Graphic Hoodie', price: formatNGN(25000), image: '', slug: 'graphic-hoodie', inStock: true },
 ];
 
 export default function CollectionPage({ params }: { params: { slug: string, collection: string } }) {

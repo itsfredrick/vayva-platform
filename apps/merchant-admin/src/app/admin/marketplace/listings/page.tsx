@@ -7,12 +7,13 @@ import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
 import { MarketplaceStatusBadge } from '@/components/marketplace-status-badge';
+import { formatNGN } from '@/config/pricing';
 
 const MOCK_LISTINGS = [
-    { id: '1', name: 'Ultra-Soft T-Shirt', price: '₦ 10,000', status: 'Listed', stock: 120, views: 450, orders: 12 },
-    { id: '2', name: 'Classic Leather Watch', price: '₦ 25,000', status: 'Pending', stock: 24, views: 10, orders: 0 },
-    { id: '3', name: 'Denim Jacket', price: '₦ 30,000', status: 'Unlisted', stock: 15, views: 0, orders: 0 },
-    { id: '4', name: 'Slim Fit Jeans', price: '₦ 12,000', status: 'Rejected', stock: 45, views: 5, orders: 0 },
+    { id: '1', name: 'Ultra-Soft T-Shirt', price: formatNGN(10000), status: 'Listed', stock: 120, views: 450, orders: 12 },
+    { id: '2', name: 'Classic Leather Watch', price: formatNGN(25000), status: 'Pending', stock: 24, views: 10, orders: 0 },
+    { id: '3', name: 'Denim Jacket', price: formatNGN(30000), status: 'Unlisted', stock: 15, views: 0, orders: 0 },
+    { id: '4', name: 'Slim Fit Jeans', price: formatNGN(12000), status: 'Rejected', stock: 45, views: 5, orders: 0 },
 ];
 
 export default function MarketplaceListingsPage() {

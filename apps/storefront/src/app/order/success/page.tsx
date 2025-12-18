@@ -4,7 +4,8 @@ import React, { useEffect } from 'react';
 import { StoreShell } from '@/components/StoreShell';
 import { useStore } from '@/context/StoreContext';
 import NextLink from 'next/link';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle as CheckCircleIcon } from 'lucide-react';
+const CheckCircle = CheckCircleIcon as any;
 
 const Link = NextLink as any;
 const CheckIcon = CheckCircle as any;

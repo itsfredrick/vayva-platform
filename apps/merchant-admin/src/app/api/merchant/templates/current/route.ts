@@ -1,0 +1,20 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@vayva/db';
+import { cookies } from 'next/headers';
+
+export async function GET(req: NextRequest) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return new NextResponse('Unauthorized', { status: 401 });
+
+    const storeId = cookies().get('x-active-store-id')?.value;
+    if (!storeId) return new NextResponse('No active store session', { status: 400 });
+
+    const selection = await prisma.storeTemplateSelection.findUnique({
+        where: { storeId },
+        include: { template: true }
+    });
+
+    return NextResponse.json({ selection });
+}

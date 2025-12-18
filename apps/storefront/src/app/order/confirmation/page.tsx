@@ -4,7 +4,14 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { StorefrontService } from '@/services/storefront.service';
 import { StoreShell } from '@/components/StoreShell';
-import { CheckCircle, Clock, XCircle, ChevronRight, Package, MapPin, Phone } from 'lucide-react';
+import { CheckCircle as CheckCircleIcon, Clock as ClockIcon, XCircle as XCircleIcon, ChevronRight as ChevronRightIcon, Package as PackageIcon, MapPin as MapPinIcon, Phone as PhoneIcon } from 'lucide-react';
+const CheckCircle = CheckCircleIcon as any;
+const Clock = ClockIcon as any;
+const XCircle = XCircleIcon as any;
+const ChevronRight = ChevronRightIcon as any;
+const Package = PackageIcon as any;
+const MapPin = MapPinIcon as any;
+const Phone = PhoneIcon as any;
 import NextLink from 'next/link';
 const Link = NextLink as any;
 

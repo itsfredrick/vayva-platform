@@ -25,8 +25,8 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'pnpm dev --filter=merchant-admin',
-        url: 'http://localhost:3000',
+        command: 'pnpm dev --filter=marketing',
+        url: 'http://localhost:3005',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
     },
