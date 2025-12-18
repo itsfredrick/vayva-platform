@@ -1,23 +1,26 @@
-
 import { prisma } from '@vayva/db';
 
-const DEFAULT_TEMPLATE_KEY = 'vayva_light_glass_store_default';
+const DEFAULT_TEMPLATE_SLUG = 'vayva-default';
 
 export const ThemeController = {
     // --- Template Gallery ---
     listTemplates: async (filters?: any) => {
-        return await prisma.themeTemplate.findMany({
+        return await prisma.template.findMany({
             where: {
                 isActive: true,
-                ...(filters?.category && { category: filters.category })
+                ...(filters?.category && filters.category !== 'All' && { category: filters.category })
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            include: {
+                assets: { where: { type: 'preview_image' }, take: 1 }
+            }
         });
     },
 
-    getTemplate: async (key: string) => {
-        return await prisma.themeTemplate.findUnique({
-            where: { key }
+    getTemplate: async (slug: string) => {
+        return await prisma.template.findUnique({
+            where: { slug },
+            include: { assets: true, versions: true }
         });
     },
 
@@ -25,49 +28,39 @@ export const ThemeController = {
     getMerchantTheme: async (storeId: string) => {
         return await prisma.merchantTheme.findFirst({
             where: { storeId, status: 'PUBLISHED' },
-            include: { template: true, settings: true }
+            include: { template: true }
         });
     },
 
-    applyTemplate: async (storeId: string, templateKey: string, userId?: string) => {
-        // Create draft theme
-        const theme = await prisma.merchantTheme.create({
+    applyTemplate: async (storeId: string, templateSlug: string, userId?: string) => {
+        const template = await prisma.template.findUnique({ where: { slug: templateSlug } });
+        if (!template) throw new Error('Template not found');
+
+        // Create or update draft theme? 
+        // Logic: Create new draft
+        return await prisma.merchantTheme.create({
             data: {
                 storeId,
-                templateKey,
-                templateVersion: 1,
-                status: 'DRAFT'
+                templateId: template.id,
+                status: 'DRAFT',
+                config: {},
+                // History tracking handled by creating history snapshot on publish
             }
         });
-
-        // Create default settings
-        await prisma.merchantThemeSettings.create({
-            data: {
-                storeId,
-                themeId: theme.id,
-                brandName: 'My Store',
-                accentColor: '#22C55E'
-            }
-        });
-
-        return theme;
     },
 
-    updateSettings: async (storeId: string, settings: any) => {
+    updateSettings: async (storeId: string, config: any) => {
         const theme = await prisma.merchantTheme.findFirst({
-            where: { storeId, status: 'DRAFT' }
+            where: { storeId, status: 'DRAFT' } // Assume editing draft
         });
 
         if (!theme) throw new Error('No draft theme found');
 
-        return await prisma.merchantThemeSettings.upsert({
-            where: { themeId: theme.id },
-            create: {
-                storeId,
-                themeId: theme.id,
-                ...settings
-            },
-            update: settings
+        return await prisma.merchantTheme.update({
+            where: { id: theme.id },
+            data: {
+                config
+            }
         });
     },
 
@@ -75,13 +68,12 @@ export const ThemeController = {
         // Archive current published theme
         await prisma.merchantTheme.updateMany({
             where: { storeId, status: 'PUBLISHED' },
-            data: { status: 'DRAFT' }
+            data: { status: 'DRAFT', publishedAt: null }
         });
 
         // Get draft theme
         const draftTheme = await prisma.merchantTheme.findFirst({
-            where: { storeId, status: 'DRAFT' },
-            include: { settings: true }
+            where: { storeId, status: 'DRAFT' }
         });
 
         if (!draftTheme) throw new Error('No draft theme found');
@@ -91,9 +83,9 @@ export const ThemeController = {
             data: {
                 storeId,
                 themeId: draftTheme.id,
-                templateKey: draftTheme.templateKey,
-                templateVersion: draftTheme.templateVersion,
-                settingsSnapshot: draftTheme.settings || {},
+                templateId: draftTheme.templateId,
+                templateVersionId: draftTheme.templateVersionId,
+                configSnapshot: draftTheme.config || {},
                 changedByUserId: userId
             }
         });
@@ -110,37 +102,23 @@ export const ThemeController = {
 
     // --- Auto-assign Default Template ---
     assignDefaultTemplate: async (storeId: string) => {
-        // Check if template exists
-        const template = await prisma.themeTemplate.findUnique({
-            where: { key: DEFAULT_TEMPLATE_KEY }
+        const template = await prisma.template.findUnique({
+            where: { slug: DEFAULT_TEMPLATE_SLUG }
         });
 
         if (!template) {
-            console.warn(`Default template ${DEFAULT_TEMPLATE_KEY} not found`);
+            console.warn(`Default template ${DEFAULT_TEMPLATE_SLUG} not found`);
             return null;
         }
 
-        // Create published theme
-        const theme = await prisma.merchantTheme.create({
+        return await prisma.merchantTheme.create({
             data: {
                 storeId,
-                templateKey: DEFAULT_TEMPLATE_KEY,
-                templateVersion: 1,
+                templateId: template.id,
                 status: 'PUBLISHED',
+                config: {},
                 publishedAt: new Date()
             }
         });
-
-        // Create default settings
-        await prisma.merchantThemeSettings.create({
-            data: {
-                storeId,
-                themeId: theme.id,
-                brandName: 'My Store',
-                accentColor: '#22C55E'
-            }
-        });
-
-        return theme;
     }
 };

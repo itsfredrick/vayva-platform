@@ -4,7 +4,15 @@ import React, { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { StorefrontService } from '@/services/storefront.service';
 import { StoreShell } from '@/components/StoreShell';
-import { Search, Package, Clock, CheckCircle, Truck, AlertCircle, ChevronRight, Phone } from 'lucide-react';
+import { Search as SearchIcon, Package as PackageIcon, Clock as ClockIcon, CheckCircle as CheckCircleIcon, Truck as TruckIcon, AlertCircle as AlertCircleIcon, ChevronRight as ChevronRightIcon, Phone as PhoneIcon } from 'lucide-react';
+const Search = SearchIcon as any;
+const Package = PackageIcon as any;
+const Clock = ClockIcon as any;
+const CheckCircle = CheckCircleIcon as any;
+const Truck = TruckIcon as any;
+const AlertCircle = AlertCircleIcon as any;
+const ChevronRight = ChevronRightIcon as any;
+const Phone = PhoneIcon as any;
 
 function OrderStatusContent() {
     const searchParams = useSearchParams();

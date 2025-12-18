@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { verifyPaymentHandler, webhookHandler, listTransactionsHandler, initializeTransactionHandler } from './controller';
+import { createDisputeHandler, listDisputesHandler, getDisputeHandler, addEvidenceHandler } from './controllers/dispute.controller';
 import {
     getWalletSummaryHandler, getLedgerHandler, setPinHandler, verifyPinHandler,
     createVirtualAccountHandler, listBanksHandler, addBankHandler, deleteBankHandler,
@@ -37,4 +38,10 @@ export const paymentRoutes = async (server: FastifyInstance) => {
     // Withdrawals
     server.post('/wallet/withdraw/initiate', initiateWithdrawalHandler);
     server.post('/wallet/withdraw/confirm', confirmWithdrawalHandler);
+
+    // Disputes (Integration 22A)
+    server.post('/disputes', createDisputeHandler);
+    server.get('/disputes', listDisputesHandler);
+    server.get('/disputes/:id', getDisputeHandler);
+    server.post('/disputes/:id/evidence', addEvidenceHandler);
 };

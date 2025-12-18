@@ -5,20 +5,21 @@ import { AppShell } from '@vayva/ui';
 import { GlassPanel } from '@vayva/ui';
 import { AnalyticsFilterBar } from '@/components/analytics-filter-bar';
 import { TrendChart } from '@/components/trend-chart';
+import { formatNGN } from '@/config/pricing';
 
 export default function SalesReportPage() {
     return (
         <AppShell title="Sales Report" breadcrumb="Analytics / Sales">
             <div className="flex flex-col gap-6">
                 <AnalyticsFilterBar />
-
+                <AnalyticsFilterBar />
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { label: 'Gross Sales', value: '₦ 5,100,000' },
-                        { label: 'Discounts', value: '- ₦ 240,000', color: 'text-state-warning' },
-                        { label: 'Returns', value: '- ₦ 150,000', color: 'text-state-danger' },
-                        { label: 'Net Sales', value: '₦ 4,710,000', color: 'text-primary' },
+                        { label: 'Gross Sales', value: formatNGN(5100000) },
+                        { label: 'Discounts', value: `- ${formatNGN(240000)}`, color: 'text-state-warning' },
+                        { label: 'Returns', value: `- ${formatNGN(150000)}`, color: 'text-state-danger' },
+                        { label: 'Net Sales', value: formatNGN(4710000), color: 'text-primary' },
                     ].map((stat, i) => (
                         <GlassPanel key={i} className="p-4">
                             <div className="text-xs text-text-secondary font-bold uppercase tracking-wider mb-1">{stat.label}</div>
@@ -48,7 +49,7 @@ export default function SalesReportPage() {
                         <tbody className="divide-y divide-white/5">
                             {[
                                 { date: 'Oct 24', orders: 12, gross: '₦ 450,000', returns: '₦ 0', net: '₦ 450,000' },
-                                { date: 'Oct 23', orders: 8, gross: '₦ 320,000', returns: '- ₦ 25,000', net: '₦ 295,000' },
+                                { date: 'Oct 23', orders: 8, gross: formatNGN(320000), returns: `- ${formatNGN(25000)}`, net: formatNGN(295000) },
                                 { date: 'Oct 22', orders: 15, gross: '₦ 600,000', returns: '₦ 0', net: '₦ 600,000' },
                             ].map((row, i) => (
                                 <tr key={i} className="group hover:bg-white/5">

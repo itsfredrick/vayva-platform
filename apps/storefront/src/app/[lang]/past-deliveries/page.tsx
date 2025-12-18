@@ -1,0 +1,96 @@
+'use client';
+
+import { MOCK_DELIVERIES } from '@/data/mock-history';
+import { MOCK_MEALS } from '@/data/mock-menu';
+import { LOCALES, LocaleKey } from '@/data/locales';
+import { useUserInteractions } from '@/hooks/useUserInteractions';
+import { HistoryGrid } from '@/components/history/HistoryGrid';
+import Link from 'next/link';
+import { ArrowRight, Heart } from 'lucide-react';
+import { useState } from 'react';
+
+// Simple Toast Component (Internal)
+function Toast({ message, show }: { message: string, show: boolean }) {
+    if (!show) return null;
+    return (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium z-50 animate-fade-in-up">
+            {message}
+        </div>
+    );
+}
+
+export default function PastDeliveriesPage({ params }: { params: { lang: string } }) {
+    const lang = (params.lang === 'tr' ? 'tr' : 'en') as LocaleKey;
+    const t = LOCALES[lang];
+    const { ratings, favorites, rateMeal, toggleFavorite, isLoaded } = useUserInteractions();
+
+    const [toast, setToast] = useState('');
+
+    const showToast = (msg: string) => {
+        setToast(msg);
+        setTimeout(() => setToast(''), 2000);
+    };
+
+    const handleRate = (id: string, r: number) => {
+        rateMeal(id, r);
+        showToast(t.ratings.saved);
+    };
+
+    const handleFav = (id: string) => {
+        const result = toggleFavorite(id);
+        showToast(result.isFavorite ? t.favorites.added : t.favorites.removed);
+    };
+
+    if (!isLoaded) return null; // Hydration safe
+
+    return (
+        <div className="min-h-screen bg-gray-50 pb-20 font-sans">
+            <Toast message={toast} show={!!toast} />
+
+            {/* Header */}
+            <div className="bg-white border-b border-gray-100 pt-8 pb-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-end">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">{t.history.title}</h1>
+                        <p className="text-gray-500 text-sm mt-1">{t.history.subtitle}</p>
+                    </div>
+                    <Link
+                        href={`/${lang}/favorites`}
+                        className="flex items-center gap-2 text-sm font-bold text-[#22C55E] hover:text-[#16A34A] transition-colors bg-[#22C55E]/5 px-4 py-2 rounded-full"
+                    >
+                        <Heart size={16} />
+                        {t.history.goToFavorites}
+                        <ArrowRight size={16} />
+                    </Link>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {MOCK_DELIVERIES.length > 0 ? (
+                    <HistoryGrid
+                        deliveries={MOCK_DELIVERIES}
+                        meals={MOCK_MEALS}
+                        ratings={ratings}
+                        favorites={favorites}
+                        lang={lang}
+                        onRate={handleRate}
+                        onToggleFavorite={handleFav}
+                    />
+                ) : (
+                    <div className="text-center py-20">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                            <span className="text-2xl">📦</span>
+                        </div>
+                        <p className="text-gray-500 mb-6">{t.history.empty}</p>
+                        <Link
+                            href={`/${lang}/menu`}
+                            className="inline-flex items-center font-bold text-white bg-[#0B1220] px-6 py-3 rounded-xl hover:shadow-lg transition-all"
+                        >
+                            {t.favorites.backToMenu}
+                        </Link>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

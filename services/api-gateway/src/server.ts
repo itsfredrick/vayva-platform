@@ -167,12 +167,7 @@ server.register(proxy, {
     http2: false
 });
 
-server.register(proxy, {
-    upstream: 'http://localhost:3012',
-    prefix: '/v1/orders',
-    rewritePrefix: '/v1/orders',
-    http2: false
-});
+
 
 server.register(proxy, {
     upstream: 'http://localhost:3014', // Support Service

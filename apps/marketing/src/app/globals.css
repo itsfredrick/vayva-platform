@@ -1,21 +1,95 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #09090b; /* Zinc 950 */
-  --font-satoshi: 'Satoshi', sans-serif; /* Needs local font file or next/font setup */
-  --font-inter: 'Inter', sans-serif;
+  color-scheme: light;
+  --vayva-green: #22C55E;
+  --vayva-green-dark: #16A34A;
+  --vayva-bg: #F7FAF7;
+  --vayva-surface: rgba(255, 255, 255, 0.72);
+  --vayva-border: rgba(16, 24, 40, 0.08);
+  --vayva-shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
+  --vayva-glow: rgba(34, 197, 94, 0.20);
 }
 
-@theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-heading: var(--font-satoshi);
-  --font-body: var(--font-inter);
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-inter);
+  background: linear-gradient(180deg, #F7FAF7 0%, #F0F5F0 100%);
+  min-height: 100vh;
+}
+
+.glass-surface {
+  background: var(--vayva-surface);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--vayva-border);
+  box-shadow: var(--vayva-shadow);
+  border-radius: 16px;
+}
+
+.btn-primary {
+  background: var(--vayva-green);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--vayva-green-dark);
+  box-shadow: 0 0 20px var(--vayva-glow);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--vayva-border);
+  color: #0B1220;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: var(--vayva-green);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--vayva-green) 0%, var(--vayva-green-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Focus states for accessibility */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--vayva-green);
+  outline-offset: 2px;
+}
+
+/* Skip to content */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  z-index: 9999;
+  padding: 1rem;
+  background: var(--vayva-green);
+  color: white;
+}
+
+.skip-to-content:focus {
+  left: 0;
 }

@@ -188,6 +188,7 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
             </div>
 
             {/* Print Styles */}
+            {/* @ts-ignore */}
             <style jsx global>{`
                 @media print {
                     .print\\:hidden { display: none !important; }
