@@ -78,8 +78,8 @@ export default function WhatsAppPage() {
                                 {messages.map(m => (
                                     <div key={m.id} className={`flex ${m.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-[70%] p-3 rounded-lg text-sm ${m.direction === 'OUTBOUND'
-                                                ? 'bg-primary text-black rounded-tr-none'
-                                                : 'bg-white/10 text-white rounded-tl-none'
+                                            ? 'bg-primary text-black rounded-tr-none'
+                                            : 'bg-white/10 text-white rounded-tl-none'
                                             }`}>
                                             {m.content}
                                         </div>
@@ -100,7 +100,7 @@ export default function WhatsAppPage() {
                         </>
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-text-secondary">
-                            <Icon name="message-circle" className="w-12 h-12 mb-2 opacity-50" />
+                            <Icon name="MessageCircle" className="w-12 h-12 mb-2 opacity-50" />
                             <p>Select a conversation to start chatting</p>
                         </div>
                     )}

@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { AppShell } from '@vayva/ui';
+import { AdminShell } from '@/components/admin-shell';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
 
 export default function DomainsPage() {
     return (
-        <AppShell title="Domains" breadcrumb="Storefront / Domains">
+        <AdminShell title="Domains" breadcrumb="Storefront / Domains">
             <div className="flex flex-col gap-8 max-w-4xl mx-auto">
                 <div className="flex flex-col gap-1">
                     <h1 className="text-2xl font-bold text-white">Domains</h1>
@@ -21,7 +21,7 @@ export default function DomainsPage() {
                         <div className="flex items-start justify-between">
                             <div className="flex gap-4">
                                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                                    <Icon name="language" size={24} />
+                                    <Icon name="Globe" size={24} />
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <h3 className="font-bold text-white text-lg">brand.vayva.ng</h3>
@@ -39,7 +39,7 @@ export default function DomainsPage() {
                 {/* Custom Domain Placeholder */}
                 <GlassPanel className="p-8 text-center flex flex-col items-center justify-center gap-4 border-2 border-dashed border-white/10 shadow-none bg-transparent">
                     <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2">
-                        <Icon name="dns" size={32} className="text-text-secondary" />
+                        <Icon name="Globe" size={32} className="text-text-secondary" />
                     </div>
                     <h3 className="text-xl font-bold text-white">Connect a Custom Domain</h3>
                     <p className="text-text-secondary max-w-md">
@@ -47,10 +47,10 @@ export default function DomainsPage() {
                     </p>
                     <div className="flex gap-4 mt-2">
                         <Button>Buy New Domain</Button>
-                        <Button variant="white">Connect Existing Domain</Button>
+                        <Button variant="outline" className="bg-white text-black hover:bg-gray-50 border-gray-200">Connect Existing Domain</Button>
                     </div>
                 </GlassPanel>
             </div>
-        </AppShell>
+        </AdminShell>
     );
 }

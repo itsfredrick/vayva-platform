@@ -14,7 +14,7 @@ export default function MarketCartPage() {
 
                 {/* Single Seller Notice */}
                 <div className="mb-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-3">
-                    <Icon name="storefront" className="text-indigo-400 mt-1" />
+                    <Icon name="Store" className="text-indigo-400 mt-1" />
                     <div>
                         <h4 className="font-bold text-indigo-400 text-sm">Selling by TechDepot</h4>
                         <p className="text-xs text-indigo-200/70">
@@ -29,22 +29,22 @@ export default function MarketCartPage() {
                         {[1].map((item) => (
                             <div key={item} className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
                                 <div className="w-24 h-24 bg-[#0b141a] rounded-lg flex items-center justify-center shrink-0 border border-white/5">
-                                    <Icon name="computer" size={32} className="text-white/20" />
+                                    <Icon name="Monitor" size={32} className="text-white/20" />
                                 </div>
                                 <div className="flex-1 flex flex-col justify-between">
                                     <div>
                                         <div className="flex justify-between items-start mb-1">
                                             <h3 className="font-bold text-white">MacBook Pro M3 Max</h3>
-                                            <button className="text-text-secondary hover:text-state-danger"><Icon name="close" size={18} /></button>
+                                            <button className="text-text-secondary hover:text-state-danger"><Icon name="HelpCircle" size={16} /> Need help with this order?</button>
                                         </div>
                                         <p className="text-sm text-text-secondary">Space Black • 1TB</p>
                                     </div>
                                     <div className="flex justify-between items-end">
                                         <div className="flex items-center gap-3">
                                             <div className="flex items-center bg-white/5 border border-white/10 rounded-full h-8 px-2">
-                                                <button className="w-6 h-full flex items-center justify-center text-white/50 hover:text-white"><Icon name="remove" size={14} /></button>
+                                                <button className="w-6 h-full flex items-center justify-center text-white/50 hover:text-white"><Icon name="Minus" size={14} /></button>
                                                 <span className="w-6 text-center text-xs text-white font-bold">1</span>
-                                                <button className="w-6 h-full flex items-center justify-center text-white/50 hover:text-white"><Icon name="add" size={14} /></button>
+                                                <button className="w-6 h-full flex items-center justify-center text-white/50 hover:text-white"><Icon name="Plus" size={14} /></button>
                                             </div>
                                         </div>
                                         <div className="font-bold text-white">₦ 3,500,000</div>

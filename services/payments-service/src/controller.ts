@@ -1,9 +1,11 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { PrismaClient, PaymentStatus } from '@prisma/client';
+import { prisma, PaymentStatus } from '@vayva/db';
 import axios from 'axios';
+import crypto from 'crypto';
 
-const prisma = new PrismaClient();
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || 'sk_test_mock';
+const IS_TEST_MODE = !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_MOCK === 'true';
 
 const verifySchema = z.object({
     reference: z.string(),
@@ -13,143 +15,185 @@ const verifySchema = z.object({
 const initializeSchema = z.object({
     orderId: z.string(),
     email: z.string().email(),
-    amount: z.number(),
+    amount: z.number(), // In Kobo
     currency: z.string().default('NGN'),
-    callbackUrl: z.string().optional()
+    callbackUrl: z.string().optional(),
+    metadata: z.any().optional()
 });
 
 export const initializeTransactionHandler = async (req: FastifyRequest, reply: FastifyReply) => {
     const body = initializeSchema.parse(req.body);
 
-    // Create Transaction Record
-    const reference = `ref_${Date.now()}`; // Mock Ref
-    const transaction = await prisma.paymentTransaction.create({
+    const order = await prisma.order.findUnique({ where: { id: body.orderId } });
+    if (!order) return reply.status(404).send({ error: 'Order not found' });
+
+    const reference = `vva_${crypto.randomBytes(8).toString('hex')}`;
+
+    // Create Transaction Record in INITIATED state
+    await prisma.paymentTransaction.create({
         data: {
+            storeId: order.storeId,
             orderId: body.orderId,
             reference,
             amount: body.amount,
             currency: body.currency,
-            status: 'PENDING',
+            status: 'INITIATED',
             provider: 'PAYSTACK',
-            metadata: { email: body.email }
+            type: 'CHARGE',
+            metadata: body.metadata || {}
         }
     });
 
-    // Mock Paystack Response
-    // In real life: await axios.post('https://api.paystack.co/transaction/initialize', ...)
+    if (IS_TEST_MODE) {
+        return reply.send({
+            status: true,
+            message: "Test Mode: Authorization URL created",
+            data: {
+                authorization_url: `http://localhost:3001/paystack-mock?reference=${reference}&amount=${body.amount}`,
+                access_code: "mock_access_code",
+                reference
+            }
+        });
+    }
 
-    // We return a mock redirect URL that would normally go to Paystack form.
-    // For local dev, maybe we redirect to a mock page or just return success.
-    // Let's assume we return a URL `https://checkout.paystack.com/mock-access-code`.
-    // BUT since we don't have a real Paystack access code, frontend might need to simulate success.
+    try {
+        const response = await axios.post('https://api.paystack.co/transaction/initialize', {
+            email: body.email,
+            amount: body.amount,
+            reference,
+            callback_url: body.callbackUrl,
+            metadata: {
+                ...body.metadata,
+                orderId: body.orderId,
+                storeId: order.storeId
+            }
+        }, {
+            headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
+        });
 
-    return reply.send({
-        status: true,
-        message: "Authorization URL created",
-        data: {
-            authorization_url: `http://localhost:3000/paystack-mock?reference=${reference}&amount=${body.amount}`, // Redirect to our own mock page/component? Or just assume frontend handles it.
-            access_code: "mock_access_code",
-            reference
-        }
-    });
+        return reply.send(response.data);
+    } catch (error: any) {
+        console.error('Paystack Initialize Error:', error.response?.data || error.message);
+        return reply.status(500).send({ error: 'Failed to initialize payment' });
+    }
 };
 
 export const verifyPaymentHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { reference, storeId } = verifySchema.parse(req.body);
+    const { reference } = verifySchema.parse(req.body);
 
-    // Idempotency: Check if already processed
-    const existing = await prisma.paymentTransaction.findUnique({
+    const tx = await prisma.paymentTransaction.findUnique({
         where: { reference }
     });
 
-    if (existing && existing.status === 'VERIFIED') {
-        return reply.send({ status: 'VERIFIED', transaction: existing });
+    if (!tx) return reply.status(404).send({ error: 'Transaction not found' });
+    if (tx.status === 'VERIFIED' || tx.status === 'SUCCESS') {
+        return reply.send({ status: tx.status, transaction: tx });
     }
 
-    // Call Paystack (Mocking for now unless env provided)
-    // In real life: await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, ...)
-    const mockPaystackStatus = 'success'; // Assume success for V1 demo
-
-    let status: PaymentStatus = 'PENDING';
-    if (mockPaystackStatus === 'success') status = 'VERIFIED';
-    else status = 'FAILED';
-
-    if (!existing) {
-        return reply.status(404).send({ error: 'Transaction not found. Initiate first.' });
+    let paystackData;
+    if (IS_TEST_MODE) {
+        paystackData = { status: 'success', reference };
+    } else {
+        try {
+            const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+                headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
+            });
+            paystackData = response.data.data;
+        } catch (error: any) {
+            console.error('Paystack Verify Error:', error.response?.data || error.message);
+            return reply.status(500).send({ error: 'Failed to verify payment' });
+        }
     }
 
-    const updated = await prisma.paymentTransaction.update({
-        where: { id: existing.id },
-        data: { status }
-    });
-
-    if (status === 'VERIFIED') {
-        // Update Order
-        await prisma.order.update({
-            where: { id: existing.orderId },
-            data: {
-                paymentStatus: 'VERIFIED',
-                status: 'PAID' // Auto transition
-            }
-        });
-
-        // Create Timeline Event
-        await prisma.orderTimelineEvent.create({
-            data: {
-                orderId: existing.orderId,
-                type: 'PAYMENT_VERIFIED',
-                text: `Payment verified via Reference ${reference}`,
-                metadata: { amount: Number(existing.amount) }
-            }
-        });
+    if (paystackData.status === 'success') {
+        await processSuccessfulPayment(tx, paystackData);
+        const updated = await prisma.paymentTransaction.findUnique({ where: { id: tx.id } });
+        return reply.send({ status: 'SUCCESS', transaction: updated });
     }
 
-    return reply.send({ status, transaction: updated });
+    return reply.send({ status: 'FAILED', transaction: tx });
 };
 
 export const webhookHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    // Verify Signature (TODO: crypto.createHmac ...)
+    const signature = req.headers['x-paystack-signature'] as string;
+
+    // In test mode without key, we might skip signature check for internal test endpoint
+    if (!IS_TEST_MODE || signature) {
+        const hash = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY)
+            .update(JSON.stringify(req.body))
+            .digest('hex');
+
+        if (hash !== signature) {
+            return reply.status(401).send({ error: 'Invalid signature' });
+        }
+    }
+
     const event = req.body as any;
+    console.log('Paystack Webhook Received:', event.event);
 
     if (event.event === 'charge.success') {
         const reference = event.data.reference;
         const tx = await prisma.paymentTransaction.findUnique({ where: { reference } });
-        if (tx && tx.status !== 'VERIFIED') {
-            const updated = await prisma.paymentTransaction.update({
-                where: { id: tx.id },
-                data: { status: 'VERIFIED', metadata: event } // Store raw payload
-            });
 
-            await prisma.order.update({
-                where: { id: tx.orderId },
-                data: { paymentStatus: 'VERIFIED', status: 'PAID' }
-            });
-
-            await prisma.orderTimelineEvent.create({
-                data: {
-                    orderId: tx.orderId,
-                    type: 'PAYMENT_WEBHOOK',
-                    text: `Payment confirmed via Webhook`,
-                    metadata: { reference }
-                }
-            });
+        if (tx && tx.status !== 'SUCCESS' && tx.status !== 'VERIFIED') {
+            await processSuccessfulPayment(tx, event.data);
         }
     }
 
-    return reply.send({ received: true });
+    return reply.send({ status: 'success' });
 };
+
+async function processSuccessfulPayment(tx: any, paystackData: any) {
+    // 1. Update Transaction
+    await prisma.paymentTransaction.update({
+        where: { id: tx.id },
+        data: {
+            status: 'SUCCESS',
+            metadata: paystackData as any
+        }
+    });
+
+    // 2. Update Order via Internal Request (or direct Prisma if common DB)
+    // For V1 we use direct Prisma since they share the DB
+    await prisma.order.update({
+        where: { id: tx.orderId },
+        data: {
+            paymentStatus: 'SUCCESS',
+            status: 'PAID'
+        }
+    });
+
+    // 3. Create Timeline Event
+    await prisma.orderTimelineEvent.create({
+        data: {
+            orderId: tx.orderId,
+            type: 'PAYMENT_CONFIRMED',
+            text: `Payment of ${tx.currency} ${tx.amount / 100} confirmed via Paystack`,
+            metadata: { reference: tx.reference, paystackId: paystackData.id }
+        }
+    });
+
+    // 4. Create Receipt
+    const receiptNumber = `RCP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    await prisma.receipt.create({
+        data: {
+            orderId: tx.orderId,
+            paymentId: tx.id,
+            receiptNumber,
+            issuedAt: new Date(),
+        }
+    });
+
+    // 5. Trigger Notifications (Emit event or direct call)
+    // TODO: Notify Notifications Service
+}
 
 export const listTransactionsHandler = async (req: FastifyRequest, reply: FastifyReply) => {
     const storeId = req.headers['x-store-id'] as string;
     if (!storeId) return reply.status(400).send({ error: 'Store ID required' });
 
-    // Join with Order to filter by storeId
     const transactions = await prisma.paymentTransaction.findMany({
-        where: {
-            order: {
-                storeId: storeId
-            }
-        },
+        where: { storeId },
         include: {
             order: {
                 include: { customer: true }
@@ -160,3 +204,4 @@ export const listTransactionsHandler = async (req: FastifyRequest, reply: Fastif
 
     return reply.send(transactions);
 };
+

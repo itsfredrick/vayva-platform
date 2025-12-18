@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss";
-import { vayvaPreset } from "@vayva/ui";
+import { vayvaPreset } from "../../packages/ui/src/tailwind-preset";
 
 const config: Config = {
     content: [

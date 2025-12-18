@@ -1,8 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@vayva/db';
 import axios from 'axios';
-
-const prisma = new PrismaClient();
 
 export const processHandler = async (req: FastifyRequest, reply: FastifyReply) => {
     const { messageId } = req.body as { messageId: string };
@@ -26,9 +24,10 @@ export const processHandler = async (req: FastifyRequest, reply: FastifyReply) =
         const approval = await prisma.approval.create({
             data: {
                 storeId: message.conversation.storeId,
-                requesterId: message.conversation.customerPhone, // Using phone as ID for V1
-                actionType: 'DISCOUNT_APPLICATION',
-                payload: { discount: '10%' },
+                // requesterId: message.conversation.customerPhone, // Store in data if needed
+                type: 'DISCOUNT_APPLICATION',
+                summary: `Discount request from ${message.conversation.customerPhone}`,
+                data: { discount: '10%', requesterId: message.conversation.customerPhone },
                 status: 'PENDING'
             }
         });

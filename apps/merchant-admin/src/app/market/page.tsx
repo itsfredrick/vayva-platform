@@ -8,14 +8,14 @@ import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
 
 const CATEGORIES = [
-    { name: 'Fashion', icon: 'checkroom', count: '2.5k' },
-    { name: 'Electronics', icon: 'devices', count: '1.2k' },
-    { name: 'Beauty', icon: 'face', count: '850' },
-    { name: 'Home', icon: 'chair', count: '3.4k' },
-    { name: 'Groceries', icon: 'local_grocery_store', count: '500+' },
-    { name: 'Phones', icon: 'smartphone', count: '900+' },
-    { name: 'Services', icon: 'design_services', count: '120' },
-    { name: 'More', icon: 'grid_view', count: 'View all' },
+    { name: 'Fashion', icon: 'Shirt', count: '2.5k' },
+    { name: 'Electronics', icon: 'Monitor', count: '1.2k' },
+    { name: 'Beauty', icon: 'Sparkles', count: '850' },
+    { name: 'Home', icon: 'Armchair', count: '3.4k' },
+    { name: 'Groceries', icon: 'ShoppingCart', count: '500+' },
+    { name: 'Phones', icon: 'Smartphone', count: '900+' },
+    { name: 'Services', icon: 'PenTool', count: '120' },
+    { name: 'More', icon: 'LayoutGrid', count: 'View all' },
 ];
 
 const MOCK_PRODUCTS: MarketProduct[] = [
@@ -52,7 +52,7 @@ export default function MarketHomePage() {
                             placeholder="What are you looking for today?"
                         />
                         <button className="absolute right-2 top-2 h-10 w-10 bg-primary rounded-full flex items-center justify-center text-black hover:bg-primary/90 transition-colors">
-                            <Icon name="search" size={24} />
+                            <Icon name="Search" size={24} />
                         </button>
                     </div>
 
@@ -72,13 +72,13 @@ export default function MarketHomePage() {
                 <section>
                     <div className="flex justify-between items-end mb-6">
                         <h2 className="text-2xl font-bold text-white">Shop by Category</h2>
-                        <Link href="/market/categories/all" className="text-primary hover:text-primary/80 font-bold text-sm flex items-center gap-1">View All <Icon name="arrow_forward" size={16} /></Link>
+                        <Link href="/market/categories/all" className="text-primary hover:text-primary/80 font-bold text-sm flex items-center gap-1">View All <Icon name="ArrowRight" size={16} /></Link>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                         {CATEGORIES.map(cat => (
                             <Link href={`/market/categories/${cat.name.toLowerCase()}`} key={cat.name}>
                                 <div className="group bg-white/5 rounded-xl p-4 border border-white/5 hover:border-primary/50 hover:bg-white/10 transition-all text-center h-full flex flex-col items-center justify-center gap-3">
-                                    <Icon name={cat.icon} size={32} className="text-text-secondary group-hover:text-primary transition-colors" />
+                                    <Icon name={cat.icon as any} size={32} className="text-text-secondary group-hover:text-primary transition-colors" />
                                     <div>
                                         <div className="font-bold text-white text-sm">{cat.name}</div>
                                         <div className="text-[10px] text-text-secondary mt-1">{cat.count}</div>
@@ -116,11 +116,11 @@ export default function MarketHomePage() {
                                     <div>
                                         <div className="flex items-center gap-1 font-bold text-white group-hover:text-primary transition-colors">
                                             {seller.name}
-                                            {seller.verified && <Icon name="verified" size={16} className="text-blue-400" />}
+                                            {seller.verified && <Icon name="ShieldCheck" size={16} className="text-blue-400" />}
                                         </div>
                                         <div className="text-sm text-text-secondary">{seller.cat}</div>
                                     </div>
-                                    <Icon name="chevron_right" className="ml-auto text-white/20 group-hover:text-white" />
+                                    <Icon name="ChevronRight" className="ml-auto text-white/20 group-hover:text-white" />
                                 </div>
                             </Link>
                         ))}
@@ -130,13 +130,13 @@ export default function MarketHomePage() {
                 {/* Trust Strip */}
                 <section className="bg-gradient-to-r from-[#0f1a14] to-[#142210] rounded-2xl border border-white/5 p-8 flex flex-col md:flex-row justify-around gap-8 md:gap-0">
                     {[
-                        { icon: 'lock', title: 'Secure Payments', desc: 'Your money is safe until delivery.' },
-                        { icon: 'verified', title: 'Verified Sellers', desc: 'We verify businesses for your safety.' },
-                        { icon: 'support_agent', title: 'Vayva Support', desc: '24/7 support via WhatsApp.' },
+                        { icon: 'Lock', title: 'Secure Payments', desc: 'Your money is safe until delivery.' },
+                        { icon: 'ShieldCheck', title: 'Verified Sellers', desc: 'We verify businesses for your safety.' },
+                        { icon: 'Headphones', title: 'Vayva Support', desc: '24/7 support via WhatsApp.' },
                     ].map((item, i) => (
                         <div key={i} className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                <Icon name={item.icon} size={24} />
+                                <Icon name={item.icon as any} size={24} />
                             </div>
                             <div>
                                 <h3 className="font-bold text-white">{item.title}</h3>

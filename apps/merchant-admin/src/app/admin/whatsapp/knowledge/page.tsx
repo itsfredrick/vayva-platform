@@ -1,32 +1,32 @@
 'use client';
 
 import React from 'react';
-import { AppShell } from '@vayva/ui';
+import { AdminShell } from '@/components/admin-shell';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
 
 export default function KnowledgeBasePage() {
     return (
-        <AppShell title="Knowledge Base" breadcrumb="WhatsApp / Knowledge Base">
+        <AdminShell title="Knowledge Base" breadcrumb="WhatsApp / Knowledge Base">
             <div className="h-[calc(100vh-12rem)] max-w-7xl mx-auto flex gap-6">
                 {/* Left: Nav & List */}
                 <div className="w-[300px] flex flex-col gap-4 shrink-0">
                     <GlassPanel className="p-2 flex flex-col gap-1">
                         <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg text-white font-bold text-sm cursor-pointer">
-                            <Icon name="quiz" size={18} /> FAQs
+                            <Icon name="HelpCircle" size={18} /> FAQs
                         </div>
                         <div className="flex items-center gap-2 px-3 py-2 text-text-secondary hover:bg-white/5 rounded-lg font-medium text-sm cursor-pointer transition-colors">
-                            <Icon name="policy" size={18} /> Store Policies
+                            <Icon name="ScrollText" size={18} /> Store Policies
                         </div>
                         <div className="flex items-center gap-2 px-3 py-2 text-text-secondary hover:bg-white/5 rounded-lg font-medium text-sm cursor-pointer transition-colors">
-                            <Icon name="lightbulb" size={18} /> Product Guidance
+                            <Icon name="Lightbulb" size={18} /> Product Guidance
                         </div>
                     </GlassPanel>
 
                     <GlassPanel className="flex-1 flex flex-col p-4 overflow-hidden">
                         <div className="relative mb-4">
-                            <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
+                            <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                             <input className="w-full bg-white/5 border border-white/5 rounded-full pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-primary" placeholder="Search FAQs..." />
                         </div>
 
@@ -40,7 +40,7 @@ export default function KnowledgeBasePage() {
                         </div>
 
                         <Button size="sm" className="mt-4 w-full bg-white/10 hover:bg-white/20 text-white border-none space-x-2">
-                            <Icon name="add" /> <span>Add New Entry</span>
+                            <Icon name="Plus" /> <span>Add New Entry</span>
                         </Button>
                     </GlassPanel>
                 </div>
@@ -57,7 +57,7 @@ export default function KnowledgeBasePage() {
                             <div className="flex gap-2">
                                 <span className="px-2 py-0.5 rounded bg-white/10 text-text-secondary text-[10px] font-bold uppercase">General</span>
                                 <span className="px-2 py-0.5 rounded bg-state-success/10 text-state-success text-[10px] font-bold uppercase flex items-center gap-1">
-                                    <Icon name="visibility" size={12} /> Live
+                                    <Icon name="Eye" size={12} /> Live
                                 </span>
                             </div>
                         </div>
@@ -86,7 +86,7 @@ Refunds are processed within 24-48 hours after we receive the item.`}
                 <div className="w-[280px] shrink-0 space-y-6">
                     <GlassPanel className="p-4 bg-gradient-to-br from-indigo-900/10 to-transparent">
                         <h3 className="font-bold text-white mb-3 text-sm flex items-center gap-2">
-                            <Icon name="shield" className="text-indigo-400" size={16} /> AI Safety Rules
+                            <Icon name="Shield" className="text-indigo-400" size={16} /> AI Safety Rules
                         </h3>
                         <ul className="space-y-2 text-xs text-text-secondary list-disc pl-4">
                             <li>AI will quote this text <strong>exactly</strong> when asked.</li>
@@ -104,6 +104,6 @@ Refunds are processed within 24-48 hours after we receive the item.`}
                     </GlassPanel>
                 </div>
             </div>
-        </AppShell>
+        </AdminShell>
     );
 }

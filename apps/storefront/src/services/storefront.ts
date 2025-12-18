@@ -10,25 +10,45 @@ export const api = axios.create({
 
 export const StorefrontService = {
     getProducts: async () => {
-        // Hardcoded storeId for V1
-        const response = await api.get('/public/products?storeId=store-123');
-        return response.data;
+        // Mock implementation
+        console.log('Mocking Storefront Products');
+        await new Promise(resolve => setTimeout(resolve, 800));
+        return [
+            {
+                id: '1',
+                name: 'Premium Wireless Headphones',
+                description: 'High-fidelity audio with noise cancellation.',
+                variants: [{ price: 45000 }]
+            },
+            {
+                id: '2',
+                name: 'Ergonomic Office Chair',
+                description: 'Comfortable chair for long work sessions.',
+                variants: [{ price: 120000 }]
+            },
+            {
+                id: '3',
+                name: 'Mechanical Keyboard',
+                description: 'Tactile switches with RGB lighting.',
+                variants: [{ price: 35000 }]
+            }
+        ];
     },
     getProduct: async (id: string) => {
-        const response = await api.get(`/products/${id}`); // Using public get? Wait, products-service get /:id is generic, works if properly exposed. 
-        // Gateway maps /v1/products -> products-service. If products-service doesn't block by default, it works.
-        // But for "public" specifically, I might want to ensure I use the public proxy if I set one up.
-        // Actually I only set up /v1/public/products for listing.
-        // Let's assume /v1/products/:id is accessible if no middleware blocks it.
-        return response.data;
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return {
+            id,
+            name: 'Premium Product',
+            description: 'Detailed description here.',
+            variants: [{ price: 50000 }]
+        };
     },
     checkout: async (payload: any) => {
-        const response = await api.post('/public/checkout', { ...payload, storeId: 'store-123' });
-        return response.data;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return { success: true };
     },
     initializePayment: async (payload: any) => {
-        // payload: { orderId, email, amount }
-        const response = await api.post('/public/pay', payload);
-        return response.data;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return { authorization_url: 'https://checkout.paystack.com/mock' };
     }
 };

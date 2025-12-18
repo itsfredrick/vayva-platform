@@ -3,14 +3,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Icon } from '@/components/ui/icon';
-import { Button } from '@/components/ui/button';
+import { Icon } from '@vayva/ui';
+import { Button } from '@vayva/ui';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const NAV_LINKS = [
     { label: 'Features', href: '/features' },
-    { label: 'Marketplace', href: '/features/marketplace' },
+    { label: 'Marketplace', href: '/marketplace' },
     { label: 'Pricing', href: '/pricing' },
     { label: 'Templates', href: '/templates' },
     { label: 'Help', href: '/help' },

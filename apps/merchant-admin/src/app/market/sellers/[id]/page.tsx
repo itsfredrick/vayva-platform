@@ -27,12 +27,12 @@ export default function SellerProfilePage({ params }: { params: { id: string } }
                     <div className="flex-1 text-center md:text-left">
                         <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center md:justify-start gap-2">
                             {sellerName}
-                            <Icon name="verified" className="text-blue-400" size={24} />
+                            <Icon name="ShieldCheck" className="text-blue-400" size={24} />
                         </h1>
                         <div className="flex items-center justify-center md:justify-start gap-4 text-sm text-text-secondary mb-4">
-                            <span className="flex items-center gap-1"><Icon name="location_on" size={16} /> Ikeja, Lagos</span>
-                            <span className="flex items-center gap-1"><Icon name="star" size={16} className="text-yellow-400" /> 4.8 (120 reviews)</span>
-                            <span className="flex items-center gap-1"><Icon name="schedule" size={16} /> Joined 2024</span>
+                            <span className="flex items-center gap-1"><Icon name="MapPin" size={16} /> Ikeja, Lagos</span>
+                            <span className="flex items-center gap-1"><Icon name="Star" size={16} className="text-yellow-400" /> 4.8 (120 reviews)</span>
+                            <span className="flex items-center gap-1"><Icon name="Clock" size={16} /> Joined 2024</span>
                         </div>
                         <p className="text-white/80 max-w-xl">
                             Your #1 source for premium Apple products in Lagos. We sell authentic gadgets with warranty. Fast delivery guaranteed.
@@ -40,10 +40,10 @@ export default function SellerProfilePage({ params }: { params: { id: string } }
                     </div>
                     <div className="flex gap-3">
                         <Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold">
-                            <Icon name="chat" size={18} className="mr-2" /> Message
+                            <Icon name="MessageCircle" size={18} className="mr-2" /> Message
                         </Button>
                         <Button variant="outline" size="icon" className="rounded-full border-white/10 text-white hover:bg-white/5">
-                            <Icon name="share" size={18} />
+                            <Icon name="Share2" size={18} />
                         </Button>
                     </div>
                 </div>

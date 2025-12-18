@@ -1,10 +1,8 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@vayva/db';
 import { authenticator } from 'otplib';
 import { hashPassword, verifyPassword } from '../utils/hash';
-
-const prisma = new PrismaClient();
 
 const loginSchema = z.object({
     email: z.string().email(),
@@ -39,7 +37,7 @@ export const verifyMfaHandler = async (req: FastifyRequest, reply: FastifyReply)
     const { preAuthToken, code } = mfaVerifySchema.parse(req.body);
 
     // Decode/Verify PreAuth Token
-    const decoded = await req.jwtVerify<any>({ token: preAuthToken }); // Using any to bypass explicit type check for now, can be stricter
+    const decoded = req.server.jwt.verify<any>(preAuthToken);
     if (decoded.aud !== 'ops-pre-mfa') {
         return reply.status(401).send({ error: 'Invalid token audience' });
     }
@@ -111,3 +109,30 @@ export const setupMfaHandler = async (req: FastifyRequest, reply: FastifyReply) 
 
     return reply.send({ secret, otpauth: authenticator.keyuri(email, 'Vayva Ops', secret) });
 };
+
+export const getMeHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const decoded = req.user as any;
+    const opsUser = await prisma.opsUser.findUnique({
+        where: { id: decoded.sub }
+    });
+
+    if (!opsUser) return reply.status(404).send({ error: 'Ops user not found' });
+
+    return reply.send({
+        id: opsUser.id,
+        email: opsUser.email,
+        name: opsUser.name,
+        role: opsUser.role,
+        createdAt: opsUser.createdAt.toISOString()
+    });
+};
+
+export const logoutHandler = async (req: FastifyRequest, reply: FastifyReply) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.replace('Bearer ', '');
+        await prisma.opsSession.deleteMany({ where: { token } });
+    }
+    return reply.send({ message: 'Logged out successfully' });
+};
+

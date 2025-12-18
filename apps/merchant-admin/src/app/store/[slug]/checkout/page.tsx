@@ -16,7 +16,7 @@ export default function CheckoutPage({ params }: { params: { slug: string } }) {
                         <span className="font-bold text-lg hidden md:block">Vayva Store</span>
                     </Link>
                     <div className="flex items-center gap-2 text-sm text-text-secondary">
-                        <Icon name="lock" size={14} /> Secure Checkout
+                        <Icon name="Lock" size={14} /> Secure Checkout
                     </div>
                 </div>
             </header>
@@ -65,7 +65,7 @@ export default function CheckoutPage({ params }: { params: { slug: string } }) {
                             Payment
                         </h2>
                         <div className="p-4 rounded-xl border border-white/10 bg-white/5 text-center space-y-3">
-                            <Icon name="credit_card" size={32} className="mx-auto text-white/50" />
+                            <Icon name="CreditCard" size={32} className="mx-auto text-white/50" />
                             <p className="text-sm text-text-secondary">After clicking "Pay Now", you will be redirected to Paystack to complete your purchase securely.</p>
                         </div>
                     </section>

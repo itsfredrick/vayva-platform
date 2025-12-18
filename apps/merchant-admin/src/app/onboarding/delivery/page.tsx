@@ -1,98 +1,116 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { AppShell } from '@vayva/ui';
-import { GlassPanel } from '@vayva/ui';
-import { Button } from '@vayva/ui';
-import { Input } from '@vayva/ui';
-import { Stepper } from '@vayva/ui';
+import React, { useState, useEffect } from 'react';
+import { Button, Input, Icon } from '@vayva/ui';
+import { useOnboarding } from '@/context/OnboardingContext';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 
 export default function DeliveryPage() {
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
+    const { state, updateState, goToStep } = useOnboarding();
 
-    // Delivery State
-    const [enablePickup, setEnablePickup] = useState(true);
-    const [enableDelivery, setEnableDelivery] = useState(true);
-    const [flatFee, setFlatFee] = useState('1500');
+    // Default form data
+    const [formData, setFormData] = useState({
+        address: '',
+        contactName: '',
+        phone: '',
+        notes: '',
+    });
 
-    const handleSave = async () => {
-        setIsLoading(true);
-        await new Promise(r => setTimeout(r, 1000));
-        setIsLoading(false);
-        router.push('/onboarding/whatsapp');
+    // Populate from state or use identity defaults
+    useEffect(() => {
+        if (state?.pickupLocation) {
+            setFormData(state.pickupLocation);
+        } else if (state?.identity) {
+            // Pre-fill contact info from identity
+            setFormData(prev => ({
+                ...prev,
+                contactName: state.identity?.fullName || '',
+                phone: state.identity?.phone || ''
+            }));
+        }
+    }, [state]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        await updateState({
+            pickupLocation: formData
+        });
+
+        await goToStep('templates');
+    };
+
+    const handleBack = () => {
+        goToStep('brand');
     };
 
     return (
-        <AppShell mode="onboarding" breadcrumb="Onboarding / Delivery">
-            <div className="flex flex-col gap-6 max-w-5xl mx-auto">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">Delivery setup</h1>
-                        <p className="text-text-secondary">How will customers get their orders?</p>
-                    </div>
-                    <Stepper currentStep={6} />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Methods */}
-                    <GlassPanel className="p-8 flex flex-col gap-8">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="font-bold text-white">Store Pickup</h3>
-                                <p className="text-sm text-text-secondary">Customers pick up from your address</p>
-                            </div>
-                            <input
-                                type="checkbox"
-                                className="toggle toggle-primary"
-                                checked={enablePickup}
-                                onChange={e => setEnablePickup(e.target.checked)}
-                            />
-                        </div>
-
-                        <div className="border-t border-white/5" />
-
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="font-bold text-white">Local Delivery</h3>
-                                <p className="text-sm text-text-secondary">You deliver to customers</p>
-                            </div>
-                            <input
-                                type="checkbox"
-                                className="toggle toggle-primary"
-                                checked={enableDelivery}
-                                onChange={e => setEnableDelivery(e.target.checked)}
-                            />
-                        </div>
-                    </GlassPanel>
-
-                    {/* Fees */}
-                    {enableDelivery && (
-                        <GlassPanel className="p-8 flex flex-col gap-6 animate-fade-in">
-                            <h3 className="font-bold text-white">Delivery Fees</h3>
-
-                            <Input
-                                label="Nationwide Flat Fee (₦)"
-                                value={flatFee}
-                                onChange={e => setFlatFee(e.target.value)}
-                                type="number"
-                            />
-
-                            <div className="flex gap-2 flex-wrap">
-                                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-text-secondary cursor-pointer hover:bg-white/10">Lagos</span>
-                                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-text-secondary cursor-pointer hover:bg-white/10">Abuja</span>
-                                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-text-secondary cursor-pointer hover:bg-white/10 text-primary border-primary/30 bg-primary/10">+ Add Zone Override</span>
-                            </div>
-                        </GlassPanel>
-                    )}
-                </div>
-
-                <div className="flex justify-between">
-                    <Button variant="ghost" onClick={() => router.back()}>Back</Button>
-                    <Button onClick={handleSave} isLoading={isLoading}>Save & Continue</Button>
-                </div>
+        <div className="max-w-xl mx-auto">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-black mb-2">Pickup Location</h1>
+                <p className="text-gray-600">Where should customers or couriers pick up orders?</p>
             </div>
-        </AppShell>
+
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+
+                <div className="space-y-1">
+                    <Input
+                        label="Pickup Address"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        required
+                        placeholder="e.g. 123 Market Street, Balogun Market"
+                    />
+                    <p className="text-xs text-gray-500">This address will be visible to customers.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                        label="Contact Name"
+                        value={formData.contactName}
+                        onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                        required
+                        placeholder="Who to contact?"
+                    />
+
+                    <PhoneInput
+                        label="Contact Phone"
+                        value={formData.phone}
+                        onChange={(phone) => setFormData({ ...formData, phone })}
+                        required
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-black">Notes / Landmark <span className="text-gray-400 font-normal">(Optional)</span></label>
+                    <textarea
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        className="w-full min-h-[100px] rounded-xl border border-gray-200 p-3 text-sm outline-none focus:ring-2 focus:ring-black/5 focus:border-black resize-none"
+                        placeholder="e.g. Opposite the yellow building, ask for Mama Nkechi"
+                    />
+                </div>
+
+                <div className="flex items-center gap-4 pt-4">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={handleBack}
+                        className="flex-1 text-gray-500 hover:text-black"
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        className="flex-[2] !bg-black !text-white h-12 rounded-xl"
+                        disabled={!formData.address || !formData.phone}
+                    >
+                        Continue
+                        <Icon name="ArrowRight" className="ml-2 w-4 h-4" />
+                    </Button>
+                </div>
+            </form>
+        </div>
     );
 }

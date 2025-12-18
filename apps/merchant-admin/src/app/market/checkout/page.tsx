@@ -15,7 +15,7 @@ export default function MarketCheckoutPage() {
                         <span className="font-bold text-lg hidden md:block">Vayva Market</span>
                     </Link>
                     <div className="flex items-center gap-2 text-sm text-text-secondary">
-                        <Icon name="lock" size={14} /> Secure with Vayva Escrow
+                        <Icon name="Lock" size={14} /> Secure with Vayva Escrow
                     </div>
                 </div>
             </header>
@@ -37,7 +37,7 @@ export default function MarketCheckoutPage() {
                             <input className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary placeholder:text-text-secondary/50" placeholder="Phone" />
                         </div>
                         <div className="mt-4 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-xs text-indigo-300 flex items-center gap-2">
-                            <Icon name="local_shipping" size={16} />
+                            <Icon name="Truck" size={16} />
                             <span>Fulfilled by <strong>TechDepot</strong>. Tracking available after payment.</span>
                         </div>
                     </section>
@@ -51,14 +51,14 @@ export default function MarketCheckoutPage() {
                         <div className="space-y-3">
                             <div className="flex items-center justify-between p-4 rounded-xl border border-primary/50 bg-primary/5 cursor-pointer">
                                 <div className="flex items-center gap-3">
-                                    <Icon name="credit_card" className="text-primary" />
+                                    <Icon name="CreditCard" className="text-primary" />
                                     <span className="font-bold text-white">Pay with Card</span>
                                 </div>
-                                <Icon name="check_circle" className="text-primary" />
+                                <Icon name="CheckCircle" className="text-primary" />
                             </div>
                             <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10">
                                 <div className="flex items-center gap-3">
-                                    <Icon name="account_balance" className="text-text-secondary" />
+                                    <Icon name="Landmark" className="text-text-secondary" />
                                     <span className="font-bold text-white/70">Bank Transfer</span>
                                 </div>
                             </div>
@@ -84,12 +84,12 @@ export default function MarketCheckoutPage() {
                     <div className="flex items-center gap-2 mb-6 pb-6 border-b border-white/10">
                         <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xs">T</div>
                         <span className="font-bold text-white text-sm">TechDepot</span>
-                        <Icon name="verified" className="text-blue-400" size={14} />
+                        <Icon name="ShieldCheck" className="text-blue-400" size={14} />
                     </div>
 
                     <div className="flex gap-4 mb-6">
                         <div className="w-16 h-16 bg-[#0b141a] rounded-lg border border-white/5 relative flex items-center justify-center">
-                            <Icon name="computer" size={24} className="text-white/20" />
+                            <Icon name="Monitor" size={24} className="text-white/20" />
                             <span className="absolute -top-2 -right-2 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center text-[10px] font-bold text-white">1</span>
                         </div>
                         <div className="flex-1">

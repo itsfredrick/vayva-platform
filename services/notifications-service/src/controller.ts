@@ -1,15 +1,13 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@vayva/db';
 
 const notifySchema = z.object({
     channel: z.enum(['EMAIL', 'SMS', 'PUSH', 'WHATSAPP']),
     recipient: z.string(),
     template: z.string(),
     data: z.record(z.any()).optional(),
-    storeId: z.string().optional(), // Added for filtering
+    storeId: z.string(), // Required by schema
     userId: z.string().optional() // Added for filtering
 });
 
@@ -29,10 +27,9 @@ export const notifyHandler = async (req: FastifyRequest, reply: FastifyReply) =>
         data: {
             type: body.template, // Using template as type for now
             title: `Notification: ${body.template}`,
-            content: JSON.stringify(body.data),
+            message: JSON.stringify(body.data),
             userId: body.userId,
-            storeId: body.storeId,
-            status: 'UNREAD'
+            storeId: body.storeId
         }
     });
 

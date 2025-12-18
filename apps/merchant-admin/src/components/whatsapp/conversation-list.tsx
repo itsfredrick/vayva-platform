@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@vayva/ui';
 
 type Conversation = {
     id: string;
@@ -19,7 +19,7 @@ export function ConversationList({ items, activeId }: { items: Conversation[], a
             {/* Toolbar */}
             <div className="p-4 border-b border-white/5 space-y-3">
                 <div className="relative">
-                    <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
+                    <Icon name="Search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                     <input
                         className="w-full bg-white/5 border border-white/5 rounded-full pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-primary placeholder:text-text-secondary/50"
                         placeholder="Search conversations..."

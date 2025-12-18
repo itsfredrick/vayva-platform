@@ -1,52 +1,83 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { StorefrontService } from '@/services/storefront';
-import Link from 'next/link';
-import { Button } from '@vayva/ui'; // Assuming we re-exported or copied ui package components
+import React, { useEffect, useState } from 'react';
+import { StoreShell } from '@/components/StoreShell';
+import { ProductCard } from '@/components/ProductCard';
+import { useStore } from '@/context/StoreContext';
+import { StorefrontService } from '@/services/storefront.service';
+import { PublicProduct } from '@/types/storefront';
+import NextLink from 'next/link';
+const Link = NextLink as any;
+import { ArrowRight as ArrowRightIcon } from 'lucide-react';
+const ArrowRight = ArrowRightIcon as any;
 
-// Mock UI copy if @vayva/ui not fully linked in simple scaffold or if it relies on admin providers
-// For simplicity in scaffold, I'll use raw Tailwind if UI package setup is complex.
-// But we copied `apps/merchant-admin` package.json which has `workspace:*` dep on ui. 
-// So imports should work if tsconfig paths align.
-
-export default function HomePage() {
-  const [products, setProducts] = useState<any[]>([]);
+export default function StoreHome() {
+  const { store } = useStore();
+  const [products, setProducts] = useState<PublicProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
-    StorefrontService.getProducts().then(setProducts).catch(console.error);
-  }, []);
+    if (store) {
+      const load = async () => {
+        const data = await StorefrontService.getProducts(store.id);
+        setProducts(data);
+        setLoadingProducts(false);
+      };
+      load();
+    }
+  }, [store]);
+
+  // If StoreShell handles "no store", we just return null or loading here until context is ready
+  if (!store) return null; // Logic is inside StoreShell actually
 
   return (
-    <div className="min-h-screen bg-black text-white p-8 font-sans">
-      <header className="flex justify-between items-center mb-12">
-        <h1 className="text-3xl font-bold tracking-tighter">VAYVA STORE</h1>
-        <Link href="/cart" className="text-sm font-medium hover:text-primary">
-          Cart
-        </Link>
-      </header>
+    <StoreShell>
+      {/* Hero Section */}
+      <section className="relative px-4 py-20 bg-gray-50 mb-16">
+        <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">{store.name}</h1>
+          <p className="text-lg md:text-xl text-gray-500 max-w-2xl mb-10 leading-relaxed">
+            {store.tagline || 'Explore our varied collection of premium products.'}
+          </p>
+          <Link href={`/collections/all?store=${store.slug}`}>
+            <button className="bg-black text-white px-8 py-4 rounded-full font-bold text-sm tracking-wide hover:bg-gray-900 transition-colors">
+              Shop All Products
+            </button>
+          </Link>
+        </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {products.length === 0 ? (
-          <p className="text-gray-500 col-span-3 text-center py-20">Loading products...</p>
-        ) : (
-          products.map((product) => (
-            <Link href={`/product/${product.id}`} key={product.id} className="group">
-              <div className="aspect-square bg-white/5 rounded-2xl mb-4 overflow-hidden relative">
-                {/* Placeholder Image */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <span className="bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-mono border border-white/10">
-                    {product.variants[0]?.price ? `NGN ${product.variants[0].price.toLocaleString()}` : 'N/A'}
-                  </span>
-                </div>
+      {/* Featured Products */}
+      <section className="max-w-7xl mx-auto px-4 mb-24">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold">Featured</h2>
+          <Link href={`/collections/all?store=${store.slug}`} className="flex items-center gap-2 text-sm font-medium hover:text-gray-600">
+            View all <ArrowRight size={16} />
+          </Link>
+        </div>
+
+        {loadingProducts ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-100 aspect-[4/5] rounded-xl mb-4"></div>
+                <div className="h-4 bg-gray-100 w-2/3 rounded mb-2"></div>
+                <div className="h-4 bg-gray-100 w-1/3 rounded"></div>
               </div>
-              <h3 className="text-xl font-medium mb-1 group-hover:text-primary transition-colors">{product.name}</h3>
-              <p className="text-sm text-gray-400 line-clamp-2">{product.description}</p>
-            </Link>
-          ))
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
+            {products.slice(0, 4).map(product => (
+              <ProductCard key={product.id} product={product} storeSlug={store.slug} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 border border-dashed border-gray-200 rounded-xl">
+            <p className="text-gray-500">No products available yet.</p>
+          </div>
         )}
-      </div>
-    </div>
+      </section>
+    </StoreShell>
   );
 }

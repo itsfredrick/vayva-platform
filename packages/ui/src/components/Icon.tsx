@@ -1,14 +1,20 @@
-import React from 'react';
-import dynamic from 'next/dynamic';
-import { LucideProps } from 'lucide-react';
-import dynamicIconImports from 'lucide-react/dynamicIconImports';
+import { icons } from 'lucide-react';
 
-interface IconProps extends LucideProps {
-    name: keyof typeof dynamicIconImports;
+export type IconName = keyof typeof icons;
+
+export interface IconProps extends React.SVGProps<SVGSVGElement> {
+    name: IconName;
+    size?: number | string;
 }
 
-export const Icon = ({ name, ...props }: IconProps) => {
-    const LucideIcon = dynamic(dynamicIconImports[name]);
+export const Icon = ({ name, size = 24, ...props }: IconProps) => {
+    const LucideIcon = icons[name];
 
-    return <LucideIcon {...props} />;
+    if (!LucideIcon) {
+        console.warn(`Icon ${name} not found`);
+        return null;
+    }
+
+    // @ts-ignore
+    return <LucideIcon size={size} {...props} />;
 };

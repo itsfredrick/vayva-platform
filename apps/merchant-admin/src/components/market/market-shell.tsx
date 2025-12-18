@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
+import { Button } from '@vayva/ui';
+import { Icon } from '@vayva/ui';
 
 interface MarketShellProps {
     children: React.ReactNode;
@@ -26,7 +26,7 @@ export function MarketShell({ children }: MarketShellProps) {
                     {/* Center: Global Search */}
                     <div className="hidden md:flex flex-1 max-w-2xl relative">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Icon name="search" className="text-white/40" size={20} />
+                            <Icon name="Search" className="text-white/40" size={20} />
                         </div>
                         <input
                             className="w-full h-11 bg-white/5 border border-white/10 rounded-full pl-11 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all placeholder:text-white/30"
@@ -39,23 +39,23 @@ export function MarketShell({ children }: MarketShellProps) {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="icon" className="md:hidden text-white"><Icon name="search" /></Button>
+                        <Button variant="ghost" size="icon" className="md:hidden text-white"><Icon name="Search" /></Button>
 
                         <div className="hidden lg:flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
-                            <Icon name="location_on" size={16} className="text-primary" />
+                            <Icon name="MapPin" size={16} className="text-primary" />
                             <span className="text-xs font-medium text-white/90">Lagos</span>
-                            <Icon name="expand_more" size={16} className="text-white/50" />
+                            <Icon name="ChevronDown" size={16} className="text-white/50" />
                         </div>
 
                         <Link href="/market/cart">
                             <Button variant="ghost" size="icon" className="text-white relative hover:bg-white/5">
-                                <Icon name="shopping_cart" />
+                                <Icon name="ShoppingCart" />
                                 <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full ring-2 ring-[#142210]" />
                             </Button>
                         </Link>
 
                         <Button variant="ghost" size="icon" className="text-white hidden sm:flex hover:bg-white/5">
-                            <Icon name="account_circle" size={24} />
+                            <Icon name="User" size={24} />
                         </Button>
                     </div>
                 </div>
@@ -79,8 +79,8 @@ export function MarketShell({ children }: MarketShellProps) {
                                 The most trusted marketplace for premium products in Nigeria. Shop directly from verified sellers with confidence.
                             </p>
                             <div className="flex gap-4">
-                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 cursor-pointer transition-colors"><Icon name="public" size={20} /></div>
-                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 cursor-pointer transition-colors"><Icon name="camera_alt" size={20} /></div>
+                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 cursor-pointer transition-colors"><Icon name="Globe" size={20} /></div>
+                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 cursor-pointer transition-colors"><Icon name="Camera" size={20} /></div>
                             </div>
                         </div>
 

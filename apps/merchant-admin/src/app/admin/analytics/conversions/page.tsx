@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { AppShell } from '@vayva/ui';
+import { AdminShell } from '@/components/admin-shell';
 import { GlassPanel } from '@vayva/ui';
 import { AnalyticsFilterBar } from '@/components/analytics-filter-bar';
 import { Icon } from '@vayva/ui';
 
 export default function ConversionFunnelPage() {
     return (
-        <AppShell title="Conversion Funnel" breadcrumb="Analytics / Conversions">
+        <AdminShell title="Conversion Funnel" breadcrumb="Analytics / Conversions">
             <div className="flex flex-col gap-6">
                 <AnalyticsFilterBar />
 
@@ -27,7 +27,7 @@ export default function ConversionFunnelPage() {
                             </div>
                         </div>
 
-                        <Icon name="arrow_downward" className="text-white/20" />
+                        <Icon name="ArrowDown" className="text-white/20" />
 
                         {/* Step 2 */}
                         <div className="w-full">
@@ -42,7 +42,7 @@ export default function ConversionFunnelPage() {
                             </div>
                         </div>
 
-                        <Icon name="arrow_downward" className="text-white/20" />
+                        <Icon name="ArrowDown" className="text-white/20" />
 
                         {/* Step 3 */}
                         <div className="w-full">
@@ -56,7 +56,7 @@ export default function ConversionFunnelPage() {
                             </div>
                         </div>
 
-                        <Icon name="arrow_downward" className="text-white/20" />
+                        <Icon name="ArrowDown" className="text-white/20" />
 
                         {/* Step 4 */}
                         <div className="w-full">
@@ -73,7 +73,7 @@ export default function ConversionFunnelPage() {
                 </GlassPanel>
 
                 <div className="p-4 rounded-xl bg-white/5 border border-white/5 flex gap-4 items-start">
-                    <Icon name="lightbulb" className="text-primary mt-1" />
+                    <Icon name="Lightbulb" className="text-primary mt-1" />
                     <div>
                         <h3 className="font-bold text-white text-sm">Optimization Tip</h3>
                         <p className="text-xs text-text-secondary">
@@ -82,6 +82,6 @@ export default function ConversionFunnelPage() {
                     </div>
                 </div>
             </div>
-        </AppShell>
+        </AdminShell>
     );
 }

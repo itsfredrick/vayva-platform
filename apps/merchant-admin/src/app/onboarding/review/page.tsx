@@ -1,58 +1,127 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { Button, Icon, GlassPanel } from '@vayva/ui';
+import { useOnboarding } from '@/context/OnboardingContext';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Button, GlassPanel, Icon } from '@vayva/ui';
-import { StoreService } from '@/services/store';
-import Cookies from 'js-cookie';
 
 export default function ReviewPage() {
+    const { state, completeOnboarding, goToStep } = useOnboarding();
+    const { user } = useAuth();
     const router = useRouter();
-    const storeId = Cookies.get('vayva_store_id');
     const [loading, setLoading] = useState(false);
 
-    if (!storeId) {
-        router.push('/onboarding/store-details');
-        return null;
-    }
+    const isKycPending = state?.kyc?.status === 'pending' || state?.kyc?.status === 'PENDING';
+    const isKycVerified = state?.kyc?.status === 'verified' || state?.kyc?.status === 'VERIFIED';
 
-    const handlePublish = async () => {
+    const handleFinish = async () => {
         setLoading(true);
-        try {
-            // Publish Store
-            await StoreService.update(storeId, {
-                status: 'ACTIVE'
-            });
-            // Redirect to Dashboard
-            router.push('/admin/dashboard?onboarding=complete');
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
+        // Save status
+        await completeOnboarding();
+        // Logic inside completeOnboarding redirects to dashboard or we do it here
     };
 
-    return (
-        <GlassPanel className="p-8 text-center">
-            <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Icon name="Sparkles" />
-            </div>
-            <h2 className="text-3xl font-bold text-white mb-4">Ready to Launch!</h2>
-            <p className="text-text-secondary max-w-md mx-auto mb-8">
-                You've set up the basics. Publish your store now to start selling, or continue setting up payments and shipping in the dashboard.
-            </p>
+    if (!state) return null;
 
-            <div className="flex flex-col gap-4 max-w-sm mx-auto">
-                <Button
-                    onClick={handlePublish}
-                    disabled={loading}
-                    size="lg"
-                    className="h-14 bg-white text-black hover:bg-white/90 font-bold"
-                >
-                    {loading ? 'Launching...' : 'Publish Store'}
-                </Button>
-                <Button variant="ghost" onClick={() => router.back()}>Back</Button>
+    return (
+        <div className="max-w-2xl mx-auto pb-20">
+            <div className="mb-8 text-center">
+                <div className="w-16 h-16 bg-[#46EC13] rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-slow">
+                    <Icon name="Check" className="text-black" size={32} />
+                </div>
+                <h1 className="text-3xl font-bold text-black mb-2">You're almost there!</h1>
+                <p className="text-gray-600">Review your details before we launch your store.</p>
             </div>
-        </GlassPanel>
+
+            <div className="space-y-6">
+                {/* Store Summary */}
+                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-black">Store Profile</h3>
+                        <Button variant="ghost" size="sm" onClick={() => goToStep('store-details')}>Edit</Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p className="text-gray-500">Store Name</p>
+                            <p className="font-medium text-black">{state.storeDetails?.storeName}</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Store URL</p>
+                            <p className="font-medium text-black">vayva.shop/{state.storeDetails?.slug}</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Contact</p>
+                            <p className="font-medium text-black">{state.identity?.fullName}</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Phone</p>
+                            <p className="font-medium text-black">{state.identity?.phone}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Operations */}
+                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-black">Operations</h3>
+                        <Button variant="ghost" size="sm" onClick={() => goToStep('delivery')}>Edit</Button>
+                    </div>
+                    <div className="text-sm space-y-2">
+                        <div>
+                            <p className="text-gray-500">Pickup Address</p>
+                            <p className="font-medium text-black">{state.pickupLocation?.address}</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Primary Channel</p>
+                            <p className="font-medium text-black">Online Storefront {state.enabledChannels?.market ? '+ One Market' : ''}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Verification Status */}
+                <div className={`p-6 rounded-2xl border ${isKycPending ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
+                    <div className="flex items-start gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isKycPending ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                            <Icon name={isKycPending ? 'Clock' : 'ShieldCheck'} />
+                        </div>
+                        <div>
+                            <h3 className={`font-bold ${isKycVerified ? 'text-green-900' : 'text-yellow-900'}`}>
+                                {isKycVerified ? 'Identity Verified' : (isKycPending ? 'Verification Pending' : 'Submission Required')}
+                            </h3>
+                            <p className={`text-sm mt-1 ${isKycVerified ? 'text-green-700' : 'text-yellow-700'}`}>
+                                {isKycVerified
+                                    ? "Your identity has been verified. Your store will be live immediately after setup."
+                                    : (isKycPending
+                                        ? "Your store will be launched soon after verification. You can proceed to your dashboard now."
+                                        : "Please complete the identity verification step to launch your store.")
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:static lg:bg-transparent lg:border-none lg:p-0 lg:mt-8">
+                <div className="max-w-2xl mx-auto flex gap-4">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => goToStep('kyc')}
+                        className="flex-1 text-gray-500 hover:text-black hidden lg:flex"
+                    >
+                        Back
+                    </Button>
+                    <Button
+                        onClick={handleFinish}
+                        className="w-full !bg-black !text-white h-14 text-lg rounded-xl shadow-xl hover:scale-[1.02] transition-transform"
+                        isLoading={loading}
+                    >
+                        {isKycPending ? 'Go to Dashboard' : 'Launch My Store'}
+                        <Icon name="Rocket" className="ml-2" />
+                    </Button>
+                </div>
+            </div>
+        </div>
     );
 }

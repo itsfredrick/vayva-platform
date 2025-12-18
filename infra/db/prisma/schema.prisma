@@ -14,19 +14,36 @@ datasource db {
 // 0. Enums (System-wide Domain Contracts)
 // -----------------------------------------------------------------------------
 
-enum Role {
+enum AppRole {
   OWNER
   ADMIN
   STAFF
+  SUPPORT
+  FINANCE
   OPS_ADMIN
   OPS_AGENT
 }
+
+enum SubscriptionPlan {
+  STARTER
+  GROWTH
+  PRO
+}
+
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETE
+}
+
 
 enum OrderStatus {
   DRAFT
   PENDING_PAYMENT
   PAID
   PROCESSING
+  FULFILLING
+  OUT_FOR_DELIVERY
   SHIPPED
   DELIVERED
   CANCELLED
@@ -39,6 +56,7 @@ enum PaymentStatus {
   INITIATED
   PENDING
   VERIFIED
+  SUCCESS
   FAILED
   REFUNDED
   DISPUTED
@@ -93,6 +111,48 @@ enum Channel {
   WHATSAPP
 }
 
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  AUDIO
+  VIDEO
+  DOCUMENT
+  STICKER
+  LOCATION
+  TEMPLATE
+}
+
+enum AiActionStatus {
+  PROPOSED
+  PENDING_APPROVAL
+  RUNNING
+  SUCCEEDED
+  FAILED
+  REJECTED
+}
+
+enum KycStatus {
+  NOT_STARTED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum VirtualAccountStatus {
+    NOT_CREATED
+    CREATED
+    FAILED
+}
+
+
 // -----------------------------------------------------------------------------
 // 1. Tenancy & Access (Core Security Boundary)
 // -----------------------------------------------------------------------------
@@ -101,17 +161,20 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String   // Bcrypt hash
-  name      String?
+  firstName String?
+  lastName  String?
   phone     String?
   avatarUrl String?
   
   // Merchant Context
   isEmailVerified Boolean @default(false)
+  isPhoneVerified Boolean @default(false)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   memberships Membership[] // Links user to multiple stores
+  tenantMemberships TenantMembership[] // Links user to tenants
   sessions    MerchantSession[]
   audits      AuditEvent[] // Actions performed by this user
 }
@@ -216,6 +279,12 @@ model Store {
   slug      String   @unique // Public URL identifier
   logoUrl   String?
   
+  // Onboarding & Plan
+  onboardingStatus OnboardingStatus @default(NOT_STARTED)
+  onboardingLastStep String? @default("START")
+  onboardingUpdatedAt DateTime @default(now())
+  plan SubscriptionPlan @default(STARTER)
+
   // Settings (JSON for flexibility in v1)
   settings  Json?    // { currency: "NGN", timezone: "Africa/Lagos", contact: {...} }
   
@@ -223,39 +292,239 @@ model Store {
   updatedAt DateTime @updatedAt
 
   memberships       Membership[]
+  // Integration 9: Operations
+  tickets           SupportTicket[]
+  ticketMessages    TicketMessage[]
+  notificationTemplates NotificationTemplate[]
+  notificationOutbox    NotificationOutbox[]
+  
+  // Integration 8: Catalog
   products          Product[]
   collections       Collection[]
+  
+  // Integration 9: Operations
+  orderEvents       OrderEvent[]
+  customerAddresses CustomerAddress[]
+
   orders            Order[]
   customers         Customer[]
-  deliveryZones     DeliveryZone[]
-  whatsAppConfig    WhatsAppConfig?
+  staffInvites      StaffInvite[]
+  
+  // WhatsApp & Communication
+  whatsAppChannel   WhatsappChannel?
+  contacts          Contact[]
   conversations     Conversation[]
-  approvals         Approval[]
-  notifications     Notification[]
+  aiActionRuns      AiActionRun[]
+  approvalRequests  ApprovalRequest[]
+  
+  // Financial relations
+  wallet            Wallet?
+  ledgerEntries     LedgerEntry[]
+  bankBeneficiaries BankBeneficiary[]
+  withdrawals       Withdrawal[]
+  invoices          Invoice[]
+  kycRecord         KycRecord?
   auditEvents       AuditEvent[]
+  notifications     Notification[]
+  // Payment Provider Relations
+  paymentAccounts   PaymentAccount[]
+  paymentCustomers  PaymentCustomer[]
+  paymentIntents    PaymentIntent[]
+  charges           Charge[]
+  refunds           Refund[]
+  payouts           Payout[]
   transactions      PaymentTransaction[]
+  
+  // Fulfillment Relations (NEW)
+  deliveryProfiles  DeliveryProfile[]
+  deliveryZones     DeliveryZone[]
+  deliveryOptions   DeliveryOption[]
+  carrierAccounts   CarrierAccount[]
+  shipments         Shipment[]
+  dispatchJobs      DispatchJob[]
+  
+  // Inventory Relations (NEW)
+  inventoryLocations InventoryLocation[]
+  inventoryMovements InventoryMovement[]
+  
+  // Integration 11: Compliance
+  legalTemplates    LegalTemplate[]
+  legalAcceptances  LegalAcceptance[]
+  consents          CustomerConsent[]
+  dataRequests      DataRequest[]
+
+  // Integration 12: Analytics
+  dailySales        AnalyticsDailySales[]
+  dailyPayments     AnalyticsDailyPayments[]
+  dailyDelivery     AnalyticsDailyDelivery[]
+  dailySupport      AnalyticsDailySupport[]
+  healthScores      HealthScore[]
+  goals             Goal[]
+
+  // Integration 13: Onboarding
+  onboardingFlow    OnboardingFlow?
+  checklistItems    GoLiveChecklistItem[]
+  storefrontSettings StorefrontSettings?
+  customDomains     CustomDomain[]
+
+  // Integration 14: Marketing
+  discountRules     DiscountRule[]
+  coupons           Coupon[]
+  discountRedemptions DiscountRedemption[]
+  orderDiscounts    OrderDiscount[]
+  segments          Segment[]
+  campaigns         Campaign[]
+  campaignSends     CampaignSend[]
+  automationRules   AutomationRule[]
+
+  // Integration 15: Marketplace
+  storeProfile      StoreProfile?
+  reviews           Review[]
+  trustBadges       TrustBadgeSnapshot[]
+
+  // Integration 16: Themes
+  merchantThemes    MerchantTheme[]
+  themeSettings     MerchantThemeSettings?
+  themeHistory      MerchantThemeHistory[]
+
+  // Integration 17: Billing
+  subscription      Subscription?
+  invoices          Invoice[]
+  usageCounters     UsageCounter[]
+  billingProfile    BillingProfile?
+
+  // Integration 18: Developer Platform
+  apiKeys           ApiKey[]
+  webhookEndpoints  WebhookEndpoint[]
+  webhookEvents     WebhookEvent[]
+  webhookDeliveries WebhookDelivery[]
+
+  // Integration 19: Admin Console
+  merchantFlags     MerchantFlag[]
+  featureOverrides  MerchantFeatureOverride[]
+  supportCases      SupportCase[]
+
+  // Integration 10: RBAC & Security
+  roles             Role[]
+  securitySetting   SecuritySetting?
+  auditLogs         AuditLog[]
+
+  // Integration 11: Compliance
+  legalTemplates    LegalTemplate[]
+  legalAcceptances  LegalAcceptance[]
+  consents          CustomerConsent[]
+  dataRequests      DataRequest[]
+
   knowledgeBase     KnowledgeBaseEntry[]
+
+  tenantId  String?
+
+  tenant    Tenant?   @relation(fields: [tenantId], references: [id])
+}
+
+model KycRecord {
+  id                String       @id @default(uuid())
+  storeId           String       @unique
+  
+  // Input Data (Masked for last4, full encrypted as string or placeholder)
+  ninLast4          String
+  bvnLast4          String
+  fullNinEncrypted  String?      // Placeholder for real encryption at rest
+  fullBvnEncrypted  String?      // Placeholder for real encryption at rest
+  
+  status            KycStatus    @default(NOT_STARTED)
+  
+  submittedAt       DateTime     @default(now())
+  reviewedAt        DateTime?
+  reviewedBy        String?      // OpsUser ID
+  
+  rejectionReason   String?
+  notes             String?
+  
+  // Simple Audit Log JSON Array
+  // [{ event: "SUBMITTED", at: "...", actorId: "...", meta: {} }]
+  audit             Json         @default("[]")
+  
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  store             Store        @relation(fields: [storeId], references: [id])
 }
 
 model Membership {
   id        String   @id @default(uuid())
   userId    String
   storeId   String
-  role      Role     @default(STAFF)
   
+  // Deprecating enum-based role for Relation-based RBAC
+  // Keeping enum for migration safety, or switching to string/relation
+  // For V1 new build, we can switch directly if clean slate.
+  // Assuming existing data: make roleId optional first, then fill. 
+  // But plan says "Breaking Change", so let's shift.
+  
+  roleId    String?   // Make optional to allow migration if needed, or required if clean. 
+                      // If clean slate: Role @relation...
+  
+  roleEnum  AppRole  @default(STAFF) @map("role") // Rename existing
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user  User  @relation(fields: [userId], references: [id])
-  store Store @relation(fields: [storeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  store     Store    @relation(fields: [storeId], references: [id])
+  roleRel   Role?    @relation(fields: [roleId], references: [id])
 
   @@unique([userId, storeId])
   @@index([storeId])
 }
 
+model StaffInvite {
+  id        String   @id @default(uuid())
+  storeId   String
+  email     String
+  role      AppRole   @default(STAFF)
+  token     String   @unique
+  
+  expiresAt DateTime
+  acceptedAt DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store     Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, email])
+}
+
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  
+  users     TenantMembership[]
+  stores    Store[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TenantMembership {
+  id        String   @id @default(uuid())
+  tenantId  String
+  userId    String
+  role      AppRole  @default(OWNER)
+  
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@unique([tenantId, userId])
+}
+
 // -----------------------------------------------------------------------------
 // 2. Commerce Core (Catalog, Orders, Ledger)
 // -----------------------------------------------------------------------------
+
 
 model Product {
   id          String   @id @default(uuid())
@@ -265,13 +534,36 @@ model Product {
   description String?
   handle      String   // SEO friendly URL slug
   status      String   @default("DRAFT") // DRAFT, ARCHIVED, ACTIVE
+  productType String?  // "T-Shirt", "Shoes"
+  brand       String?
+  tags        String[] // ["Summer", "Sale"]
+  
+  // Pricing (Base/Default)
+  price       Decimal  @default(0) @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  costPrice   Decimal? @db.Decimal(10, 2)
+  
+  // Inventory & Shipping
+  sku         String?
+  barcode     String?
+  trackInventory Boolean @default(true)
+  allowBackorder Boolean @default(false)
+  weight      Float?   // in grams
+  width       Float?   // in mm
+  height      Float?   // in mm
+  depth       Float?   // in mm
+  
+  // SEO
+  seoTitle    String?
+  seoDescription String?
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   store       Store                @relation(fields: [storeId], references: [id])
-  variants    Variant[]
-  media       ProductMedia[]
+  variants    ProductVariant[]
+  images      ProductImage[]
+  inventoryItems InventoryItem[]
   collections CollectionProduct[]
   
   // Marketplace Integration
@@ -281,43 +573,132 @@ model Product {
   @@index([storeId, status])
 }
 
-model Variant {
+model ProductVariant {
   id        String   @id @default(uuid())
   productId String
   
-  title     String   // e.g. "Size: L / Color: Red"
+  title     String   // "Size: L / Color: Red" - Auto-generated or manual
+  
+  // Options: { "Size": "L", "Color": "Red" }
+  options   Json     
+  
   sku       String?
   barcode   String?
-  price     Decimal  @db.Decimal(10, 2)
-  compareAt Decimal? @db.Decimal(10, 2)
-  inventory Int      @default(0)
+  
+  // Pricing Overrides (If null, inherit from Product)
+  price     Decimal?  @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  costPrice Decimal? @db.Decimal(10, 2)
+  
+  // Inventory Settings (at variant level)
+  trackInventory Boolean @default(true)
+  allowBackorder Boolean @default(false)
+  weight    Float?
+  
+  position  Int      @default(0)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   product   Product           @relation(fields: [productId], references: [id])
+  inventoryItems InventoryItem[]
   orderItems OrderItem[]
   inventoryEvents InventoryEvent[]
+  
+  image     ProductImage?     @relation(fields: [imageId], references: [id])
+  imageId   String?
 }
 
-model ProductMedia {
+model ProductImage {
   id        String    @id @default(uuid())
   productId String
+  
   url       String
-  type      MediaType @default(IMAGE)
-  alt       String?
+  altText   String?
+  width     Int?
+  height    Int?
+  
+  s3Key     String?   // For deletion/management
   position  Int       @default(0)
   
   createdAt DateTime @default(now())
+  updatedAt DateTime  @updatedAt
   
   product   Product  @relation(fields: [productId], references: [id])
+  variants  ProductVariant[]
 }
+
+// -----------------------------------------------------------------------------
+// Inventory System (Multi-location ready)
+// -----------------------------------------------------------------------------
+
+model InventoryLocation {
+  id          String   @id @default(uuid())
+  storeId     String
+  
+  name        String   // "Main Warehouse", "Lekki Store"
+  isDefault   Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  store       Store    @relation(fields: [storeId], references: [id])
+  items       InventoryItem[]
+  movements   InventoryMovement[]
+}
+
+model InventoryItem {
+  id          String   @id @default(uuid())
+  locationId  String
+  variantId   String
+  productId   String   // Denormalized for query performance
+  
+  onHand      Int      @default(0) // Physical count
+  reserved    Int      @default(0) // Held in active checkouts
+  available   Int      @default(0) // onHand - reserved (Computed/Updated via triggers or app logic)
+  
+  reorderPoint Int?
+  
+  updatedAt   DateTime @updatedAt
+  
+  location    InventoryLocation @relation(fields: [locationId], references: [id])
+  variant     ProductVariant    @relation(fields: [variantId], references: [id])
+  product     Product           @relation(fields: [productId], references: [id]) // Optional constraint but useful
+  
+  @@unique([locationId, variantId])
+}
+
+model InventoryMovement {
+  id          String   @id @default(uuid())
+  storeId     String
+  
+  locationId  String
+  variantId   String
+  
+  type        String   // ADJUSTMENT, SALE, RESTOCK, RETURN, RESERVATION
+  
+  quantity    Int      // Positive or Negative Delta
+  
+  reason      String?  // "Stock Take", "Order #123"
+  referenceId String?  // Order ID, etc.
+  
+  performedBy String?  // User ID
+  
+  createdAt   DateTime @default(now())
+  
+  store       Store             @relation(fields: [storeId], references: [id])
+  location    InventoryLocation @relation(fields: [locationId], references: [id])
+  
+  @@index([storeId, variantId])
+}
+
 
 model Collection {
   id        String   @id @default(uuid())
   storeId   String
   title     String
   handle    String
+  description String?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -343,31 +724,83 @@ model Customer {
   id        String   @id @default(uuid())
   storeId   String
   
+  // Identity
   email     String?
-  phone     String?
+  phone     String?  @map("phoneE164") // Normalized E.164
   firstName String?
   lastName  String?
+  
+  // Extended CRM
+  whatsappContactId String?
+  defaultAddressId  String?
+  
+  notes     String?  @db.Text
+  tags      String[] 
+  marketingOptIn Boolean @default(false)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   store     Store    @relation(fields: [storeId], references: [id])
   orders    Order[]
+  addresses CustomerAddress[]
+  tickets   SupportTicket[]
 
   @@unique([storeId, email]) 
-  // Phone uniqueness might be desired too, but handling nulls carefully
+  @@unique([storeId, phone])
+}
+
+model CustomerAddress {
+  id              String   @id @default(uuid())
+  storeId         String
+  customerId      String
+  
+  label           String?   // "Home", "Office"
+  isDefault       Boolean   @default(false)
+  
+  recipientName   String?
+  recipientPhone  String?
+  
+  addressLine1    String
+  addressLine2    String?
+  city            String
+  state           String
+  country         String    @default("NG")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id])
 }
 
 model Order {
   id            String      @id @default(uuid())
+  refCode       String      @unique
   storeId       String
+
+  // Customer Link
   customerId    String?
+  customerEmail String?
+  customerPhone String?
   
   // Order State
-  orderNumber   Int         @default(autoincrement()) // Store-specific seq logic needed, simplified here
-  status        OrderStatus @default(DRAFT)
+  orderNumber   Int         @default(autoincrement()) 
+  source        String      @default("CHECKOUT") // CHECKOUT, MANUAL, SOCIAL
+  
+  status        OrderStatus @default(DRAFT) // OPEN, FULFILLED, CANCELLED, CLOSED
   paymentStatus PaymentStatus @default(INITIATED)
   fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
+  
+  // Delivery & Payment Details
+  deliveryMethod String? // KWIK, SELF_DISPATCH, PICKUP
+  deliveryFee    Decimal @default(0) @db.Decimal(10, 2)
+  
+  paymentMethod  String? // CARD, TRANSFER, COD, WALLET
+  
+  // Notes
+  internalNote   String? @db.Text
+  customerNote   String? @db.Text
   
   // Financials
   currency      String      @default("NGN")
@@ -385,28 +818,54 @@ model Order {
   store         Store               @relation(fields: [storeId], references: [id])
   customer      Customer?           @relation(fields: [customerId], references: [id])
   items         OrderItem[]
-  timeline      OrderTimelineEvent[]
+  timeline      OrderTimelineEvent[] // Legacy or Rename? Let's use OrderEvent for new audit
+  events        OrderEvent[]         // New detailed audit
   transactions  PaymentTransaction[]
-  deliveryTask  DeliveryTask?
+  paymentIntents PaymentIntent[]
+  tickets       SupportTicket[]
+  
+  shipment      Shipment? 
   
   @@index([storeId, createdAt])
   @@index([storeId, status])
+  @@index([storeId, paymentStatus])
+  @@index([storeId, fulfillmentStatus])
+  
+  receipts      Receipt[]
+}
+
+model OrderEvent {
+  id            String   @id @default(uuid())
+  storeId       String
+  orderId       String
+  
+  type          String   // CREATED, PAYMENT_UPDATED, FULFILLMENT_UPDATED, NOTE_ADDED
+  message       String
+  metadata      Json?
+  
+  createdBy     String?  // User ID
+  createdAt     DateTime @default(now())
+  
+  store         Store    @relation(fields: [storeId], references: [id])
+  order         Order    @relation(fields: [orderId], references: [id])
 }
 
 model OrderItem {
   id        String   @id @default(uuid())
   orderId   String
-  variantId String?  // Optional if product deleted, but we should snapshot
+  
+  // Product Data
+  productId String?
+  variantId String?  
   
   // Snapshot data (Consistency even if product changes)
-  productId String?
-  title     String
+  title     String   // Product Title + Variant Title
   sku       String?
   price     Decimal  @db.Decimal(10, 2)
   quantity  Int
   
   order     Order    @relation(fields: [orderId], references: [id])
-  variant   Variant? @relation(fields: [variantId], references: [id])
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
 }
 
 model PaymentTransaction {
@@ -440,39 +899,306 @@ model InventoryEvent {
   
   createdAt DateTime @default(now())
 
-  variant   Variant  @relation(fields: [variantId], references: [id])
+  variant   ProductVariant  @relation(fields: [variantId], references: [id])
+}
+
+
+// -----------------------------------------------------------------------------
+// 3. Delivery & Fulfillment (NIGERIA OPTIMIZED)
+// -----------------------------------------------------------------------------
+
+model DeliveryProfile {
+  id              String   @id @default(uuid())
+  storeId         String
+  
+  name            String   @default("General Profile")
+  isDefault       Boolean  @default(true)
+  defaultCurrency String   @default("NGN")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+  zones           DeliveryZone[]
+  options         DeliveryOption[]
+}
+
+// ... (Existing Delivery Models preserved implicitly if not replaced, but I need to be careful with replace_file_content range)
+
+// -----------------------------------------------------------------------------
+// Support & Ticketing (NEW)
+// -----------------------------------------------------------------------------
+
+model SupportTicket {
+  id              String   @id @default(uuid())
+  storeId         String
+  
+  customerId      String?
+  conversationId  String?  // Link to WhatsApp Conversation
+  orderId         String?
+  
+  ticketNumber    Int      @default(autoincrement())
+  subject         String
+  description     String?  @db.Text
+  
+  status          String   @default("OPEN") // OPEN, PENDING, RESOLVED, CLOSED
+  priority        String   @default("MEDIUM") // LOW, MEDIUM, HIGH
+  category        String?  // DELIVERY, PAYMENT, PRODUCT, GENERAL
+  
+  assignedTo      String?  // User ID
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  conversation    Conversation? @relation(fields: [conversationId], references: [id])
+  order           Order?   @relation(fields: [orderId], references: [id])
+  messages        TicketMessage[]
+  
+  @@index([storeId, status])
+  @@index([storeId, customerId])
+}
+
+model TicketMessage {
+  id              String   @id @default(uuid())
+  storeId         String
+  ticketId        String
+  
+  direction       String   // INBOUND, OUTBOUND, INTERNAL
+  channel         String   // WHATSAPP, EMAIL, SMS, INTERNAL
+  
+  body            String   @db.Text
+  attachments     Json?    // Array of { url, type, name }
+  
+  createdBy       String?  // User ID if internal/outbound
+  
+  createdAt       DateTime @default(now())
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+  ticket          SupportTicket @relation(fields: [ticketId], references: [id])
 }
 
 // -----------------------------------------------------------------------------
-// 3. Delivery & fulfillment
+// Notifications Engine (NEW)
+// -----------------------------------------------------------------------------
+
+model NotificationTemplate {
+  id              String   @id @default(uuid())
+  storeId         String
+  
+  channel         String   // WHATSAPP, SMS, EMAIL
+  key             String   // ORDER_PLACED, ORDER_SHIPPED, ETC.
+  
+  name            String
+  enabled         Boolean  @default(true)
+  
+  subject         String?  // For Email
+  body            String   @db.Text
+  variables       Json?    // ["{{order_number}}", "{{customer_name}}"]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+  
+  @@unique([storeId, channel, key])
+}
+
+model NotificationOutbox {
+  id              String   @id @default(uuid())
+  storeId         String
+  
+  channel         String
+  templateKey     String?
+  
+  to              String
+  payload         Json?
+  
+  status          String   @default("QUEUED") // QUEUED, SENT, DELIVERED, FAILED, SKIPPED
+  
+  providerMessageId String?
+  errorCode       String?
+  errorMessage    String?
+  
+  recipientId     String?  // Customer ID
+  orderId         String?
+  ticketId        String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+  
+  @@index([storeId, status])
+}
+
+// -----------------------------------------------------------------------------
+// 5. WhatsApp & AI Conversation System
 // -----------------------------------------------------------------------------
 
 model DeliveryZone {
-  id        String   @id @default(uuid())
-  storeId   String
-  name      String   // "Lagos Island"
-  regions   String[] // List of cities/LGAs
-  basePrice Decimal  @db.Decimal(10, 2)
+  id              String   @id @default(uuid())
+  storeId         String // Denormalized for query ease
+  profileId       String
   
-  store     Store    @relation(fields: [storeId], references: [id])
+  name            String   // "Lagos Island", "Nationwide"
+  states          String[] // List of States e.g. ["Lagos", "Ogun"]
+  cities          String[] // List of Cities (optional constraint)
+  
+  feeType         String   // FLAT, FREE, CONDITIONAL
+  feeAmount       Decimal  @db.Decimal(10, 2)
+  freeOverAmount  Decimal? @db.Decimal(10, 2)
+  
+  etaMinDays      Int      @default(1)
+  etaMaxDays      Int      @default(3)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store           @relation(fields: [storeId], references: [id])
+  profile         DeliveryProfile @relation(fields: [profileId], references: [id])
 }
 
-model DeliveryTask {
-  id              String      @id @default(uuid())
-  orderId         String      @unique
+model DeliveryOption {
+  id              String   @id @default(uuid())
+  storeId         String
+  profileId       String
+  
+  type            String   // KWIK, SELF_DISPATCH, PICKUP
+  name            String   // "Express Delivery", "Standard"
+  description     String?
+  
+  enabled         Boolean  @default(true)
+  
+  etaMinDays      Int?     // Override zone if set
+  etaMaxDays      Int?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store           @relation(fields: [storeId], references: [id])
+  profile         DeliveryProfile @relation(fields: [profileId], references: [id])
+}
+
+model CarrierAccount {
+  id              String   @id @default(uuid())
   storeId         String
   
-  provider        String      // "manual", "kwik", "gokada"
-  trackingId      String?
-  status          DeliveryTaskStatus @default(PENDING)
+  carrier         String   // KWIK, GOKADA, FEZ
+  status          String   @default("DISCONNECTED")
   
-  driverName      String?
-  driverPhone     String?
+  credentialsEnc  String?  // JSON string encrypted
   
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+  
+  @@unique([storeId, carrier])
+}
 
-  order           Order       @relation(fields: [orderId], references: [id])
+model Shipment {
+  id              String   @id @default(uuid())
+  storeId         String
+  orderId         String   @unique // One shipment per order for V1
+  
+  deliveryOptionType String // KWIK, SELF_DISPATCH, PICKUP
+  status          String   @default("PENDING") // PENDING, PACKED, READY, DISPATCHED, IN_TRANSIT, DELIVERED, FAILED, RETURNED
+  
+  // Recipient Snapshot
+  recipientName   String?
+  recipientPhone  String?
+  
+  // Nigeria Address
+  addressState    String?
+  addressCity     String?
+  addressLga      String?
+  addressLine1    String?
+  addressLine2    String?
+  landmark        String?
+  
+  lat             Float?
+  lng             Float?
+  
+  deliveryFee     Decimal  @db.Decimal(10, 2) @default(0)
+  currency        String   @default("NGN")
+  
+  trackingUrl     String?
+  trackingCode    String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+  order           Order    @relation(fields: [orderId], references: [id])
+  dispatchJobs    DispatchJob[]
+  trackingEvents  TrackingEvent[]
+}
+
+model DispatchJob {
+  id              String   @id @default(uuid())
+  storeId         String
+  shipmentId      String
+  
+  carrier         String   // KWIK, MANUAL
+  providerJobId   String?
+  status          String   @default("CREATED") // CREATED, ACCEPTED, PICKED_UP, IN_TRANSIT, DELIVERED, FAILED
+  
+  // Manual / Rider Info
+  assignedRiderName String?
+  assignedRiderPhone String?
+  vehicleType     String?
+  
+  pickupEta       DateTime?
+  deliveryEta     DateTime?
+  
+  // Proof of Delivery
+  podType         String   @default("NONE") // NONE, SIGNATURE, PHOTO, OTP
+  podData         Json?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+  shipment        Shipment @relation(fields: [shipmentId], references: [id])
+  
+  @@unique([carrier, providerJobId])
+}
+
+model TrackingEvent {
+  id              String   @id @default(uuid())
+  storeId         String
+  shipmentId      String
+  dispatchJobId   String?
+  
+  status          String
+  description     String
+  locationText    String?
+  
+  occurredAt      DateTime @default(now())
+  raw             Json? // raw payload from carrier
+  
+  createdAt       DateTime @default(now())
+  
+  shipment        Shipment @relation(fields: [shipmentId], references: [id])
+}
+
+model DeliveryWebhookEvent {
+  id              String   @id @default(uuid())
+  storeId         String?
+  
+  carrier         String
+  providerEventId String
+  
+  payload         Json
+  status          String   @default("RECEIVED")
+  error           String?
+  
+  receivedAt      DateTime @default(now())
+  processedAt     DateTime?
+  
+  @@unique([carrier, providerEventId])
 }
 
 // -----------------------------------------------------------------------------
@@ -500,141 +1226,2019 @@ model MarketplaceListing {
 // 5. WhatsApp AI & Communication
 // -----------------------------------------------------------------------------
 
-model WhatsAppConfig {
-  id        String   @id @default(uuid())
-  storeId   String   @unique
+// -----------------------------------------------------------------------------
+// 5. WhatsApp & AI Conversation System
+// -----------------------------------------------------------------------------
+
+model WhatsappChannel {
+  id                  String   @id @default(uuid())
+  merchantId          String   @unique @map("storeId")
   
-  phoneId   String?  // Meta Phone ID
-  wabaId    String?  // WhatsApp Business Account ID
-  apiKey    String?  // Encrypted?
+  provider            String   @default("meta")
+  wabaId              String?  
+  phoneNumberId       String?  
+  displayPhoneNumber  String?
+  businessName        String?
   
-  isEnabled Boolean  @default(false)
+  status              String   @default("DISCONNECTED") // CONNECTED, DISCONNECTED, NEEDS_ATTENTION
   
-  store     Store    @relation(fields: [storeId], references: [id])
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  store               Store    @relation(fields: [merchantId], references: [id])
+  credentials         WhatsappCredential?
+}
+
+model WhatsappCredential {
+  id                  String   @id @default(uuid())
+  channelId           String   @unique
+  
+  encryptedToken      String   // Encrypted access token
+  tokenExpiresAt      DateTime?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  channel             WhatsappChannel @relation(fields: [channelId], references: [id])
+}
+
+model Contact {
+  id              String   @id @default(uuid())
+  merchantId      String   @map("storeId")
+  
+  channel         Channel  @default(WHATSAPP)
+  externalId      String   // wa_id for whatsapp
+  displayName     String?
+  phoneE164       String?
+  
+  lastSeenAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  store           Store    @relation(fields: [merchantId], references: [id])
+  conversations   Conversation[]
+
+  @@unique([merchantId, channel, externalId])
 }
 
 model Conversation {
-  id        String   @id @default(uuid())
-  storeId   String
+  id              String   @id @default(uuid())
+  merchantId      String   @map("storeId")
+  contactId       String
   
-  customerPhone String
-  status    String   // OPEN, CLOSED
+  status          String   @default("OPEN") // OPEN, PENDING, CLOSED
+  assignedTo      String?  // User ID
   
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  unreadCount     Int      @default(0)
+  lastMessageAt   DateTime @default(now())
+  
+  tags            Json     @default("[]")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  store     Store    @relation(fields: [storeId], references: [id])
-  messages  Message[]
+  store           Store    @relation(fields: [merchantId], references: [id])
+  contact         Contact  @relation(fields: [contactId], references: [id])
+  messages        Message[]
+  aiActionRuns    AiActionRun[]
   
-  @@unique([storeId, customerPhone])
+  // Integration 9
+  tickets       SupportTicket[]
+
+  @@unique([merchantId, contactId])
+  @@index([merchantId, lastMessageAt(sort: Desc)])
 }
 
 model Message {
-  id             String   @id @default(uuid())
-  conversationId String
+  id              String   @id @default(uuid())
+  merchantId      String   @map("storeId")
+  conversationId  String
   
-  direction      Direction
-  type           String   // TEXT, IMAGE, TEMPLATE
-  content        String
+  direction       Direction
+  type            MessageType @default(TEXT)
+  providerMessageId String?
   
-  aiMetadata     Json?    // { intent: "order_status", confidence: 0.95 }
+  textBody        String?  @db.Text
+  mediaId         String?  // Internal MediaAsset ID or provider media id
   
-  createdAt      DateTime @default(now())
+  status          MessageStatus @default(QUEUED)
+  errorCode       String?
+  errorMessage    String?
   
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sentAt          DateTime?
+  receivedAt      DateTime?
+  
+  createdAt       DateTime @default(now())
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id])
+  mediaAssets     MediaAsset[]
+  aiActionLinks   AiActionMessageLink[]
+
+  @@unique([merchantId, providerMessageId])
+  @@index([conversationId, createdAt])
 }
 
-model Approval {
-  id        String   @id @default(uuid())
-  storeId   String
+model MediaAsset {
+  id              String   @id @default(uuid())
+  merchantId      String   @map("storeId")
+  conversationId  String
+  messageId       String
   
-  type      String   // REFUND, DISCOUNT, AI_ACTION
-  summary   String
-  data      Json     // The payload to approve
+  contentType     String
+  filename        String?
+  sizeBytes       Int?
+  s3Key           String
+  sha256          String?
   
-  status    ApprovalStatus @default(PENDING)
-  actionBy  String?  // Ops Agent or AI
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  store     Store    @relation(fields: [storeId], references: [id])
+  createdAt       DateTime @default(now())
+
+  message         Message  @relation(fields: [messageId], references: [id])
 }
 
-model KnowledgeBaseEntry {
-  id        String   @id @default(uuid())
-  storeId   String
-  question  String
-  answer    String
-  tags      String[]
+model WhatsappTemplate {
+  id              String   @id @default(uuid())
+  merchantId      String   @map("storeId")
   
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  name            String
+  language        String
+  category        String
+  status          String   // PENDING, APPROVED, REJECTED
   
-  store     Store    @relation(fields: [storeId], references: [id])
+  components      Json     // Array of components
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([merchantId, name, language])
 }
 
 // -----------------------------------------------------------------------------
-// 6. Audit & System Events
+// AI Actions & Approvals
+// -----------------------------------------------------------------------------
+
+model AiActionDefinition {
+  id          String   @id @default(uuid())
+  
+  triggerType String   // "CONVERSATION_MESSAGE"
+  name        String   // "Create Order"
+  description String
+  
+  toolConfig  Json     // { "parameters": { ... } }
+  
+  createdAt   DateTime @default(now())
+}
+
+model AiActionRun {
+  id               String   @id @default(uuid())
+  storeId          String   @map("storeId")
+  conversationId   String
+  
+  actionDefId      String
+  
+  status           AiActionStatus @default(PROPOSED)
+  arguments        Json     // Filtered args
+  
+  requiresApproval Boolean  @default(false)
+  approvalRequestId String? @unique
+  
+  result           Json?    // Outcome
+  error            String?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  store            Store         @relation(fields: [storeId], references: [id])
+  conversation     Conversation  @relation(fields: [conversationId], references: [id])
+  approvalRequest  ApprovalRequest?
+  
+  @@index([storeId, status])
+}
+
+model AiActionMessageLink {
+  id            String   @id @default(uuid())
+  messageId     String
+  aiActionRunId String
+  
+  relationType  String   // "TRIGGERED_BY", "PROPOSED_IN", "RESULT_OF"
+  
+  message       Message  @relation(fields: [messageId], references: [id])
+  // link to run? (omitted for now to keep simple)
+}
+
+model ApprovalRequest {
+  id               String   @id @default(uuid())
+  storeId          String   @map("storeId")
+  
+  entityType       String   // "Refund", "PaymentLink"
+  entityId         String   @unique
+  
+  status           ApprovalStatus @default(PENDING)
+  requestedBy      String   // "AI_AGENT" or User ID
+  
+  approvedBy       String?  // User ID
+  approvedAt       DateTime?
+  rejectionReason  String?
+  
+  summary          String
+  riskScore        Int      @default(0)
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  store            Store         @relation(fields: [storeId], references: [id])
+  aiActionRun      AiActionRun?  @relation(fields: [entityId], references: [id], map: "ApprovalRequest_AiActionRun_fkey")
+  refund           Refund?       @relation(fields: [entityId], references: [id], map: "ApprovalRequest_Refund_fkey")
+
+  @@index([storeId, status])
+}
+
+// -----------------------------------------------------------------------------
+// Audit & Notifications
 // -----------------------------------------------------------------------------
 
 model AuditEvent {
   id        String   @id @default(uuid())
   storeId   String?
-  userId    String?    // Link to Merchant User
-  opsUserId String?    // Link to Ops User
   
-  action    String   // LOGIN, SETTING_CHANGE, REFUND_APPROVE
-  resource  String   // Entity being acted on
-  resourceId String
+  actorId   String   // User or OpsUser ID
+  actorType String   // USER, OPS_USER, SYSTEM
   
-  metadata  Json?    // oldVal, newVal, etc.
+  event     String   // LOGIN, SETTINGS_UPDATE, WITHDRAWAL_REQUEST
+  meta      Json?
   ipAddress String?
-  userAgent String?
   
   createdAt DateTime @default(now())
 
   store     Store?   @relation(fields: [storeId], references: [id])
-  user      User?    @relation(fields: [userId], references: [id])
-  opsUser   OpsUser? @relation(fields: [opsUserId], references: [id])
+  user      User?    @relation(fields: [actorId], references: [id], map: "AuditEvent_User_fkey")
+  opsUser   OpsUser? @relation(fields: [actorId], references: [id], map: "AuditEvent_OpsUser_fkey")
+
+  @@index([storeId])
 }
+
+model Notification {
+  id        String   @id @default(uuid())
+  storeId   String
+  
+  type      String   // ORDER_CREATED, WITHDRAWAL_SUCCESS
+  title     String
+  body      String?
+  
+  isRead    Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+
+  store     Store    @relation(fields: [storeId], references: [id])
+  
+  @@index([storeId, isRead])
+}
+
+// -----------------------------------------------------------------------------
+// Knowledge Base (RAG)
+// -----------------------------------------------------------------------------
+
+model KnowledgeBaseEntry {
+  id        String   @id @default(uuid())
+  storeId   String
+  
+  content   String   @db.Text
+  embedding Json?    // Vector (pgvector if supported, else json)
+  
+  sourceType String  // MANUAL, scraped
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store     Store    @relation(fields: [storeId], references: [id])
+}
+
+// -----------------------------------------------------------------------------
+// Previous Financial Models (Wallet, etc.)
+// -----------------------------------------------------------------------------
+
+model Wallet {
+  id                String   @id @default(uuid())
+  storeId           String   @unique
+  
+  kycStatus         KycStatus @default(NOT_STARTED)
+  pinHash           String?   // Hashed Wallet PIN
+  pinSet            Boolean   @default(false)
+  isLocked          Boolean   @default(false)
+  failedPinAttempts Int       @default(0)
+  lockedUntil       DateTime?
+  
+  // Balances in Kobo (smallest currency unit)
+  availableKobo     BigInt    @default(0)
+  pendingKobo       BigInt    @default(0)
+  
+  // Dedicated Virtual Account (Paystack)
+  vaStatus          VirtualAccountStatus @default(NOT_CREATED)
+  vaBankName        String?
+  vaAccountNumber   String?
+  vaAccountName     String?
+  vaProviderRef     String?   // Paystack slug or ID
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  store             Store     @relation(fields: [storeId], references: [id])
+}
+
+model BankBeneficiary {
+  id              String   @id @default(uuid())
+  storeId         String
+  
+  bankCode        String   // Paystack Bank Code
+  bankName        String
+  accountNumber   String
+  accountName     String
+  isDefault       Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  store           Store    @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+model Withdrawal {
+  id              String   @id @default(uuid())
+  storeId         String
+  
+  amountKobo      BigInt
+  feeKobo         BigInt   @default(0)
+  
+  bankAccountId   String
+  status          String   // PENDING_OTP, PROCESSING, SUCCESS, FAILED
+  
+  otpCode         String?
+  otpExpiresAt    DateTime?
+  
+  providerRef     String?  // Paystack Transfer Reference
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  store           Store    @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+model Invoice {
+  id              String   @id @default(uuid())
+  storeId         String
+  customerId      String?
+  
+  invoiceNumber   String   @unique
+  status          String   // DRAFT, SENT, PAID, OVERDUE, CANCELLED
+  
+  subtotalKobo    BigInt
+  taxKobo         BigInt   @default(0)
+  totalKobo       BigInt
+  
+  dueDate         DateTime?
+  items           Json     // Array of items
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  store           Store    @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+// -----------------------------------------------------------------------------
+// 6. Payments & Ledger (NEW OR UPDATED)
+// -----------------------------------------------------------------------------
+
+model PaymentAccount {
+  id                String   @id @default(uuid())
+  storeId           String   
+  
+  provider          String   // 'stripe' | 'paystack'
+  providerAccountId String
+  status            String   @default("DISCONNECTED") // CONNECTED, DISCONNECTED, NEEDS_ACTION
+  
+  defaultCurrency   String   @default("NGN")
+  capabilities      Json?    // Provider specific capabilities
+  webhookSecretEnc  String?  // Encrypted webhook secret
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  store             Store    @relation(fields: [storeId], references: [id])
+  
+  @@unique([storeId, provider])
+}
+
+model PaymentCustomer {
+  id                 String   @id @default(uuid())
+  storeId            String
+  contactId          String?  // Optional link to Contact
+  
+  provider           String
+  providerCustomerId String
+  email              String?
+  phoneE164          String?
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  
+  store              Store    @relation(fields: [storeId], references: [id])
+  
+  @@unique([storeId, provider, providerCustomerId])
+  @@index([storeId, email])
+}
+
+model PaymentIntent {
+  id                     String   @id @default(uuid())
+  storeId                String
+  orderId                String?
+  
+  provider               String
+  providerPaymentIntentId String
+  
+  status                 String   // requires_payment_method, requires_confirmation, processing, succeeded, canceled, failed
+  amount                 Decimal  @db.Decimal(10, 2)
+  currency               String
+  clientSecretHash       String?  // Don't store full secret if possible, or careful
+  description            String?
+  metadata               Json?
+  
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  
+  store                  Store    @relation(fields: [storeId], references: [id])
+  order                  Order?   @relation(fields: [orderId], references: [id])
+  charges                Charge[]
+  
+  @@unique([provider, providerPaymentIntentId])
+  @@index([storeId, status, createdAt(sort: Desc)])
+}
+
+model Charge {
+  id               String   @id @default(uuid())
+  storeId          String
+  orderId          String?
+  paymentIntentId  String?
+  
+  provider         String
+  providerChargeId String
+  
+  status           String   @default("PENDING") // succeeded, failed, refunded, partial_refund
+  amount           Decimal  @db.Decimal(10, 2)
+  currency         String
+  
+  paidAt           DateTime?
+  failureCode      String?
+  failureMessage   String?
+  
+  receiptUrl       String?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  store            Store         @relation(fields: [storeId], references: [id])
+  paymentIntent    PaymentIntent? @relation(fields: [paymentIntentId], references: [id])
+  refunds          Refund[]
+  
+  @@unique([provider, providerChargeId])
+}
+
+model Refund {
+  id               String   @id @default(uuid())
+  storeId          String
+  orderId          String?
+  chargeId         String
+  
+  provider         String
+  providerRefundId String? // Null if internal request pending approval
+  
+  status           String   @default("PENDING") // pending, approved, succeeded, failed, canceled
+  amount           Decimal  @db.Decimal(10, 2)
+  currency         String
+  reason           String?
+  
+  requestedBy      String?  // User ID
+  approvedBy       String?  // User ID
+  approvedAt       DateTime?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  store            Store    @relation(fields: [storeId], references: [id])
+  charge           Charge   @relation(fields: [chargeId], references: [id])
+  approvalRequest  ApprovalRequest?
+  
+  @@unique([provider, providerRefundId])
+}
+
+model Payout {
+  id               String   @id @default(uuid())
+  storeId          String
+  
+  provider         String
+  providerPayoutId String
+  
+  status           String   // paid, in_transit, failed, canceled
+  amount           Decimal  @db.Decimal(10, 2)
+  currency         String
+  arrivalDate      DateTime?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  store            Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([provider, providerPayoutId])
+}
+
+model LedgerEntry {
+  id             String   @id @default(uuid())
+  storeId        String
+  
+  referenceType  String   // charge, refund, payout, fee, adjustment
+  referenceId    String
+  
+  direction      String   // DEBIT, CREDIT
+  account        String   // cash, receivable, revenue, fees, refunds, payouts
+  
+  amount         Decimal  @db.Decimal(10, 2)
+  currency       String
+  description    String?  // Added for clarity
+  
+  occurredAt     DateTime @default(now())
+  metadata       Json?
+  
+  createdAt      DateTime @default(now())
+  
+  store          Store    @relation(fields: [storeId], references: [id])
+  
+  @@index([storeId, occurredAt(sort: Desc)])
+  @@index([storeId, account])
+}
+
+model PaymentWebhookEvent {
+  id              String   @id @default(uuid())
+  storeId         String?  // Nullable until resolved
+  
+  provider        String
+  providerEventId String
+  eventType       String
+  
+  payload         Json
+  status          String   @default("RECEIVED") // RECEIVED, PROCESSED, FAILED
+  error           String?
+  
+  receivedAt      DateTime @default(now())
+  processedAt     DateTime?
+  
+  @@unique([provider, providerEventId])
+}
+
+// -----------------------------------------------------------------------------
+// Timeline Events (for completeness)
+// -----------------------------------------------------------------------------
 
 model OrderTimelineEvent {
   id        String   @id @default(uuid())
   orderId   String
   
-  text      String
-  type      String   // STATUS_CHANGE, NOTE, PAYMENT
-  metadata  Json?
+  title     String
+  body      String?
   
   createdAt DateTime @default(now())
   
   order     Order    @relation(fields: [orderId], references: [id])
 }
 
-model Notification {
+model Receipt {
+  id        String   @id @default(uuid())
+  orderId   String
+  url       String
+  
+  createdAt DateTime @default(now())
+  
+  order     Order    @relation(fields: [orderId], references: [id])
+}
+
+// Integration 10: RBAC & Security Models
+
+model Role {
+  id          String   @id @default(uuid())
+  storeId     String?  // Null for System Roles (Global Defaults)
+  name        String
+  description String?
+  isSystem    Boolean  @default(false) // e.g., OWNER, STAFF cannot be deleted
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  store       Store?   @relation(fields: [storeId], references: [id])
+  permissions RolePermission[]
+  members     Membership[]
+
+  @@unique([storeId, name])
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique // e.g., "orders.manage"
+  description String?
+  group       String   // e.g., "Orders", "Settings"
+  
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model SecuritySetting {
+  id                    String   @id @default(uuid())
+  storeId               String   @unique
+  
+  mfaRequired           Boolean  @default(false)
+  sessionTimeoutMinutes Int      @default(720) // 12 hours
+  allowedIpRanges       String[] // CIDR blocks
+  
+  updatedAt             DateTime @updatedAt
+  
+  store                 Store    @relation(fields: [storeId], references: [id])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  storeId      String
+  
+  actorUserId  String?
+  actorType    String   @default("USER") // USER, SYSTEM, API_KEY
+  action       String   // e.g., "ORDER_UPDATE", "ROLE_CHANGE"
+  entityType   String   // e.g., "ORDER", "ROLE"
+  entityId     String?
+  
+  metadata     Json?    // { before: ..., after: ... }
+  ipAddress    String?
+  userAgent    String?
+  
+  createdAt    DateTime @default(now())
+  
+  store        Store    @relation(fields: [storeId], references: [id])
+
+  @@index([storeId, createdAt])
+  @@index([storeId, action])
+  @@index([storeId, actorUserId])
+}
+
+// Integration 11: Compliance & Trust Center
+
+enum LegalKey {
+  PRIVACY
+  TERMS
+  REFUNDS
+  SHIPPING
+  COOKIES
+  AUP
+  CONTACT
+}
+
+enum ConsentChannel {
+  WHATSAPP
+  SMS
+  EMAIL
+}
+
+enum ConsentType {
+  MARKETING
+  TRANSACTIONAL
+}
+
+enum ConsentStatus {
+  OPT_IN
+  OPT_OUT
+}
+
+enum DataRequestType {
+  EXPORT
+  DELETE
+  ACCESS
+  CORRECTION
+}
+
+enum DataRequestStatus {
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model LegalTemplate {
+  id          String   @id @default(uuid())
+  storeId     String?  // Null for Platform Defaults
+  
+  key         LegalKey
+  title       String
+  content     String   @db.Text // Markdown
+  version     Int      @default(1)
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  store       Store?   @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, key, version])
+}
+
+model LegalAcceptance {
+  id          String   @id @default(uuid())
+  storeId     String
+  userId      String
+  
+  key         LegalKey
+  version     Int
+  
+  ipAddress   String?
+  userAgent   String?
+  acceptedAt  DateTime @default(now())
+  
+  store       Store    @relation(fields: [storeId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model CustomerConsent {
+  id          String         @id @default(uuid())
+  storeId     String
+  customerId  String?
+  
+  // Identifiers if customerId not linked yet
+  phone       String?
+  email       String?
+  
+  channel     ConsentChannel
+  type        ConsentType
+  status      ConsentStatus
+  
+  source      String?        // checkout, keyword, admin
+  occurredAt  DateTime       @default(now())
+  metadata    Json?
+  
+  store       Store          @relation(fields: [storeId], references: [id])
+  customer    Customer?      @relation(fields: [customerId], references: [id])
+
+  @@index([storeId, phone])
+  @@index([storeId, email])
+}
+
+model DataRequest {
+  id            String            @id @default(uuid())
+  storeId       String
+  
+  type          DataRequestType
+  status        DataRequestStatus @default(SUBMITTED)
+  
+  requesterType String            // "CUSTOMER" | "STAFF"
+  customerId    String?
+  userId        String?
+  
+  notes         String?
+  
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  completedAt   DateTime?
+  
+  store         Store             @relation(fields: [storeId], references: [id])
+  customer      Customer?         @relation(fields: [customerId], references: [id])
+  user          User?             @relation(fields: [userId], references: [id])
+  
+  exportJob     ExportJob?
+}
+
+model ExportJob {
+  id            String      @id @default(uuid())
+  storeId       String
+  dataRequestId String      @unique
+  
+  status        String      // QUEUED, RUNNING, SUCCEEDED, FAILED
+  s3Key         String?
+  expiresAt     DateTime?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  dataRequest   DataRequest @relation(fields: [dataRequestId], references: [id])
+}
+
+// Integration 12: Analytics & Reports
+
+enum MetricPeriod {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+}
+
+model AnalyticsDailySales {
+  id              String   @id @default(uuid())
+  storeId         String
+  date            DateTime @db.Date
+  
+  ordersCount     Int      @default(0)
+  grossSales      Decimal  @default(0) @db.Decimal(12, 2)
+  discounts       Decimal  @default(0) @db.Decimal(12, 2)
+  shipping        Decimal  @default(0) @db.Decimal(12, 2)
+  netSales        Decimal  @default(0) @db.Decimal(12, 2)
+  refunds         Decimal  @default(0) @db.Decimal(12, 2)
+  
+  paidOrdersCount     Int  @default(0)
+  codOrdersCount      Int  @default(0)
+  transferOrdersCount Int  @default(0)
+  
+  createdAt       DateTime @default(now())
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, date])
+  @@index([storeId, date])
+}
+
+model AnalyticsDailyPayments {
+  id                    String   @id @default(uuid())
+  storeId               String
+  date                  DateTime @db.Date
+  
+  successCount          Int      @default(0)
+  failedCount           Int      @default(0)
+  successAmount         Decimal  @default(0) @db.Decimal(12, 2)
+  failedAmount          Decimal  @default(0) @db.Decimal(12, 2)
+  avgPaymentTimeSeconds Int?
+  
+  createdAt             DateTime @default(now())
+  
+  store                 Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, date])
+  @@index([storeId, date])
+}
+
+model AnalyticsDailyDelivery {
+  id                  String   @id @default(uuid())
+  storeId             String
+  date                DateTime @db.Date
+  
+  shipmentsDispatched Int      @default(0)
+  shipmentsDelivered  Int      @default(0)
+  shipmentsFailed     Int      @default(0)
+  deliverySuccessRate Decimal? @db.Decimal(5, 2)
+  avgDeliveryHours    Decimal? @db.Decimal(8, 2)
+  
+  kwikShare           Decimal? @db.Decimal(5, 2)
+  selfDispatchShare   Decimal? @db.Decimal(5, 2)
+  
+  createdAt           DateTime @default(now())
+  
+  store               Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, date])
+  @@index([storeId, date])
+}
+
+model AnalyticsDailySupport {
+  id                      String   @id @default(uuid())
+  storeId                 String
+  date                    DateTime @db.Date
+  
+  inboundMessages         Int      @default(0)
+  outboundMessages        Int      @default(0)
+  firstResponseAvgSeconds Int?
+  
+  ticketsCreated          Int      @default(0)
+  ticketsResolved         Int      @default(0)
+  resolutionAvgSeconds    Int?
+  
+  unreadConversationsEOD  Int      @default(0)
+  
+  createdAt               DateTime @default(now())
+  
+  store                   Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, date])
+  @@index([storeId, date])
+}
+
+model HealthScore {
+  id         String   @id @default(uuid())
+  storeId    String
+  date       DateTime @db.Date
+  
+  score      Int      // 0-100
+  components Json     // { sales: 85, payments: 90, delivery: 75, ... }
+  
+  createdAt  DateTime @default(now())
+  
+  store      Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, date])
+  @@index([storeId, date])
+}
+
+model Goal {
+  id          String       @id @default(uuid())
+  storeId     String
+  
+  metricKey   String       // "net_sales", "orders_count"
+  period      MetricPeriod
+  targetValue Decimal      @db.Decimal(12, 2)
+  
+  startDate   DateTime     @db.Date
+  endDate     DateTime?    @db.Date
+  
+  isActive    Boolean      @default(true)
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  store       Store        @relation(fields: [storeId], references: [id])
+
+  @@index([storeId, isActive])
+}
+
+// Integration 13: Onboarding & Store Setup
+
+enum OnboardingStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ChecklistStatus {
+  TODO
+  DONE
+  BLOCKED
+  SKIPPED
+}
+
+enum ChecklistCategory {
+  STOREFRONT
+  PAYMENTS
+  DELIVERY
+  WHATSAPP
+  POLICIES
+  SECURITY
+}
+
+model OnboardingFlow {
+  id              String           @id @default(uuid())
+  storeId         String           @unique
+  
+  status          OnboardingStatus @default(IN_PROGRESS)
+  currentStepKey  String?
+  completedSteps  String[]
+  skippedSteps    String[]
+  metadata        Json?
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  store           Store            @relation(fields: [storeId], references: [id])
+}
+
+model GoLiveChecklistItem {
+  id              String           @id @default(uuid())
+  storeId         String
+  
+  key             String           // e.g., "storefront.products_added"
+  title           String
+  description     String?
+  category        ChecklistCategory
+  
+  status          ChecklistStatus  @default(TODO)
+  blockerReason   String?
+  
+  updatedAt       DateTime         @updatedAt
+  
+  store           Store            @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, key])
+  @@index([storeId, status])
+}
+
+model StorefrontSettings {
+  id              String   @id @default(uuid())
+  storeId         String   @unique
+  
+  slug            String   @unique
+  isLive          Boolean  @default(false)
+  
+  themeKey        String   @default("vayva_light_glass_store_v1")
+  accentColor     String?  @default("#22C55E")
+  logoS3Key       String?
+  bannerS3Key     String?
+  
+  socialLinks     Json?
+  seoTitle        String?
+  seoDescription  String?
+  
+  updatedAt       DateTime @updatedAt
+  
+  store           Store    @relation(fields: [storeId], references: [id])
+}
+
+model CustomDomain {
+  id                String   @id @default(uuid())
+  storeId           String
+  
+  domain            String   @unique
+  status            String   @default("pending_verification") // pending_verification, active, error
+  verificationType  String   @default("cname") // cname, txt
+  expectedValue     String?
+  
+  lastCheckedAt     DateTime?
+  createdAt         DateTime @default(now())
+  
+  store             Store    @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+}
+
+// Integration 14: Marketing & Growth Engine
+
+enum DiscountType {
+  PERCENT
+  AMOUNT
+  FREE_SHIPPING
+}
+
+enum DiscountAppliesTo {
+  ALL
+  PRODUCTS
+  COLLECTIONS
+}
+
+enum CouponStatus {
+  ACTIVE
+  DISABLED
+  EXPIRED
+}
+
+enum CampaignType {
+  BROADCAST
+  AUTOMATION
+}
+
+enum CampaignChannel {
+  WHATSAPP
+  SMS
+  EMAIL
+}
+
+enum CampaignStatus {
+  DRAFT
+  PENDING_APPROVAL
+  SCHEDULED
+  SENDING
+  PAUSED
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum CampaignSendStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  SKIPPED
+}
+
+model DiscountRule {
+  id                    String            @id @default(uuid())
+  storeId               String
+  
+  name                  String
+  type                  DiscountType
+  valueAmount           Decimal?          @db.Decimal(10, 2)
+  valuePercent          Decimal?          @db.Decimal(5, 2)
+  
+  appliesTo             DiscountAppliesTo @default(ALL)
+  productIds            String[]
+  collectionIds         String[]
+  
+  minOrderAmount        Decimal?          @db.Decimal(10, 2)
+  maxDiscountAmount     Decimal?          @db.Decimal(10, 2)
+  currency              String            @default("NGN")
+  
+  startsAt              DateTime
+  endsAt                DateTime?
+  
+  usageLimitTotal       Int?
+  usageLimitPerCustomer Int?
+  requiresCoupon        Boolean           @default(false)
+  
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  store                 Store             @relation(fields: [storeId], references: [id])
+  coupons               Coupon[]
+  redemptions           DiscountRedemption[]
+  orderDiscounts        OrderDiscount[]
+
+  @@index([storeId, startsAt])
+}
+
+model Coupon {
+  id        String       @id @default(uuid())
+  storeId   String
+  ruleId    String
+  
+  code      String       // Uppercase
+  status    CouponStatus @default(ACTIVE)
+  
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  
+  store     Store        @relation(fields: [storeId], references: [id])
+  rule      DiscountRule @relation(fields: [ruleId], references: [id])
+  redemptions DiscountRedemption[]
+
+  @@unique([storeId, code])
+  @@index([storeId, status])
+}
+
+model DiscountRedemption {
+  id               String       @id @default(uuid())
+  storeId          String
+  ruleId           String
+  couponId         String?
+  orderId          String
+  customerId       String?
+  
+  amountDiscounted Decimal      @db.Decimal(10, 2)
+  redeemedAt       DateTime     @default(now())
+  
+  store            Store        @relation(fields: [storeId], references: [id])
+  rule             DiscountRule @relation(fields: [ruleId], references: [id])
+  coupon           Coupon?      @relation(fields: [couponId], references: [id])
+  order            Order        @relation(fields: [orderId], references: [id])
+
+  @@index([storeId, redeemedAt])
+}
+
+model OrderDiscount {
+  id                      String       @id @default(uuid())
+  storeId                 String
+  orderId                 String
+  ruleId                  String
+  
+  couponCode              String?
+  discountAmount          Decimal      @db.Decimal(10, 2)
+  shippingDiscountAmount  Decimal      @default(0) @db.Decimal(10, 2)
+  metadata                Json?
+  
+  createdAt               DateTime     @default(now())
+  
+  store                   Store        @relation(fields: [storeId], references: [id])
+  order                   Order        @relation(fields: [orderId], references: [id])
+  rule                    DiscountRule @relation(fields: [ruleId], references: [id])
+
+  @@unique([orderId, ruleId])
+}
+
+model Segment {
+  id            String     @id @default(uuid())
+  storeId       String
+  
+  name          String
+  definition    Json       // DSL rules
+  estimatedSize Int?
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  store         Store      @relation(fields: [storeId], references: [id])
+  campaigns     Campaign[]
+
+  @@index([storeId])
+}
+
+model Campaign {
+  id                  String          @id @default(uuid())
+  storeId             String
+  
+  type                CampaignType
+  channel             CampaignChannel
+  name                String
+  status              CampaignStatus  @default(DRAFT)
+  
+  segmentId           String?
+  scheduledAt         DateTime?
+  quietHours          Json?
+  
+  messageTemplateKey  String?
+  messageBody         String          @db.Text
+  variables           Json?
+  
+  createdByUserId     String
+  
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  
+  store               Store           @relation(fields: [storeId], references: [id])
+  segment             Segment?        @relation(fields: [segmentId], references: [id])
+  sends               CampaignSend[]
+
+  @@index([storeId, status])
+}
+
+model CampaignSend {
+  id                String            @id @default(uuid())
+  storeId           String
+  campaignId        String
+  customerId        String?
+  
+  toAddress         String
+  status            CampaignSendStatus @default(QUEUED)
+  
+  providerMessageId String?
+  errorCode         String?
+  errorMessage      String?
+  metadata          Json?
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  store             Store             @relation(fields: [storeId], references: [id])
+  campaign          Campaign          @relation(fields: [campaignId], references: [id])
+
+  @@unique([campaignId, toAddress])
+  @@index([storeId, status])
+}
+
+model AutomationRule {
   id        String   @id @default(uuid())
   storeId   String
-  userId    String?  // Optional: Some notifications are for the whole store staff
   
-  title     String
-  message   String
-  type      String   // ORDER, SYSTEM
-  isRead    Boolean  @default(false)
-  link      String?
+  key       String   // abandoned_checkout, post_purchase, winback
+  enabled   Boolean  @default(false)
+  config    Json
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  store     Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, key])
+}
+
+// Integration 15: Marketplace & Store Directory
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+  HIDDEN
+}
+
+enum ReportEntityType {
+  REVIEW
+  STORE
+  PRODUCT
+}
+
+enum ReportReason {
+  SPAM
+  FRAUD
+  HATE
+  HARASSMENT
+  COPYRIGHT
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+model StoreProfile {
+  id                  String   @id @default(uuid())
+  storeId             String   @unique
+  
+  slug                String   @unique
+  displayName         String
+  bio                 String?  @db.Text
+  logoUrl             String?
+  bannerUrl           String?
+  
+  state               String?  // Lagos, FCT, Rivers, etc.
+  city                String?  // Ikeja, Abuja, Port Harcourt
+  lga                 String?  // Local Government Area
+  
+  categories          String[]
+  whatsappNumberE164  String?
+  websiteUrl          String?
+  
+  isDirectoryListed   Boolean  @default(false)
+  isMarketplaceListed Boolean  @default(false)
+  pickupAvailable     Boolean  @default(false)
+  deliveryMethods     String[] @default(["self_dispatch"])
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  store               Store    @relation(fields: [storeId], references: [id])
+  reviews             Review[]
+
+  @@index([isDirectoryListed, state, city])
+  @@index([slug])
+}
+
+model Review {
+  id                 String       @id @default(uuid())
+  storeId            String
+  storeProfileId     String
+  productId          String?
+  orderId            String?
+  customerId         String?
+  
+  rating             Int          // 1-5
+  title              String?
+  body               String?      @db.Text
+  
+  status             ReviewStatus @default(PENDING)
+  isVerifiedPurchase Boolean      @default(false)
+  
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  
+  store              Store        @relation(fields: [storeId], references: [id])
+  storeProfile       StoreProfile @relation(fields: [storeProfileId], references: [id])
+  product            Product?     @relation(fields: [productId], references: [id])
+  order              Order?       @relation(fields: [orderId], references: [id])
+  media              ReviewMedia[]
+  reports            Report[]
+
+  @@index([storeProfileId, status, createdAt])
+  @@index([productId, status, createdAt])
+}
+
+model ReviewMedia {
+  id        String   @id @default(uuid())
+  reviewId  String
+  
+  s3Key     String
+  url       String
+  
+  createdAt DateTime @default(now())
+  
+  review    Review   @relation(fields: [reviewId], references: [id])
+}
+
+model Report {
+  id                 String           @id @default(uuid())
+  
+  entityType         ReportEntityType
+  entityId           String
+  
+  reporterIp         String?
+  reporterCustomerId String?
+  
+  reason             ReportReason
+  details            String?          @db.Text
+  
+  status             ReportStatus     @default(OPEN)
+  
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  
+  review             Review?          @relation(fields: [entityId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([entityType, entityId])
+}
+
+model TrustBadgeSnapshot {
+  id         String   @id @default(uuid())
+  storeId    String
+  date       DateTime @db.Date
+  
+  badges     String[] // ["verified", "fast_dispatch", "reliable_delivery", "top_rated"]
+  metrics    Json     // { deliverySuccessRate: 95, avgResponseTimeSeconds: 120, ... }
+  
+  createdAt  DateTime @default(now())
+  
+  store      Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, date])
+  @@index([storeId, date])
+}
+
+// Integration 16: Template Gallery & Theme Engine
+
+enum ThemeLicenseType {
+  OWNED
+  PERMISSIVE
+}
+
+enum ThemeStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum ThemeCategory {
+  MINIMAL
+  FASHION
+  ELECTRONICS
+  BEAUTY
+  FOOD
+  SERVICES
+  GENERAL
+}
+
+model ThemeTemplate {
+  id              String            @id @default(uuid())
+  
+  key             String            @unique // e.g., "vayva_light_glass_store_default"
+  name            String
+  description     String?           @db.Text
+  category        ThemeCategory     @default(GENERAL)
+  
+  previewImages   Json?             // Array of URLs
+  demoUrl         String?
+  
+  licenseType     ThemeLicenseType  @default(OWNED)
+  licenseNote     String?           @db.Text
+  
+  version         Int               @default(1)
+  isActive        Boolean           @default(true)
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  merchantThemes  MerchantTheme[]
+
+  @@index([isActive, category])
+}
+
+model MerchantTheme {
+  id              String      @id @default(uuid())
+  storeId         String
+  
+  templateKey     String
+  templateVersion Int         @default(1)
+  status          ThemeStatus @default(DRAFT)
+  
+  publishedAt     DateTime?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  store           Store       @relation(fields: [storeId], references: [id])
+  template        ThemeTemplate @relation(fields: [templateKey], references: [key])
+  settings        MerchantThemeSettings?
+  history         MerchantThemeHistory[]
+
+  @@index([storeId, status])
+}
+
+model MerchantThemeSettings {
+  id                String   @id @default(uuid())
+  storeId           String   @unique
+  themeId           String   @unique
+  
+  brandName         String?
+  accentColor       String?  @default("#22C55E")
+  secondaryColor    String?
+  
+  logoS3Key         String?
+  bannerS3Key       String?
+  
+  fontFamilyKey     String?  @default("inter")
+  
+  layoutPrefs       Json?    // Template-specific safe options
+  homepageSections  Json?    // Reorderable sections
+  socialLinks       Json?
+  
+  whatsappNumberE164 String?
+  
+  updatedAt         DateTime @updatedAt
+  
+  store             Store    @relation(fields: [storeId], references: [id])
+  theme             MerchantTheme @relation(fields: [themeId], references: [id])
+}
+
+model MerchantThemeHistory {
+  id                String   @id @default(uuid())
+  storeId           String
+  themeId           String
+  
+  templateKey       String
+  templateVersion   Int
+  settingsSnapshot  Json
+  
+  changedByUserId   String?
+  reason            String?
+  
+  createdAt         DateTime @default(now())
+  
+  store             Store    @relation(fields: [storeId], references: [id])
+  theme             MerchantTheme @relation(fields: [themeId], references: [id])
+
+  @@index([storeId, createdAt])
+}
+
+// Integration 17: Subscriptions & Billing
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  PAUSED
+}
+
+enum BillingProvider {
+  STRIPE
+  PAYSTACK
+  MANUAL
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+}
+
+model Plan {
+  id              String   @id @default(uuid())
+  
+  key             String   @unique // e.g., "free", "starter", "growth", "pro"
+  name            String
+  description     String?  @db.Text
+  
+  currency        String   @default("NGN")
+  priceMonthly    Decimal  @db.Decimal(10, 2)
+  priceYearly     Decimal  @db.Decimal(10, 2)
+  
+  features        Json     // Human-readable features
+  limits          Json     // Enforcement numbers
+  
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  subscriptions   Subscription[]
+
+  @@index([isActive])
+}
+
+model Subscription {
+  id                    String             @id @default(uuid())
+  storeId               String             @unique
+  planKey               String
+  
+  status                SubscriptionStatus @default(TRIALING)
+  provider              BillingProvider    @default(STRIPE)
+  providerSubscriptionId String?
+  
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  
+  cancelAtPeriodEnd     Boolean            @default(false)
+  trialEndsAt           DateTime?
+  
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  
+  store                 Store              @relation(fields: [storeId], references: [id])
+  plan                  Plan               @relation(fields: [planKey], references: [key])
+  invoices              Invoice[]
+
+  @@index([storeId, status])
+}
+
+model Invoice {
+  id                String        @id @default(uuid())
+  storeId           String
+  subscriptionId    String?
+  
+  provider          BillingProvider @default(STRIPE)
+  providerInvoiceId String?
+  
+  number            String        @unique
+  currency          String        @default("NGN")
+  amountDue         Decimal       @db.Decimal(10, 2)
+  amountPaid        Decimal       @default(0) @db.Decimal(10, 2)
+  status            InvoiceStatus @default(DRAFT)
+  
+  hostedInvoiceUrl  String?
+  pdfUrl            String?
+  dueDate           DateTime?
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  store             Store         @relation(fields: [storeId], references: [id])
+  subscription      Subscription? @relation(fields: [subscriptionId], references: [id])
+  lines             InvoiceLine[]
+
+  @@index([storeId, status])
+}
+
+model InvoiceLine {
+  id          String  @id @default(uuid())
+  invoiceId   String
+  
+  description String
+  quantity    Int     @default(1)
+  unitAmount  Decimal @db.Decimal(10, 2)
+  amount      Decimal @db.Decimal(10, 2)
+  metadata    Json?
+  
+  invoice     Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model UsageCounter {
+  id          String   @id @default(uuid())
+  storeId     String
+  
+  key         String   // e.g., "whatsapp_messages_sent", "orders_created"
+  periodStart DateTime
+  periodEnd   DateTime
+  
+  used        Int      @default(0)
+  limit       Int
+  
+  updatedAt   DateTime @updatedAt
+  
+  store       Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, key, periodStart])
+  @@index([storeId, key])
+}
+
+model BillingProfile {
+  id           String   @id @default(uuid())
+  storeId      String   @unique
+  
+  legalName    String?
+  addressText  String?  @db.Text
+  taxId        String?
+  billingEmail String?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  store        Store    @relation(fields: [storeId], references: [id])
+}
+
+// Integration 18: Developer Platform & Public API
+
+enum ApiKeyStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum WebhookEndpointStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+  DEAD
+}
+
+model ApiKey {
+  id          String       @id @default(uuid())
+  storeId     String
+  
+  name        String
+  keyHash     String       @unique
+  scopes      String[]
+  
+  status      ApiKeyStatus @default(ACTIVE)
+  
+  lastUsedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  revokedAt   DateTime?
+  
+  store       Store        @relation(fields: [storeId], references: [id])
+
+  @@index([storeId, status])
+}
+
+model WebhookEndpoint {
+  id                String                @id @default(uuid())
+  storeId           String
+  
+  url               String
+  status            WebhookEndpointStatus @default(ACTIVE)
+  secretEnc         String                // Encrypted
+  
+  subscribedEvents  String[]
+  
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  
+  store             Store                 @relation(fields: [storeId], references: [id])
+  deliveries        WebhookDelivery[]
+
+  @@index([storeId, status])
+}
+
+model WebhookEvent {
+  id        String   @id @default(uuid())
+  storeId   String
+  
+  type      String   // e.g., "order.created", "shipment.delivered"
+  payload   Json
   
   createdAt DateTime @default(now())
   
   store     Store    @relation(fields: [storeId], references: [id])
+  deliveries WebhookDelivery[]
+
+  @@index([storeId, type, createdAt])
 }
 
-model PushToken {
+model WebhookDelivery {
+  id                  String                @id @default(uuid())
+  storeId             String
+  endpointId          String
+  eventId             String
+  
+  eventType           String
+  attempt             Int                   @default(1)
+  status              WebhookDeliveryStatus @default(PENDING)
+  
+  responseCode        Int?
+  responseBodySnippet String?               @db.Text
+  
+  nextRetryAt         DateTime?
+  deliveredAt         DateTime?
+  
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  
+  store               Store                 @relation(fields: [storeId], references: [id])
+  endpoint            WebhookEndpoint       @relation(fields: [endpointId], references: [id])
+  event               WebhookEvent          @relation(fields: [eventId], references: [id])
+
+  @@index([storeId, status, nextRetryAt])
+  @@index([endpointId, createdAt])
+}
+
+// Integration 19: Admin Console & Ops Tools
+
+enum FlagSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum SupportCaseStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum SupportCaseCategory {
+  PAYMENTS
+  DELIVERY
+  WHATSAPP
+  CAMPAIGNS
+  ACCOUNT
+}
+
+model MerchantFlag {
+  id         String       @id @default(uuid())
+  storeId    String
+  
+  key        String       // fraud_risk, spam_risk, kyc_required, manual_review
+  severity   FlagSeverity @default(MEDIUM)
+  notes      String?      @db.Text
+  
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  
+  store      Store        @relation(fields: [storeId], references: [id])
+
+  @@index([storeId, key])
+}
+
+model PlatformKillSwitch {
   id        String   @id @default(uuid())
-  userId    String
-  token     String
-  platform  String   // IOS, ANDROID, WEB
+  
+  key       String   @unique // whatsapp_sending_disabled, campaigns_disabled, etc.
+  enabled   Boolean  @default(false)
+  config    Json?
+  reason    String?  @db.Text
   
   updatedAt DateTime @updatedAt
+}
+
+model MerchantFeatureOverride {
+  id        String    @id @default(uuid())
+  storeId   String
   
-  @@unique([userId, token])
+  key       String    // throttle_whatsapp_per_minute, disable_campaigns, etc.
+  value     Json
+  reason    String    @db.Text
+  
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  store     Store     @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, key])
+  @@index([storeId])
+}
+
+model SupportCase {
+  id               String              @id @default(uuid())
+  storeId          String
+  createdByAdminId String
+  
+  category         SupportCaseCategory
+  summary          String
+  status           SupportCaseStatus   @default(OPEN)
+  
+  links            Json?               // { orderIds: [], conversationIds: [] }
+  
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  
+  store            Store               @relation(fields: [storeId], references: [id])
+
+  @@index([storeId, status])
+  @@index([status, createdAt])
+}
+
+model AdminAuditLog {
+  id            String   @id @default(uuid())
+  
+  actorUserId   String
+  action        String
+  targetType    String?
+  targetId      String?
+  storeId       String?
+  
+  reason        String?  @db.Text
+  before        Json?
+  after         Json?
+  
+  ipAddress     String?
+  userAgent     String?  @db.Text
+  
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([storeId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+// Integration 20: Reliability & Scale
+
+enum IdempotencyStatus {
+  STARTED
+  COMPLETED
+  FAILED
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+enum JobRunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum DLQStatus {
+  DEAD
+  REPLAYED
+  IGNORED
+}
+
+enum MigrationStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  PAUSED
+}
+
+model IdempotencyKey {
+  id           String             @id @default(uuid())
+  storeId      String?
+  
+  scope        String             // whatsapp_send, payment_create, refund_create, etc.
+  key          String
+  
+  status       IdempotencyStatus  @default(STARTED)
+  responseHash String?
+  responseJson Json?
+  
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@unique([storeId, scope, key])
+  @@index([scope, key])
+}
+
+model OutboxEvent {
+  id          String            @id @default(uuid())
+  storeId     String?
+  
+  type        String
+  payload     Json
+  
+  status      OutboxEventStatus @default(PENDING)
+  nextRetryAt DateTime?
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([status, nextRetryAt])
+  @@index([storeId, type])
+}
+
+model JobRun {
+  id            String       @id @default(uuid())
+  storeId       String?
+  
+  jobName       String
+  correlationId String?
+  
+  attempt       Int          @default(1)
+  status        JobRunStatus @default(RUNNING)
+  
+  startedAt     DateTime     @default(now())
+  completedAt   DateTime?
+  duration      Int?         // milliseconds
+  
+  errorType     String?      // transient, permanent
+  errorMessage  String?      @db.Text
+  
+  metadata      Json?
+
+  @@index([jobName, status, startedAt])
+  @@index([storeId, jobName])
+}
+
+model DeadLetterQueue {
+  id          String    @id @default(uuid())
+  storeId     String?
+  
+  jobType     String
+  payload     Json
+  
+  lastError   String    @db.Text
+  failedAt    DateTime  @default(now())
+  retryAfter  DateTime?
+  
+  status      DLQStatus @default(DEAD)
+  replayedAt  DateTime?
+
+  @@index([status, failedAt])
+  @@index([storeId, jobType])
+}
+
+model MigrationRun {
+  id          String          @id @default(uuid())
+  
+  key         String          @unique
+  description String?
+  
+  status      MigrationStatus @default(PENDING)
+  progress    Int             @default(0) // percentage
+  
+  startedAt   DateTime?
+  completedAt DateTime?
+  lastError   String?         @db.Text
+  
+  metadata    Json?
+
+  @@index([status, startedAt])
 }

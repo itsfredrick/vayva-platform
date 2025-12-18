@@ -7,7 +7,7 @@ import { AppShell } from '@vayva/ui';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
-import { MarketplaceStatusChip } from '@/components/marketplace-status-badge';
+import { MarketplaceStatusBadge } from '@/components/marketplace-status-badge';
 
 export default function ListingDetailPage() {
     const params = useParams();
@@ -44,7 +44,7 @@ export default function ListingDetailPage() {
                         <GlassPanel className="p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-bold text-white">Listing Status</h3>
-                                <MarketplaceStatusChip status={isVisible ? 'Listed' : 'Unlisted'} />
+                                <MarketplaceStatusBadge status={isVisible ? 'Listed' : 'Unlisted'} />
                             </div>
                             <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/5">
                                 <div>

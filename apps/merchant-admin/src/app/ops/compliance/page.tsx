@@ -52,7 +52,7 @@ export default function OpsCompliancePage() {
                                 <td className="px-6 py-4 text-text-secondary">{f.time}</td>
                                 <td className="px-6 py-4 text-right">
                                     <Button size="sm" variant="ghost" className="text-text-secondary hover:text-white gap-2">
-                                        <Icon name="chat" size={16} /> Review Transcript
+                                        <Icon name="MessageSquare" size={16} /> Review Transcript
                                     </Button>
                                 </td>
                             </tr>

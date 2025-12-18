@@ -6,7 +6,7 @@ import { AppShell } from '@vayva/ui';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
-import { MarketplaceStatusChip } from '@/components/marketplace-status-badge';
+import { MarketplaceStatusBadge } from '@/components/marketplace-status-badge';
 
 const MOCK_LISTINGS = [
     { id: '1', name: 'Ultra-Soft T-Shirt', price: '₦ 10,000', status: 'Listed', stock: 120, views: 450, orders: 12 },
@@ -80,7 +80,7 @@ export default function MarketplaceListingsPage() {
                                                 <span className="font-bold text-white">{item.name}</span>
                                             </div>
                                         </td>
-                                        <td className="p-4"><MarketplaceStatusChip status={item.status} /></td>
+                                        <td className="p-4"><MarketplaceStatusBadge status={item.status} /></td>
                                         <td className="p-4 text-white font-mono">{item.price}</td>
                                         <td className="p-4 text-text-secondary">{item.stock} in stock</td>
                                         <td className="p-4 text-xs text-text-secondary">

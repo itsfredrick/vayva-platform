@@ -1,51 +1,53 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { AppShell, GlassPanel } from '@vayva/ui';
-import { AuditService } from '@/services/audit';
-import { useAuth } from '@/context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { AdminShell } from '@/components/admin-shell';
+import { Button, Icon, cn } from '@vayva/ui';
 
-export default function ActivityPage() {
-    const router = useRouter();
-    const { user } = useAuth();
-    const [events, setEvents] = useState<any[]>([]);
-
-    useEffect(() => {
-        AuditService.list().then(setEvents).catch(console.error);
-    }, []);
+export default function ActivityLogPage() {
+    // Mock Data
+    const audits = [
+        { id: '1', actor: 'Fredrick', action: 'ROLE_UPDATE', entity: 'Support Role', date: new Date().toISOString() },
+        { id: '2', actor: 'System', action: 'ORDER_FULFILLMENT', entity: 'Order #1002', date: new Date(Date.now() - 3600000).toISOString() },
+        { id: '3', actor: 'Sarah', action: 'LOGIN_SUCCESS', entity: 'Session', date: new Date(Date.now() - 7200000).toISOString() },
+    ];
 
     return (
-        <AppShell
-            title="Activity Feed"
-            breadcrumbs={[{ label: 'Settings', href: '/admin/settings' }, { label: 'Activity', href: '#' }]}
-            profile={{ name: user?.name || '', email: user?.email || '' }}
-            storeName="Store"
-            onLogout={() => router.push('/signin')}
-        >
-            <GlassPanel className="p-0 overflow-hidden">
-                <div className="flex flex-col">
-                    {events.length === 0 ? (
-                        <div className="p-8 text-center text-text-secondary">No activity logs.</div>
-                    ) : (
-                        events.map((e) => (
-                            <div key={e.id} className="p-4 border-b border-white/5 hover:bg-white/5 transition-colors flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="font-mono text-xs text-text-secondary bg-white/10 px-2 py-1 rounded">
-                                        {e.action}
-                                    </div>
-                                    <div className="text-white text-sm">
-                                        <span className="text-text-secondary">Resource:</span> {e.resource} ({e.resourceId})
-                                    </div>
-                                </div>
-                                <div className="text-xs text-text-secondary font-mono">
-                                    {new Date(e.createdAt).toLocaleString()}
-                                </div>
-                            </div>
-                        ))
-                    )}
+        <AdminShell title="Activity Log" breadcrumb="Settings">
+            <div className="max-w-5xl mx-auto flex flex-col gap-8">
+
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-2xl font-bold text-[#0B0B0B]">Activity Log</h1>
+                    <p className="text-[#525252]">Audit trail of all actions in your account.</p>
                 </div>
-            </GlassPanel>
-        </AppShell>
+
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-medium">
+                            <tr>
+                                <th className="px-6 py-4">Actor</th>
+                                <th className="px-6 py-4">Action</th>
+                                <th className="px-6 py-4">Entity</th>
+                                <th className="px-6 py-4">Date</th>
+                                <th className="px-6 py-4">Meta</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {audits.map(log => (
+                                <tr key={log.id}>
+                                    <td className="px-6 py-4 font-medium text-[#0B0B0B]">{log.actor}</td>
+                                    <td className="px-6 py-4 text-[#525252]">{log.action}</td>
+                                    <td className="px-6 py-4 text-blue-600">{log.entity}</td>
+                                    <td className="px-6 py-4 text-[#525252]">{new Date(log.date).toLocaleString()}</td>
+                                    <td className="px-6 py-4">
+                                        <Button variant="ghost" size="sm">View Details</Button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </AdminShell>
     );
 }

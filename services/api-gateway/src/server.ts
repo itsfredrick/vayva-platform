@@ -21,17 +21,76 @@ server.get('/health', async () => {
     return { status: 'ok' };
 });
 
-// Proxy to Auth Service
+// Custom Handlers for Cookie-based Auth (Merchant)
+server.post('/v1/auth/merchant/login', async (request, reply) => {
+    const upstreamResponse = await fetch('http://localhost:3011/v1/auth/merchant/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+
+    const data = await upstreamResponse.json();
+    if (upstreamResponse.status === 200 && data.token) {
+        reply.setCookie('vayva_session', data.token, {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60
+        });
+    }
+    return reply.status(upstreamResponse.status).send(data);
+});
+
+// Custom Handlers for Cookie-based Auth (Ops)
+server.post('/v1/auth/ops/verify-mfa', async (request, reply) => {
+    const upstreamResponse = await fetch('http://localhost:3011/v1/auth/ops/verify-mfa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+
+    const data = await upstreamResponse.json();
+    if (upstreamResponse.status === 200 && data.token) {
+        reply.setCookie('vayva_session', data.token, {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 12 * 60 * 60 // 12 hours for ops
+        });
+    }
+    return reply.status(upstreamResponse.status).send(data);
+});
+
+// Proxy everything else to Auth Service
 server.register(proxy, {
-    upstream: 'http://localhost:3001',
+    upstream: 'http://localhost:3011',
     prefix: '/v1/auth',
     rewritePrefix: '/v1/auth',
     http2: false
 });
 
+
+// Proxy to Staff Service (Lives in Auth Service)
+server.register(proxy, {
+    upstream: 'http://localhost:3011',
+    prefix: '/v1/staff',
+    rewritePrefix: '/v1/staff',
+    http2: false
+});
+
+// Proxy to Onboarding Service (Lives in Auth Service)
+server.register(proxy, {
+    upstream: 'http://localhost:3011',
+    prefix: '/v1/onboarding',
+    rewritePrefix: '/v1/onboarding',
+    http2: false
+});
+
 // Proxy to Orders Service
 server.register(proxy, {
-    upstream: 'http://localhost:3002',
+    upstream: 'http://localhost:3012',
     prefix: '/v1/orders',
     rewritePrefix: '/v1/orders',
     http2: false
@@ -39,7 +98,7 @@ server.register(proxy, {
 
 // Proxy to Payments Service
 server.register(proxy, {
-    upstream: 'http://localhost:3003',
+    upstream: 'http://localhost:3013',
     prefix: '/v1/payments',
     rewritePrefix: '/v1/payments',
     http2: false
@@ -86,55 +145,88 @@ server.register(proxy, {
 });
 
 // Proxy to Products Service
+// Catalog & Inventory (Routes to catalog-service)
 server.register(proxy, {
-    upstream: 'http://localhost:3009',
+    upstream: 'http://localhost:3004',
     prefix: '/v1/products',
-    rewritePrefix: '/v1/products',
-    http2: false
-});
-
-// Proxy to Public Storefront Endpoints
-server.register(proxy, {
-    upstream: 'http://localhost:3009',
-    prefix: '/v1/public/products',
-    rewritePrefix: '/v1/products/public', // Rewrite to specific public route in service
+    rewritePrefix: '/api/products',
     http2: false
 });
 
 server.register(proxy, {
-    upstream: 'http://localhost:3002', // Orders Service
-    prefix: '/v1/public/checkout',
-    rewritePrefix: '/v1/orders/checkout',
+    upstream: 'http://localhost:3004',
+    prefix: '/v1/inventory',
+    rewritePrefix: '/api/inventory',
     http2: false
 });
 
 server.register(proxy, {
-    upstream: 'http://localhost:3003', // Payments Service
+    upstream: 'http://localhost:3004',
+    prefix: '/v1/variants',
+    rewritePrefix: '/api/variants',
+    http2: false
+});
+
+server.register(proxy, {
+    upstream: 'http://localhost:3012',
+    prefix: '/v1/orders',
+    rewritePrefix: '/v1/orders',
+    http2: false
+});
+
+server.register(proxy, {
+    upstream: 'http://localhost:3014', // Support Service
+    prefix: '/v1/tickets',
+    rewritePrefix: '/tickets', // internal route was /tickets
+    http2: false
+});
+
+server.register(proxy, {
+    upstream: 'http://localhost:3013',
     prefix: '/v1/public/pay',
     rewritePrefix: '/v1/payments/initialize',
     http2: false
 });
 
-// Legacy Routes (Disabled for V1 refactor)
-// server.register(signupRoute, { prefix: '/auth' });
-// server.register(loginRoute, { prefix: '/auth' });
-// ...
-
-// Onboarding Routes (Might need refactor later)
-server.register(onboardingRoute, { prefix: '/onboarding' });
-
-// Stubs for Webhooks
+// Webhooks
 server.post('/webhooks/paystack', async (request, reply) => {
-    // TODO: Verify signature
-    // TODO: Idempotency check
-    // TODO: Forward to Payments Service
-    return { status: 'received' };
+    // Proxy to payments-service webhook handler
+    const response = await fetch('http://localhost:3013/v1/payments/webhook', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-paystack-signature': request.headers['x-paystack-signature'] as string
+        },
+        body: JSON.stringify(request.body)
+    });
+    const data = await response.json();
+    return reply.status(response.status).send(data);
+});
+
+
+server.get('/webhooks/whatsapp', async (request, reply) => {
+    // Proxy verification to WhatsApp Service
+    const query = new URLSearchParams(request.query as any).toString();
+    const response = await fetch(`http://localhost:3005/v1/whatsapp/webhooks/whatsapp?${query}`, {
+        method: 'GET'
+    });
+    const data = await response.text(); // key is that it returns text/plain for hub.challenge
+    return reply.status(response.status).send(data);
 });
 
 server.post('/webhooks/whatsapp', async (request, reply) => {
-    // TODO: Verify signature
-    // TODO: Forward to WhatsApp Service
-    return { status: 'received' };
+    // Proxy events to WhatsApp Service
+    const response = await fetch('http://localhost:3005/v1/whatsapp/webhooks/whatsapp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            // Forward signature header if present (Meta uses x-hub-signature-256)
+            'x-hub-signature-256': request.headers['x-hub-signature-256'] as string || ''
+        },
+        body: JSON.stringify(request.body)
+    });
+    const data = await response.json();
+    return reply.status(response.status).send(data);
 });
 
 const start = async () => {

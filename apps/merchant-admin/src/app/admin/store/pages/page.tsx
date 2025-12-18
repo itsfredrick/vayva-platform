@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AppShell } from '@vayva/ui';
+import { AdminShell } from '@/components/admin-shell';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Icon } from '@vayva/ui';
@@ -15,19 +15,20 @@ const MOCK_PAGES = [
 
 export default function PagesListPage() {
     return (
-        <AppShell title="Pages" breadcrumb="Storefront / Pages">
+        <AdminShell title="Pages" breadcrumb="Storefront / Pages">
             <div className="flex flex-col gap-6">
                 {/* Top Controls */}
                 <div className="flex items-center justify-between">
                     <div className="flex-1 max-w-sm">
                         <GlassPanel className="p-1 pl-4 flex items-center gap-2">
-                            <Icon name="search" className="text-text-secondary" />
+                            <Icon name="Search" className="text-text-secondary" />
                             <input
                                 className="bg-transparent border-none outline-none text-white text-sm w-full h-10 placeholder:text-text-secondary"
                                 placeholder="Search pages..."
                             />
                         </GlassPanel>
                     </div>
+                    {/* @ts-ignore */}
                     <Link href="/admin/store/pages/new">
                         <Button>Create Page</Button>
                     </Link>
@@ -50,6 +51,7 @@ export default function PagesListPage() {
                                 {MOCK_PAGES.map((page) => (
                                     <tr key={page.id} className="group hover:bg-white/5 transition-colors cursor-pointer">
                                         <td className="p-4 font-bold text-white">
+                                            {/* @ts-ignore */}
                                             <Link href={`/admin/store/pages/${page.id}`} className="hover:underline hover:text-primary transition-colors">
                                                 {page.title}
                                             </Link>
@@ -63,9 +65,10 @@ export default function PagesListPage() {
                                         </td>
                                         <td className="p-4 text-text-secondary text-xs">{page.updated}</td>
                                         <td className="p-4 text-right">
+                                            {/* @ts-ignore */}
                                             <Link href={`/admin/store/pages/${page.id}`}>
                                                 <Button size="icon" variant="ghost" className="h-8 w-8 text-text-secondary hover:text-white">
-                                                    <Icon name="edit" size={16} />
+                                                    <Icon name="Pencil" size={16} />
                                                 </Button>
                                             </Link>
                                         </td>
@@ -76,6 +79,6 @@ export default function PagesListPage() {
                     </div>
                 </GlassPanel>
             </div>
-        </AppShell>
+        </AdminShell>
     );
 }

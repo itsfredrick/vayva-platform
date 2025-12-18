@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { Icon } from '@/components/ui/icon';
-import { Button } from '@/components/ui/button';
+import { Icon } from '@vayva/ui';
+import { Button } from '@vayva/ui';
 
 export interface Product {
     id: string;
@@ -29,7 +29,7 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
                             // In real app, use Next Image
                             <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${product.image})` }} />
                         ) : (
-                            <Icon name="image" size={48} />
+                            <Icon name="Image" size={48} />
                         )}
                     </div>
 

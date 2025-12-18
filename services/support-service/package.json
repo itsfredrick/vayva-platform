@@ -1,0 +1,24 @@
+{
+    "name": "support-service",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+    },
+    "dependencies": {
+        "fastify": "^4.24.3",
+        "@fastify/cors": "^8.4.1",
+        "@prisma/client": "^5.7.0",
+        "dotenv": "^16.3.1",
+        "csv-parser": "^3.0.0",
+        "xlsx": "^0.18.5"
+    },
+    "devDependencies": {
+        "typescript": "^5.3.3",
+        "ts-node-dev": "^2.0.0",
+        "@types/node": "^20.10.0",
+        "prisma": "^5.7.0"
+    }
+}

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@vayva/ui';
 
 const FOOTER_LINKS = {
     Product: [
@@ -23,6 +23,15 @@ const FOOTER_LINKS = {
         { label: 'Community', href: '#' },
         { label: 'Status', href: '/status' },
         { label: 'Legal Hub', href: '/legal' },
+        { label: 'Terms of Service', href: '/legal/terms' },
+        { label: 'Privacy Policy', href: '/legal/privacy' },
+        { label: 'Manage Cookies', href: '/legal/cookies' },
+    ],
+    Compliance: [
+        { label: 'Acceptable Use', href: '/legal/acceptable-use' },
+        { label: 'Prohibited Items', href: '/legal/prohibited-items' },
+        { label: 'Refund Policy', href: '/legal/refund-policy' },
+        { label: 'KYC & Safety', href: '/legal/kyc-explainer' },
     ],
 };
 
@@ -30,7 +39,7 @@ export function MarketingFooter() {
     return (
         <footer className="bg-white border-t border-black/5 pt-20 pb-10">
             <div className="max-w-[1440px] mx-auto px-4 lg:px-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-10 mb-16">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 mb-16">
                     {/* Brand Column */}
                     <div className="col-span-2 lg:col-span-2 space-y-6">
                         <Link href="/" className="flex items-center gap-2">
@@ -50,7 +59,7 @@ export function MarketingFooter() {
                                     className="w-10 h-10 rounded-full bg-black/5 flex items-center justify-center text-[#1d1d1f]/60 hover:text-[#46EC13] hover:bg-black/10 transition-all"
                                 >
                                     {/* Use a generic icon if specific ones aren't available in mapping, or just placeholder */}
-                                    <Icon name="public" size={20} />
+                                    <Icon name="Globe" size={20} />
                                 </a>
                             ))}
                         </div>

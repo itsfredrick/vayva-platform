@@ -1,17 +1,17 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@vayva/ui';
 import { StepShell } from './StepShell';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@vayva/ui';
 
 const STORE_TYPES = [
-    { id: 'fashion', label: 'Fashion & Clothing', icon: 'shirt' },
-    { id: 'beauty', label: 'Health & Beauty', icon: 'sparkles' },
-    { id: 'electronics', label: 'Electronics & Gadgets', icon: 'smartphone' },
-    { id: 'food', label: 'Food & Dining', icon: 'utensils' },
-    { id: 'home', label: 'Home & Decor', icon: 'home' }, // Assuming 'home' icon exists or map to another
-    { id: 'other', label: 'Other', icon: 'store' },
+    { id: 'fashion', label: 'Fashion & Clothing', icon: 'Shirt' },
+    { id: 'beauty', label: 'Health & Beauty', icon: 'Sparkles' },
+    { id: 'electronics', label: 'Electronics & Gadgets', icon: 'Smartphone' },
+    { id: 'food', label: 'Food & Dining', icon: 'Utensils' },
+    { id: 'home', label: 'Home & Decor', icon: 'Home' }, // Assuming 'home' icon exists or map to another
+    { id: 'other', label: 'Other', icon: 'Store' },
 ];
 
 interface StoreTypeStepProps {

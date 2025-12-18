@@ -1,0 +1,108 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e6]
+        - heading "Vayva" [level=1] [ref=e10]
+      - navigation [ref=e11]:
+        - link "Overview" [ref=e12] [cursor=pointer]:
+          - /url: /admin
+          - img [ref=e13]
+          - generic [ref=e18]: Overview
+        - link "Products" [ref=e19] [cursor=pointer]:
+          - /url: /admin/products
+          - img [ref=e20]
+          - generic [ref=e24]: Products
+        - link "Orders" [ref=e25] [cursor=pointer]:
+          - /url: /admin/orders
+          - img [ref=e26]
+          - generic [ref=e29]: Orders
+        - link "Customers" [ref=e30] [cursor=pointer]:
+          - /url: /admin/customers
+          - img [ref=e31]
+          - generic [ref=e36]: Customers
+        - link "Wallet" [ref=e37] [cursor=pointer]:
+          - /url: /admin/wallet
+          - img [ref=e38]
+          - generic [ref=e42]: Wallet
+        - link "WA Agent" [ref=e43] [cursor=pointer]:
+          - /url: /admin/whatsapp
+          - img [ref=e44]
+          - generic [ref=e46]: WA Agent
+      - link "Control Center Builder, Themes & Pages" [ref=e48] [cursor=pointer]:
+        - /url: /admin/control-center
+        - generic [ref=e49]:
+          - img [ref=e51]
+          - generic:
+            - paragraph: Control Center
+            - paragraph: Builder, Themes & Pages
+      - generic [ref=e55] [cursor=pointer]:
+        - generic [ref=e56]: FD
+        - generic:
+          - paragraph
+    - main [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]: Home
+          - generic [ref=e61]: /
+          - generic [ref=e62]: Products
+          - generic [ref=e63]: /
+          - generic [ref=e64]: Add Product
+        - generic [ref=e66]:
+          - img [ref=e67]
+          - textbox "Search for anything..." [ref=e70]
+        - generic [ref=e71]:
+          - link "Visit Store" [ref=e72] [cursor=pointer]:
+            - /url: http://localhost:3001?store=undefined
+            - text: Visit Store
+            - img [ref=e73]
+          - button [ref=e77] [cursor=pointer]:
+            - img [ref=e78]
+          - button "FD" [ref=e83] [cursor=pointer]
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - heading "Basic Information" [level=3] [ref=e89]
+            - generic [ref=e90]:
+              - generic [ref=e91]: Product Name
+              - textbox "e.g. Vintage Denim Jacket" [ref=e92]
+            - generic [ref=e93]:
+              - generic [ref=e94]: Description
+              - textbox "Describe your product..." [ref=e95]
+          - generic [ref=e96]:
+            - heading "Media" [level=3] [ref=e97]
+            - generic [ref=e98] [cursor=pointer]:
+              - img [ref=e99]
+              - paragraph [ref=e102]: Click to upload images
+              - paragraph [ref=e103]: or drag and drop
+          - generic [ref=e104]:
+            - heading "Pricing & Inventory" [level=3] [ref=e105]
+            - generic [ref=e106]:
+              - generic [ref=e107]:
+                - generic [ref=e108]: Price
+                - generic [ref=e109]:
+                  - generic [ref=e110]: ₦
+                  - spinbutton [ref=e111]
+              - generic [ref=e112]:
+                - generic [ref=e113]: Inventory
+                - spinbutton [ref=e114]
+            - generic [ref=e115]:
+              - checkbox "This product has variants (e.g. size, color)" [ref=e116]
+              - generic [ref=e117] [cursor=pointer]: This product has variants (e.g. size, color)
+        - generic [ref=e119]:
+          - heading "Publishing" [level=3] [ref=e120]
+          - generic [ref=e121]:
+            - generic [ref=e122] [cursor=pointer]:
+              - radio "Active" [checked] [ref=e123]
+              - generic [ref=e124]: Active
+            - generic [ref=e125] [cursor=pointer]:
+              - radio "Draft" [ref=e126]
+              - generic [ref=e127]: Draft
+        - generic [ref=e129]:
+          - button "Cancel" [ref=e130] [cursor=pointer]
+          - button "Save Product" [disabled]
+  - alert [ref=e131]
+```

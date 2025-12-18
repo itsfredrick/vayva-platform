@@ -14,6 +14,21 @@ export const StoreSchema = z.object({
     country: z.string().default('NG'),
     currency: z.string().default('NGN'),
 
+    // Policies
+    returnsMarkdown: z.string().optional(),
+    shippingMarkdown: z.string().optional(),
+    privacyMarkdown: z.string().optional(),
+    termsMarkdown: z.string().optional(),
+
+    // Policy Contact Details
+    policyContact: z.object({
+        email: z.string().email(),
+        phone: z.string(),
+        whatsapp: z.string().optional(),
+        address: z.string().optional(),
+        businessHours: z.string().optional(),
+    }).optional(),
+
     // Settings
     timezone: z.string().default('Africa/Lagos'),
     isActive: z.boolean().default(true),

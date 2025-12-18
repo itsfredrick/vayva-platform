@@ -25,7 +25,7 @@ export default function MarketSearchPage() {
                     {/* Filters (Desktop) */}
                     <div className="hidden lg:block space-y-8">
                         <div>
-                            <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Icon name="category" size={18} /> Category</h3>
+                            <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Icon name="LayoutGrid" size={18} /> Category</h3>
                             <div className="space-y-2">
                                 {['Electronics', 'Computing', 'Phones', 'Gaming', 'Accessories'].map(c => (
                                     <div key={c} className="flex items-center gap-2">
@@ -37,7 +37,7 @@ export default function MarketSearchPage() {
                         </div>
 
                         <div>
-                            <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Icon name="attach_money" size={18} /> Price Range</h3>
+                            <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Icon name="Banknote" size={18} /> Price Range</h3>
                             <div className="space-y-3">
                                 <div className="flex gap-2 text-sm">
                                     <input className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white" placeholder="Min" />
@@ -49,7 +49,7 @@ export default function MarketSearchPage() {
                         </div>
 
                         <div>
-                            <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Icon name="location_on" size={18} /> Location</h3>
+                            <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Icon name="MapPin" size={18} /> Location</h3>
                             <div className="space-y-2">
                                 {['Lagos', 'Abuja', 'Port Harcourt'].map(c => (
                                     <div key={c} className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export default function MarketSearchPage() {
                         {/* Empty state hint */}
                         {MOCK_RESULTS.length < 5 && (
                             <div className="mt-12 p-8 rounded-xl bg-white/5 border border-white/5 text-center">
-                                <Icon name="search_off" size={48} className="mx-auto text-white/20 mb-4" />
+                                <Icon name="SearchX" size={48} className="mx-auto text-white/20 mb-4" />
                                 <h3 className="font-bold text-white">End of results</h3>
                                 <p className="text-sm text-text-secondary">Try adjusting your filters or search for something else.</p>
                             </div>

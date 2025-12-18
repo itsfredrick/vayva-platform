@@ -1,19 +1,23 @@
+
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { notificationRoutes } from './routes';
+import { protectedRoutes, publicRoutes } from './api/routes';
+import { prisma } from '@vayva/db';
 
-const server = Fastify({ logger: true });
+const server = Fastify({
+    logger: true
+});
 
 server.register(cors);
 
-// Health check
-server.get('/health', async () => ({ status: 'ok' }));
-
-// Register Routes
-server.register(notificationRoutes, { prefix: '/v1/notifications' });
+// Database Client
+// export const prisma = new PrismaClient(); // Use shared
 
 const start = async () => {
     try {
+        await server.register(publicRoutes, { prefix: '/v1' });
+        await server.register(protectedRoutes, { prefix: '/v1' });
+
         await server.listen({ port: 3008, host: '0.0.0.0' });
         console.log('Notifications Service running on port 3008');
     } catch (err) {

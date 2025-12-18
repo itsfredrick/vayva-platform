@@ -55,7 +55,7 @@ export default function WhatsAppSettingsPage() {
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${agentEnabled ? 'bg-state-success/20 text-state-success' : 'bg-white/5 text-text-secondary'}`}>
-                                <Icon name="smart_toy" size={24} />
+                                <Icon name="Bot" size={24} />
                             </div>
                             <div>
                                 <h2 className="font-bold text-white text-lg">AI Agent Status</h2>
@@ -91,7 +91,7 @@ export default function WhatsAppSettingsPage() {
                                 </>
                             ) : (
                                 <div className="flex items-center gap-2 text-state-warning">
-                                    <Icon name="warning" />
+                                    <Icon name="AlertTriangle" />
                                     <span className="font-bold">WhatsApp not connected</span>
                                 </div>
                             )}
@@ -169,7 +169,7 @@ export default function WhatsAppSettingsPage() {
                         <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] uppercase font-bold rounded tracking-wider border border-blue-500/20">Recommended</span>
                     </div>
                     <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl mb-6 flex gap-3">
-                        <Icon name="shield" className="text-blue-400 shrink-0" />
+                        <Icon name="Shield" className="text-blue-400 shrink-0" />
                         <p className="text-sm text-blue-100/80">Approvals prevent the AI from making irreversible decisions or financial mistakes. We recommend keeping these enabled.</p>
                     </div>
 
@@ -279,7 +279,7 @@ export default function WhatsAppSettingsPage() {
                                 {['refund', 'scam', 'police', 'chargeback', 'angry', 'complaint'].map(keyword => (
                                     <span key={keyword} className="px-2 py-1 rounded bg-white/10 text-white text-xs font-bold flex items-center gap-1 group">
                                         {keyword}
-                                        <button className="text-white/50 hover:text-white"><Icon name="close" size={12} /></button>
+                                        <button className="text-white/50 hover:text-white"><Icon name="X" size={12} /></button>
                                     </span>
                                 ))}
                                 <input

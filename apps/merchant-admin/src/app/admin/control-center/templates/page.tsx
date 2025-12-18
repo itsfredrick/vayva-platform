@@ -1,0 +1,117 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { GlassPanel, Button, Icon } from '@vayva/ui';
+import { Spinner } from '@/components/Spinner';
+import { ControlCenterService } from '@/services/control-center.service';
+import { StoreTemplate, StoreConfig } from '@/types/control-center';
+import { TemplateCard } from '@/components/control-center/TemplateCard';
+import Link from 'next/link';
+
+// Mock user plan for gating logic
+const USER_PLAN = 'starter'; // 'starter' | 'growth' | 'pro'
+
+export default function TemplatesPage() {
+    const [templates, setTemplates] = useState<StoreTemplate[]>([]);
+    const [config, setConfig] = useState<StoreConfig | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [applyingId, setApplyingId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const loadData = async () => {
+            const [t, c] = await Promise.all([
+                ControlCenterService.getTemplates(),
+                ControlCenterService.getStoreConfig()
+            ]);
+            setTemplates(t);
+            setConfig(c);
+            setLoading(false);
+        };
+        loadData();
+    }, []);
+
+    const categories = ['all', 'minimal', 'editorial', 'catalog', 'enterprise'];
+
+    const filteredTemplates = selectedCategory === 'all'
+        ? templates
+        : templates.filter(t => t.category === selectedCategory);
+
+    const handleSelectTemplate = async (id: string) => {
+        setApplyingId(id);
+        await ControlCenterService.updateTemplate(id);
+        // Refresh local state
+        const newConfig = await ControlCenterService.getStoreConfig();
+        setConfig(newConfig);
+        setApplyingId(null);
+    };
+
+    const handlePreview = (id: string) => {
+        // Open preview in new tab or modal
+        window.open(`/admin/control-center/preview?template=${id}`, '_blank');
+    };
+
+    if (loading || !config) {
+        return <div className="flex h-96 items-center justify-center"><Spinner /></div>;
+    }
+
+    return (
+        <div className="flex h-[calc(100vh-100px)] -m-6">
+            {/* Left Rail - Categories */}
+            <div className="w-64 border-r border-white/10 bg-black/20 p-6 flex flex-col gap-2">
+                <Link href="/admin/control-center" className="mb-6 flex items-center text-sm text-text-secondary hover:text-white">
+                    <Icon name="ArrowLeft" size={16} className="mr-2" />
+                    Back
+                </Link>
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Categories</h2>
+                {categories.map(cat => (
+                    <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all ${selectedCategory === cat
+                            ? 'bg-white/10 text-white'
+                            : 'text-text-secondary hover:bg-white/5 hover:text-white'
+                            }`}
+                    >
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </button>
+                ))}
+            </div>
+
+            {/* Main Grid */}
+            <div className="flex-1 overflow-y-auto p-8">
+                <div className="mb-8">
+                    <h1 className="text-2xl font-bold text-white">Template Gallery</h1>
+                    <p className="text-text-secondary">Select a look for your store.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredTemplates.map((template) => {
+                        // Plan Gating Logic
+                        const isGated = USER_PLAN === 'starter' && template.isPremium;
+                        const canSelect = !isGated;
+
+                        return (
+                            <TemplateCard
+                                key={template.id}
+                                template={template}
+                                isActive={config.templateId === template.id}
+                                onSelect={handleSelectTemplate}
+                                onPreview={handlePreview}
+                                canSelect={canSelect}
+                            />
+                        );
+                    })}
+                </div>
+            </div>
+            {applyingId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <div className="flex flex-col items-center">
+                        <Spinner size="lg" />
+                        <p className="mt-4 font-medium text-white">Applying Template...</p>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

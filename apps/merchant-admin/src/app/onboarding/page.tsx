@@ -1,34 +1,17 @@
 'use client';
-
-import { Button, GlassPanel } from '@vayva/ui';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useOnboarding } from '@/context/OnboardingContext';
 
-export default function OnboardingPage() {
+export default function OnboardingIndex() {
     const router = useRouter();
+    const { state, loading } = useOnboarding();
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-background-dark p-4">
-            <GlassPanel className="w-full max-w-2xl p-12 text-center">
-                <div className="mb-8">
-                    {/* Illustration placeholder */}
-                    <div className="w-32 h-32 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span className="text-4xl">🏪</span>
-                    </div>
-                    <h1 className="text-4xl font-bold text-white mb-4">Let's set up your store</h1>
-                    <p className="text-xl text-text-secondary max-w-lg mx-auto">
-                        Complete a few simple steps to launch your Vayva store and start selling.
-                    </p>
-                </div>
+    useEffect(() => {
+        if (!loading && state) {
+            router.replace(`/onboarding/${state.currentStep}`);
+        }
+    }, [loading, state, router]);
 
-                <Button
-                    size="lg"
-                    variant="primary"
-                    className="h-14 px-8 text-lg"
-                    onClick={() => router.push('/onboarding/store-details')}
-                >
-                    Start Setup
-                </Button>
-            </GlassPanel>
-        </div>
-    );
+    return null; // Or a loading spinner
 }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { MarketingHeader } from '@/components/marketing/marketing-header';
 import { MarketingFooter } from '@/components/marketing/marketing-footer';
 import { MarketingShell } from '@/components/marketing/marketing-shell';
+import { CookieBanner } from '@/components/marketing/CookieBanner';
 
 export const metadata: Metadata = {
     title: 'Vayva | Sell online in Nigeria',
@@ -20,6 +21,7 @@ export default function MarketingLayout({
                 {children}
             </main>
             <MarketingFooter />
+            <CookieBanner />
         </MarketingShell>
     );
 }

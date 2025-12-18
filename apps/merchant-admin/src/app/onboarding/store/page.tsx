@@ -56,6 +56,7 @@ export default function StoreDetailsPage() {
                             placeholder="e.g. Amina Beauty"
                             value={storeName}
                             onChange={e => handleNameChange(e.target.value)}
+                            data-testid="onboarding-store-name"
                         />
 
                         <div className="grid grid-cols-2 gap-4">
@@ -119,7 +120,7 @@ export default function StoreDetailsPage() {
 
                         <div className="flex justify-between pt-4 mt-auto">
                             <Button variant="ghost" onClick={() => router.back()}>Back</Button>
-                            <Button onClick={handleSave} disabled={!isFormValid} isLoading={isLoading}>Save & Continue</Button>
+                            <Button onClick={handleSave} disabled={!isFormValid} isLoading={isLoading} data-testid="onboarding-store-submit">Save & Continue</Button>
                         </div>
                     </GlassPanel>
 

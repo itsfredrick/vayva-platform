@@ -11,7 +11,7 @@ export default function MarketConfirmationPage() {
         <MarketShell>
             <div className="max-w-3xl mx-auto px-4 py-16 text-center">
                 <div className="w-20 h-20 bg-state-success rounded-full flex items-center justify-center text-black mx-auto mb-6 shadow-lg shadow-green-500/20">
-                    <Icon name="check" size={40} />
+                    <Icon name="Check" size={40} />
                 </div>
 
                 <h1 className="text-3xl font-bold text-white mb-2">Order Confirmed!</h1>
@@ -28,7 +28,7 @@ export default function MarketConfirmationPage() {
                             </div>
                         </div>
                         <div className="mt-2 text-sm text-state-success font-medium flex items-center gap-1">
-                            <Icon name="shield" size={14} /> Vayva Buyer Protection Active
+                            <Icon name="Shield" size={14} /> Vayva Buyer Protection Active
                         </div>
                     </div>
 

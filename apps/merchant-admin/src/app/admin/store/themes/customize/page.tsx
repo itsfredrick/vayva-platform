@@ -32,7 +32,7 @@ export default function ThemeCustomizePage() {
             <div className="h-16 border-b border-white/5 bg-[#142210]/50 backdrop-blur-xl flex items-center justify-between px-4 z-50">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                        <Icon name="arrow_back" />
+                        <Icon name="ArrowLeft" />
                     </Button>
                     <span className="font-bold hidden md:inline-block">Dawn Theme</span>
                     <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
@@ -41,13 +41,13 @@ export default function ThemeCustomizePage() {
                             onClick={() => setViewMode('desktop')}
                             className={`p-1.5 rounded-full transition-colors ${viewMode === 'desktop' ? 'bg-white/10 text-white' : 'text-text-secondary hover:text-white'}`}
                         >
-                            <Icon name="desktop_windows" size={18} />
+                            <Icon name="Monitor" size={18} />
                         </button>
                         <button
                             onClick={() => setViewMode('mobile')}
                             className={`p-1.5 rounded-full transition-colors ${viewMode === 'mobile' ? 'bg-white/10 text-white' : 'text-text-secondary hover:text-white'}`}
                         >
-                            <Icon name="smartphone" size={18} />
+                            <Icon name="Smartphone" size={18} />
                         </button>
                     </div>
                 </div>
@@ -88,21 +88,21 @@ export default function ThemeCustomizePage() {
                                 {sections.map((section, idx) => (
                                     <div key={section.id} className="group p-3 rounded-lg bg-white/5 border border-transparent hover:border-white/10 flex items-center justify-between cursor-pointer active:cursor-grabbing hover:bg-white/10 transition-colors">
                                         <div className="flex items-center gap-3">
-                                            <Icon name="drag_indicator" size={16} className="text-white/20 group-hover:text-white/50 cursor-grab" />
+                                            <Icon name="GripVertical" size={16} className="text-white/20 group-hover:text-white/50 cursor-grab" />
                                             <span className="text-sm font-medium">{section.name}</span>
                                         </div>
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button className="p-1 hover:text-white text-text-secondary">
-                                                <Icon name="visibility" size={16} />
+                                                <Icon name="Eye" size={16} />
                                             </button>
                                             <button className="p-1 hover:text-white text-text-secondary">
-                                                <Icon name="settings" size={16} />
+                                                <Icon name="Settings" size={16} />
                                             </button>
                                         </div>
                                     </div>
                                 ))}
                                 <Button variant="outline" className="w-full mt-4 text-xs border-dashed border-white/20 text-text-secondary hover:text-white hover:border-white/40">
-                                    <Icon name="add" className="mr-2" size={16} />
+                                    <Icon name="Plus" className="mr-2" size={16} />
                                     Add Section
                                 </Button>
                             </>
@@ -205,7 +205,7 @@ export default function ThemeCustomizePage() {
                             <label className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-2 block">Background Image</label>
                             <div className="h-32 border border-dashed border-white/20 rounded-lg flex items-center justify-center hover:bg-white/5 cursor-pointer transition-colors">
                                 <div className="text-center">
-                                    <Icon name="image" className="mx-auto mb-1 text-text-secondary" />
+                                    <Icon name="Image" className="mx-auto mb-1 text-text-secondary" />
                                     <span className="text-xs text-text-secondary">Change</span>
                                 </div>
                             </div>

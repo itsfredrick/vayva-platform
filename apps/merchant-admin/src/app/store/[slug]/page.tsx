@@ -61,7 +61,7 @@ export default function StoreHomepage({ params }: { params: { slug: string } }) 
                     <div className="hidden md:block relative h-[400px]">
                         <div className="absolute right-0 top-0 w-64 h-80 bg-white/5 rounded-2xl rotate-3 border border-white/10 backdrop-blur-sm z-10"></div>
                         <div className="absolute right-12 top-12 w-64 h-80 bg-white/10 rounded-2xl -rotate-2 border border-white/10 backdrop-blur-md z-20 flex items-center justify-center">
-                            <Icon name="shopping_bag" size={64} className="text-white/20" />
+                            <Icon name="ShoppingBag" size={64} className="text-white/20" />
                         </div>
                     </div>
                 </div>
@@ -74,7 +74,7 @@ export default function StoreHomepage({ params }: { params: { slug: string } }) 
                         {CATEGORIES.map(cat => (
                             <Link key={cat.name} href={`/store/${params.slug}/collections/${cat.name.toLowerCase()}`}>
                                 <div className="group flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                                    <Icon name={cat.image} className="text-text-secondary group-hover:text-primary transition-colors" />
+                                    <Icon name={cat.image as any} className="text-text-secondary group-hover:text-primary transition-colors" />
                                     <span className="font-bold text-white text-sm">{cat.name}</span>
                                 </div>
                             </Link>
@@ -92,7 +92,7 @@ export default function StoreHomepage({ params }: { params: { slug: string } }) 
                             <p className="text-text-secondary">Handpicked just for you.</p>
                         </div>
                         <Link href={`/store/${params.slug}/collections/all`} className="text-primary hover:text-primary/80 text-sm font-bold flex items-center gap-1">
-                            View All <Icon name="arrow_forward" size={16} />
+                            View All <Icon name="ArrowRight" size={16} />
                         </Link>
                     </div>
 
@@ -108,13 +108,13 @@ export default function StoreHomepage({ params }: { params: { slug: string } }) 
             <section className="py-16 bg-[#0b141a]">
                 <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
                     {[
-                        { icon: 'local_shipping', title: 'Fast Delivery', desc: 'Lagos delivery within 24 hours.' },
-                        { icon: 'verified_user', title: 'Secure Payment', desc: '100% secure checkout via Paystack.' },
-                        { icon: 'chat', title: 'WhatsApp Support', desc: 'Chat with us anytime for help.' },
+                        { icon: 'Truck', title: 'Fast Delivery', desc: 'Lagos delivery within 24 hours.' },
+                        { icon: 'ShieldCheck', title: 'Secure Payment', desc: '100% secure checkout via Paystack.' },
+                        { icon: 'MessageCircle', title: 'WhatsApp Support', desc: 'Chat with us anytime for help.' },
                     ].map((item, i) => (
                         <div key={i} className="flex flex-col items-center text-center p-6 rounded-2xl bg-white/5 border border-white/5">
                             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
-                                <Icon name={item.icon} size={24} />
+                                <Icon name={item.icon as any} size={24} />
                             </div>
                             <h3 className="font-bold text-white text-lg mb-2">{item.title}</h3>
                             <p className="text-sm text-text-secondary">{item.desc}</p>

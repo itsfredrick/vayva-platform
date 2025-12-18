@@ -21,7 +21,7 @@ export default function OpsMerchantsPage() {
             description="Manage stores, review risk profiles, and handle account actions."
             actions={
                 <Button variant="outline" className="text-white border-white/10 hover:bg-white/5 gap-2">
-                    <Icon name="file_download" size={18} /> Export CSV
+                    <Icon name="Download" size={18} /> Export CSV
                 </Button>
             }
         >
@@ -29,11 +29,11 @@ export default function OpsMerchantsPage() {
             {/* Filters */}
             <div className="bg-white/5 border border-white/5 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-center">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded border border-white/10 text-sm text-text-secondary min-w-[200px]">
-                    <Icon name="filter_list" size={16} />
+                    <Icon name="Filter" size={16} />
                     <span>All Statuses</span>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded border border-white/10 text-sm text-text-secondary min-w-[200px]">
-                    <Icon name="warning" size={16} />
+                    <Icon name="AlertTriangle" size={16} />
                     <span>All Risk Levels</span>
                 </div>
                 <div className="flex-1" />
@@ -81,7 +81,7 @@ export default function OpsMerchantsPage() {
                                     <RiskChip level={m.risk as any} />
                                 </td>
                                 <td className="px-6 py-4">
-                                    {m.marketplace ? <Icon name="check" size={16} className="text-green-400" /> : <span className="text-white/20">-</span>}
+                                    {m.marketplace ? <Icon name="Check" size={16} className="text-green-400" /> : <span className="text-white/20">-</span>}
                                 </td>
                                 <td className="px-6 py-4 text-right font-mono text-white">
                                     {m.gmv}

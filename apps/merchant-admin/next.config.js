@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    transpilePackages: ["@vayva/ui"],
+    transpilePackages: ["@vayva/ui", "@vayva/theme"],
     eslint: {
         ignoreDuringBuilds: true,
     },

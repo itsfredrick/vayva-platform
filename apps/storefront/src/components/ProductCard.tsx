@@ -1,0 +1,43 @@
+import React from 'react';
+import NextLink from 'next/link';
+const Link = NextLink as any;
+import Image from 'next/image';
+import { PublicProduct } from '@/types/storefront';
+
+interface ProductCardProps {
+    product: PublicProduct;
+    storeSlug: string;
+}
+
+export function ProductCard({ product, storeSlug }: ProductCardProps) {
+    return (
+        <Link href={`/products/${product.id}?store=${storeSlug}`} className="group block">
+            <div className="relative aspect-[4/5] bg-gray-100 rounded-xl overflow-hidden mb-4">
+                {product.images[0] ? (
+                    <img // Using img for simplicity in mock, next/image usually requires config for domains
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                        No Image
+                    </div>
+                )}
+                {!product.inStock && (
+                    <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-sm">
+                        Sold Out
+                    </div>
+                )}
+            </div>
+
+            <h3 className="font-medium text-sm group-hover:text-gray-600 transition-colors">{product.name}</h3>
+            <div className="flex items-center gap-2 mt-1">
+                <span className="font-bold text-sm">₦{product.price.toLocaleString()}</span>
+                {product.compareAtPrice && product.compareAtPrice > product.price && (
+                    <span className="text-xs text-gray-400 line-through">₦{product.compareAtPrice.toLocaleString()}</span>
+                )}
+            </div>
+        </Link>
+    );
+}

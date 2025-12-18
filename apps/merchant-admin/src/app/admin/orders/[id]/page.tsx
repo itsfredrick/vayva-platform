@@ -1,120 +1,103 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { AppShell, Button, GlassPanel, StatusChip, Icon } from '@vayva/ui';
-import { OrderService, Order } from '@/services/orders';
-import { useAuth } from '@/context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { AdminShell } from '@/components/admin-shell';
+import { OrdersService, Order } from '@/services/orders';
+import { ItemsCard, TimelineCard, CustomerCard, DeliveryCard } from '@/components/orders/OrderDetailCards';
+import { DeliveryTaskModal, RefundModal } from '@/components/orders/OrderModals';
+import { Button, Icon, cn } from '@vayva/ui';
 
-export default function OrderDetailPage() {
+export default function OrderDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    const { id } = useParams();
-    const { user } = useAuth();
     const [order, setOrder] = useState<Order | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+    const [showRefundModal, setShowRefundModal] = useState(false);
 
     useEffect(() => {
-        if (id) {
-            OrderService.get(id as string)
-                .then(setOrder)
-                .catch(console.error)
-                .finally(() => setLoading(false));
-        }
-    }, [id]);
+        const fetchOrder = async () => {
+            setIsLoading(true);
+            try {
+                const data = await OrdersService.getOrder(params.id);
+                setOrder(data);
+            } catch (err) {
+                console.error('Fetch order detail error', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchOrder();
+    }, [params.id]);
 
-    const handleStatusUpdate = async (newStatus: string) => {
-        if (!order) return;
-        try {
-            const updated = await OrderService.updateStatus(order.id, newStatus);
-            setOrder(updated);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    if (loading) return <div className="p-8 text-center text-white">Loading...</div>;
-    if (!order) return <div className="p-8 text-center text-white">Order not found</div>;
+    if (isLoading) return <AdminShell title="Order Loading..."><div className="p-12 text-center text-gray-400">Loading Order...</div></AdminShell>;
+    if (!order) return <AdminShell title="Not Found"><div className="p-12 text-center text-gray-400">Order not found.</div></AdminShell>;
 
     return (
-        <AppShell
-            title={`Order #${order.id.substring(0, 8)}`}
-            breadcrumbs={[
-                { label: 'Orders', href: '/admin/orders' },
-                { label: `#${order.id.substring(0, 8)}`, href: `/admin/orders/${order.id}` }
-            ]}
-            profile={{ name: user?.name || 'Merchant', email: user?.email || '' }}
-            storeName="Store"
-            onLogout={() => router.push('/signin')}
-        >
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Content */}
-                <div className="lg:col-span-2 space-y-6">
-                    <GlassPanel className="p-6">
-                        <h3 className="text-lg font-bold text-white mb-4">Items</h3>
-                        <div className="space-y-4">
-                            {order.items.map((item, idx) => (
-                                <div key={idx} className="flex justify-between items-center p-3 border border-white/10 rounded-lg">
-                                    <div className="flex flex-col">
-                                        <span className="text-white font-medium">{item.title}</span>
-                                        <span className="text-sm text-text-secondary">Qty: {item.quantity}</span>
-                                    </div>
-                                    <span className="text-white font-bold">NGN {item.price.toLocaleString()}</span>
+        <AdminShell title={`Order ${order.refCode}`} breadcrumb="Orders">
+            <div className="flex flex-col gap-6 max-w-6xl mx-auto">
+
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-2xl font-bold text-[#0B0B0B]">Order {order.refCode}</h1>
+                            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-bold uppercase">{order.status.replace('_', ' ')}</span>
+                        </div>
+                        <p className="text-[#525252] text-sm">{new Date(order.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline"><Icon name="Printer" size={16} /></Button>
+                        <Button variant="outline" onClick={() => setShowRefundModal(true)}>Refund</Button>
+                        <Button onClick={() => setShowDeliveryModal(true)}>Fulfil Order</Button>
+                    </div>
+                </div>
+
+                {/* Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Left Column (Items & Timeline) */}
+                    <div className="lg:col-span-2 flex flex-col gap-6">
+                        <ItemsCard order={order} />
+                        <TimelineCard events={order.timeline} />
+                    </div>
+
+                    {/* Right Column (Customer, Delivery, Payment) */}
+                    <div className="flex flex-col gap-6">
+                        <CustomerCard customer={order.customer} />
+                        <DeliveryCard order={order} onCreateTask={() => setShowDeliveryModal(true)} />
+
+                        {/* Payment Card */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-6 flex flex-col gap-4">
+                            <h3 className="font-bold text-[#0B0B0B]">Payment</h3>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-[#525252]">Status</span>
+                                <span className={cn("font-bold uppercase", order.paymentStatus === 'SUCCESS' ? 'text-green-600' : 'text-orange-600')}>
+                                    {order.paymentStatus}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-[#525252]">Method</span>
+                                <span>{order.paymentMethod || 'Paystack'}</span>
+                            </div>
+                            {order.transactionReference && (
+                                <div className="pt-2 border-t border-gray-50">
+                                    <p className="text-xs text-[#525252]">Ref: {order.transactionReference}</p>
+                                    <Button variant="ghost" size="sm" className="w-full mt-2 text-blue-600 hover:text-blue-700">View in Wallet</Button>
                                 </div>
-                            ))}
+                            )}
                         </div>
-                        <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
-                            <span className="text-text-secondary">Total</span>
-                            <span className="text-xl font-bold text-white">NGN {order.total.toLocaleString()}</span>
-                        </div>
-                    </GlassPanel>
+                    </div>
+
                 </div>
 
-                {/* Sidebar */}
-                <div className="space-y-6">
-                    <GlassPanel className="p-6">
-                        <h3 className="text-lg font-bold text-white mb-4">Status</h3>
-                        <div className="flex items-center gap-3 mb-6">
-                            <StatusChip status={order.status} />
-                        </div>
-                        <div className="space-y-2">
-                            <Button
-                                variant="secondary"
-                                className="w-full justify-start"
-                                onClick={() => handleStatusUpdate('PROCESSING')}
-                            >
-                                Mark as Processing
-                            </Button>
-                            <Button
-                                variant="secondary"
-                                className="w-full justify-start"
-                                onClick={() => handleStatusUpdate('SHIPPED')}
-                            >
-                                Mark as Shipped
-                            </Button>
-                            <Button
-                                variant="secondary"
-                                className="w-full justify-start"
-                                onClick={() => handleStatusUpdate('DELIVERED')}
-                            >
-                                Mark as Delivered
-                            </Button>
-                        </div>
-                    </GlassPanel>
-
-                    <GlassPanel className="p-6">
-                        <h3 className="text-lg font-bold text-white mb-4">Customer</h3>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                                <Icon name="user" className="text-white" />
-                            </div>
-                            <div>
-                                <div className="text-white font-medium">{order.customer?.name || 'Guest'}</div>
-                                <div className="text-sm text-text-secondary">{order.customer?.email || 'No email'}</div>
-                            </div>
-                        </div>
-                    </GlassPanel>
-                </div>
             </div>
-        </AppShell>
+
+            {/* Modals */}
+            <DeliveryTaskModal isOpen={showDeliveryModal} onClose={() => setShowDeliveryModal(false)} order={order} />
+            <RefundModal isOpen={showRefundModal} onClose={() => setShowRefundModal(false)} order={order} />
+
+        </AdminShell>
     );
 }
+

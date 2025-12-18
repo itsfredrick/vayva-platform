@@ -1,4 +1,3 @@
-```typescript
 import { FastifyInstance } from 'fastify';
 import { listProductsHandler, createProductHandler, getProductHandler, updateProductHandler, deleteProductHandler, listPublicProductsHandler } from './controller';
 
@@ -10,4 +9,3 @@ export const productRoutes = async (server: FastifyInstance) => {
   server.put('/:id', updateProductHandler);
   server.delete('/:id', deleteProductHandler);
 };
-```

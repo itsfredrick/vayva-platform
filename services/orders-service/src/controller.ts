@@ -1,167 +1,176 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { z } from 'zod';
-import { PrismaClient, OrderStatus } from '@prisma/client';
+import { prisma } from '@vayva/db';
+import { OrderStatus, PaymentStatus, FulfillmentStatus, Channel } from '@prisma/client';
 
-const prisma = new PrismaClient();
+export const OrdersController = {
+    // --- QUERY ---
+    getOrders: async (req: FastifyRequest<{ Querystring: { storeId: string, status?: string, paymentStatus?: string, fulfillmentStatus?: string } }>, reply: FastifyReply) => {
+        const { storeId, status, paymentStatus, fulfillmentStatus } = req.query;
 
-const createOrderSchema = z.object({
-    storeId: z.string(),
-    items: z.array(z.object({
-        title: z.string(),
-        price: z.number(),
-        quantity: z.number(),
-        productId: z.string().optional(),
-        variantId: z.string().optional(),
-    })),
-    total: z.number(),
-});
-
-const checkoutSchema = z.object({
-    storeId: z.string(),
-    items: z.array(z.object({
-        productId: z.string(),
-        variantId: z.string(),
-        quantity: z.number(),
-        price: z.number(), // In real app, fetch from DB to prevent tampering
-        title: z.string()
-    })),
-    customer: z.object({
-        email: z.string().email(),
-        name: z.string(),
-        phone: z.string().optional(),
-        address: z.string().optional()
-    }),
-    total: z.number()
-});
-
-export const createOrderHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    const body = createOrderSchema.parse(req.body);
-
-    const order = await prisma.order.create({
-        data: {
-            storeId: body.storeId,
-            total: body.total,
-            status: 'DRAFT',
-            items: {
-                create: body.items.map(item => ({
-                    title: item.title,
-                    price: item.price,
-                    quantity: item.quantity,
-                    productId: item.productId,
-                    variantId: item.variantId,
-                }))
+        const orders = await prisma.order.findMany({
+            where: {
+                storeId,
+                status: status ? (status as OrderStatus) : undefined,
+                paymentStatus: paymentStatus ? (paymentStatus as PaymentStatus) : undefined,
+                fulfillmentStatus: fulfillmentStatus ? (fulfillmentStatus as FulfillmentStatus) : undefined
             },
-            timeline: {
-                create: {
-                    type: 'CREATED',
-                    text: 'Order created',
-                }
-            }
-        },
-        include: { items: true }
-    });
+            include: {
+                customer: true,
+                items: true,
+                events: { orderBy: { createdAt: 'desc' }, take: 1 } // Latest event
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        return orders;
+    },
 
-    return reply.send(order);
-};
-
-export const createCheckoutOrderHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    const body = checkoutSchema.parse(req.body);
-
-    // 1. Find or Create Customer (Guest)
-    let customer = await prisma.customer.findFirst({
-        where: { email: body.customer.email, storeId: body.storeId }
-    });
-
-    if (!customer) {
-        customer = await prisma.customer.create({
-            data: {
-                storeId: body.storeId,
-                email: body.customer.email,
-                name: body.customer.name,
-                phone: body.customer.phone,
-                // In a real app, we might create a session or auth here
+    getOrder: async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+        const { id } = req.params;
+        const order = await prisma.order.findUnique({
+            where: { id },
+            include: {
+                customer: true,
+                items: true,
+                events: { orderBy: { createdAt: 'desc' } },
+                transactions: true,
+                shipment: true
             }
         });
-    }
+        if (!order) return reply.status(404).send({ error: "Order not found" });
+        return order;
+    },
 
-    // 2. Create Order
-    const order = await prisma.order.create({
-        data: {
-            storeId: body.storeId,
-            customerId: customer.id,
-            total: body.total,
-            status: 'PENDING_PAYMENT',
-            paymentStatus: 'PENDING',
-            fulfillmentStatus: 'UNFULFILLED',
-            items: {
-                create: body.items.map(item => ({
-                    title: item.title,
-                    price: item.price,
-                    quantity: item.quantity,
-                    productId: item.productId,
-                    variantId: item.variantId,
-                }))
+    // --- ACTIONS ---
+
+    createOrder: async (req: FastifyRequest<{ Body: any }>, reply: FastifyReply) => {
+        const { storeId, items, customer, paymentMethod, deliveryMethod, notes } = req.body;
+
+        // 1. CRM - Find or Create Customer
+        let customerId = null;
+        if (customer && customer.phone) {
+            const existing = await prisma.customer.findUnique({
+                where: { storeId_phone: { storeId, phone: customer.phone } }
+            });
+            if (existing) {
+                customerId = existing.id;
+                // Update latest info? Optional
+            } else {
+                const newCust = await prisma.customer.create({
+                    data: {
+                        storeId,
+                        phone: customer.phone,
+                        email: customer.email,
+                        firstName: customer.firstName,
+                        lastName: customer.lastName,
+                    }
+                });
+                customerId = newCust.id;
+            }
+        }
+
+        // 2. Create Order
+        // Calculate totals (simplified for V1, usually robust calc engine)
+        const subtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+        const total = subtotal; // + tax + shipping
+
+        const order = await prisma.order.create({
+            data: {
+                storeId,
+                customerId,
+                customerPhone: customer?.phone,
+                customerEmail: customer?.email,
+
+                status: OrderStatus.OPEN,
+                // Cast to PaymentStatus enum. If COD -> INITIATED
+                paymentStatus: paymentMethod === 'COD' ? PaymentStatus.INITIATED : PaymentStatus.INITIATED,
+                fulfillmentStatus: FulfillmentStatus.UNFULFILLED,
+
+                paymentMethod,
+                deliveryMethod,
+                internalNote: notes,
+
+                subtotal,
+                total,
+
+                items: {
+                    create: items.map((item: any) => ({
+                        title: item.title,
+                        productId: item.productId,
+                        variantId: item.variantId,
+                        price: item.price,
+                        quantity: item.quantity
+                    }))
+                },
+
+                events: {
+                    create: {
+                        storeId,
+                        type: 'CREATED',
+                        message: 'Order created manually',
+                        createdBy: 'admin' // TODO: Get from auth
+                    }
+                }
             },
-            timeline: {
-                create: {
-                    type: 'CREATED',
-                    text: 'Order placed by customer via Storefront',
+            include: { events: true }
+        });
+
+        // 3. Reserve Inventory? (Integration 8 call - TODO)
+
+        return reply.status(201).send(order);
+    },
+
+    markPaid: async (req: FastifyRequest<{ Params: { id: string }, Body: { method: string, reference?: string } }>, reply: FastifyReply) => {
+        const { id } = req.params;
+        const { method, reference } = req.body; // method: TRANSFER, COD
+
+        const order = await prisma.order.findUnique({ where: { id } });
+        if (!order) return reply.status(404).send({ error: "Order not found" });
+
+        const updated = await prisma.order.update({
+            where: { id },
+            data: {
+                paymentStatus: PaymentStatus.PAID,
+                paymentMethod: method,
+                events: {
+                    create: {
+                        storeId: order.storeId,
+                        type: 'PAYMENT_UPDATED',
+                        message: `Marked as PAID via ${method}`,
+                        metadata: { reference }
+                    }
                 }
             }
-        },
-        include: { items: true }
-    });
+        });
 
-    return reply.send(order);
-};
+        // Trigger Notification Logic (Async)
+        // await notify(order.storeId, 'ORDER_PAID', order);
 
-export const listOrdersHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { storeId } = req.query as { storeId: string };
-    if (!storeId) return reply.status(400).send({ error: 'storeId required' });
+        return updated;
+    },
 
-    const orders = await prisma.order.findMany({
-        where: { storeId },
-        orderBy: { createdAt: 'desc' },
-        include: { items: true, customer: true }
-    });
+    markDelivered: async (req: FastifyRequest<{ Params: { id: string }, Body: { note?: string } }>, reply: FastifyReply) => {
+        const { id } = req.params;
+        const { note } = req.body;
 
-    return reply.send(orders);
-};
+        const order = await prisma.order.findUnique({ where: { id } });
+        if (!order) return reply.status(404).send({ error: "Order not found" });
 
-export const getOrderHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { id } = req.params as { id: string };
-
-    const order = await prisma.order.findUnique({
-        where: { id },
-        include: { items: true, customer: true, timeline: true }
-    });
-
-    if (!order) return reply.status(404).send({ error: 'Order not found' });
-
-    return reply.send(order);
-};
-
-export const updateStatusHandler = async (req: FastifyRequest, reply: FastifyReply) => {
-    const { id } = req.params as { id: string };
-    const { status, note } = z.object({
-        status: z.nativeEnum(OrderStatus),
-        note: z.string().optional()
-    }).parse(req.body);
-
-    const order = await prisma.order.update({
-        where: { id },
-        data: {
-            status,
-            timeline: {
-                create: {
-                    type: 'STATUS_CHANGE',
-                    text: `Status updated to ${status}`,
-                    metadata: { note }
+        const updated = await prisma.order.update({
+            where: { id },
+            data: {
+                fulfillmentStatus: FulfillmentStatus.DELIVERED,
+                status: OrderStatus.FULFILLED, // Auto-close/fulfill logic
+                events: {
+                    create: {
+                        storeId: order.storeId,
+                        type: 'FULFILLMENT_UPDATED',
+                        message: 'Marked as DELIVERED manually',
+                        metadata: { note }
+                    }
                 }
             }
-        },
-        include: { items: true, customer: true, timeline: true }
-    });
+        });
 
-    return reply.send(order);
+        return updated;
+    }
 };

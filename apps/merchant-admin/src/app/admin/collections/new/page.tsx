@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AppShell } from '@vayva/ui';
+import { AdminShell } from '@/components/admin-shell';
 import { GlassPanel } from '@vayva/ui';
 import { Button } from '@vayva/ui';
 import { Input } from '@vayva/ui';
@@ -13,7 +13,7 @@ export default function CreateCollectionPage() {
     const router = useRouter();
 
     return (
-        <AppShell title="Create Collection" breadcrumb="Catalog / Collections / New">
+        <AdminShell title="Create Collection" breadcrumb="Catalog / Collections / New">
             <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-20">
                 {/* Sticky Action Bar */}
                 <div className="flex items-center justify-between sticky top-[80px] z-30 py-4 bg-[#142210]/95 backdrop-blur-xl border-b border-white/5 -mx-6 px-6 sm:mx-0 sm:px-0 sm:bg-transparent sm:border-none sm:backdrop-blur-none sm:static">
@@ -86,13 +86,13 @@ export default function CreateCollectionPage() {
                         <GlassPanel className="p-6">
                             <h3 className="font-bold text-white mb-4">Collection Image</h3>
                             <div className="border border-dashed border-white/20 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer h-40">
-                                <Icon name="add_photo_alternate" size={24} className="text-text-secondary mb-2" />
+                                <Icon name="ImagePlus" size={24} className="text-text-secondary mb-2" />
                                 <p className="text-xs font-bold text-white">Upload image</p>
                             </div>
                         </GlassPanel>
                     </div>
                 </div>
             </div>
-        </AppShell>
+        </AdminShell>
     );
 }

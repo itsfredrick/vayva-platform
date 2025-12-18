@@ -29,9 +29,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string, 
                 {/* Breadcrumb */}
                 <div className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-8 flex items-center gap-2">
                     <Link href={`/store/${params.slug}`} className="hover:text-white">Home</Link>
-                    <Icon name="chevron_right" size={14} />
+                    <Icon name="ChevronRight" size={14} />
                     <Link href={`/store/${params.slug}/collections/all`} className="hover:text-white">Products</Link>
-                    <Icon name="chevron_right" size={14} />
+                    <Icon name="ChevronRight" size={14} />
                     <span className="text-white">{MOCK_PRODUCT.name}</span>
                 </div>
 
@@ -40,7 +40,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string, 
                     {/* Gallery */}
                     <div className="space-y-4">
                         <div className="aspect-[4/5] bg-white/5 rounded-2xl w-full relative overflow-hidden flex items-center justify-center">
-                            <Icon name="image" size={64} className="text-white/10" />
+                            <Icon name="Image" size={64} className="text-white/10" />
                         </div>
                         <div className="grid grid-cols-4 gap-4">
                             {[1, 2, 3, 4].map(i => (
@@ -68,7 +68,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string, 
                                                 ${color === 'White' ? 'bg-white' : color === 'Black' ? 'bg-gray-900' : 'bg-blue-900'}
                                             `}
                                         >
-                                            {selectedColor === color && <Icon name="check" size={16} className={color === 'White' ? 'text-black' : 'text-white'} />}
+                                            {selectedColor === color && <Icon name="Check" size={16} className={color === 'White' ? 'text-black' : 'text-white'} />}
                                         </div>
                                     ))}
                                 </div>
@@ -95,9 +95,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string, 
                             {/* Qty & Actions */}
                             <div className="flex gap-4">
                                 <div className="flex items-center bg-white/5 border border-white/10 rounded-full h-12 px-2">
-                                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-8 h-full flex items-center justify-center text-white/50 hover:text-white"><Icon name="remove" size={16} /></button>
+                                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-8 h-full flex items-center justify-center text-white/50 hover:text-white"><Icon name="Minus" size={16} /></button>
                                     <span className="w-8 text-center text-white font-bold">{qty}</span>
-                                    <button onClick={() => setQty(qty + 1)} className="w-8 h-full flex items-center justify-center text-white/50 hover:text-white"><Icon name="add" size={16} /></button>
+                                    <button onClick={() => setQty(qty + 1)} className="w-8 h-full flex items-center justify-center text-white/50 hover:text-white"><Icon name="Plus" size={16} /></button>
                                 </div>
                                 <Button className="flex-1 h-12 rounded-full bg-primary text-black hover:bg-primary/90 font-bold text-base shadow-[0_0_20px_rgba(70,236,19,0.2)]">
                                     Add to Cart
@@ -105,7 +105,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string, 
                             </div>
 
                             <Button variant="outline" className="w-full h-12 rounded-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 gap-2">
-                                <Icon name="chat" /> Chat on WhatsApp about this item
+                                <Icon name="MessageCircle" /> Chat on WhatsApp about this item
                             </Button>
                         </div>
 
@@ -118,7 +118,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string, 
                             <div className="py-4">
                                 <div className="flex justify-between items-center cursor-pointer group">
                                     <h3 className="font-bold text-white text-sm group-hover:text-primary transition-colors">Delivery & Returns</h3>
-                                    <Icon name="add" size={18} className="text-text-secondary" />
+                                    <Icon name="Plus" size={18} className="text-text-secondary" />
                                 </div>
                             </div>
                         </div>

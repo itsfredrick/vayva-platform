@@ -34,7 +34,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                                 )}
                             >
                                 {isCompleted ? (
-                                    <Icon name="check" size={16} />
+                                    <Icon name="Check" size={16} />
                                 ) : (
                                     <span className="text-sm font-bold">{index + 1}</span>
                                 )}

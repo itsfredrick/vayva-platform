@@ -50,7 +50,7 @@ export default function BillingDashboardPage() {
                 {/* Top Row: Current Plan & Payment */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <GlassPanel className="p-6 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-50"><Icon name="local_activity" size={64} className="text-white/5" /></div>
+                        <div className="absolute top-0 right-0 p-4 opacity-50"><Icon name="Ticket" size={64} className="text-white/5" /></div>
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-2">
                                 <h2 className="text-lg font-bold text-white">Current Plan</h2>
@@ -68,12 +68,12 @@ export default function BillingDashboardPage() {
                     </GlassPanel>
 
                     <GlassPanel className="p-6 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-50"><Icon name="credit_card" size={64} className="text-white/5" /></div>
+                        <div className="absolute top-0 right-0 p-4 opacity-50"><Icon name="CreditCard" size={64} className="text-white/5" /></div>
                         <div className="relative z-10">
                             <h2 className="text-lg font-bold text-white mb-4">Payment Method</h2>
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="w-12 h-8 rounded bg-white/10 flex items-center justify-center">
-                                    <Icon name="credit_card" />
+                                    <Icon name="CreditCard" />
                                 </div>
                                 <div>
                                     <div className="font-bold text-white">Mastercard •••• 4242</div>
@@ -129,7 +129,7 @@ export default function BillingDashboardPage() {
                                                 </span>
                                             </td>
                                             <td className="p-4 text-right">
-                                                <Button variant="ghost" size="sm" className="h-8"><Icon name="download" size={16} /></Button>
+                                                <Button variant="ghost" size="sm" className="h-8"><Icon name="Download" size={16} /></Button>
                                             </td>
                                         </tr>
                                     ))}

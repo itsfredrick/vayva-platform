@@ -55,7 +55,7 @@ export default function TrackOrderPage({ params }: { params: { slug: string } })
                     </div>
 
                     <Button variant="outline" className="w-full border-white/10 text-white hover:bg-white/5 gap-2">
-                        <Icon name="help" size={16} /> Need help with this order?
+                        <Icon name="HelpCircle" size={16} /> Need help with this order?
                     </Button>
                 </div>
 

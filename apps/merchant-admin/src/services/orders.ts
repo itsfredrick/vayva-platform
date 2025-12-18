@@ -3,36 +3,56 @@ import { api } from './api';
 export interface OrderItem {
     id: string;
     title: string;
+    variantId?: string;
     quantity: number;
     price: number;
+    image?: string;
+}
+
+export interface OrderTimelineEvent {
+    id: string;
+    type: string;
+    text: string;
+    createdAt: string;
+    metadata?: any;
 }
 
 export interface Order {
     id: string;
-    customer: any;
-    items: OrderItem[];
-    total: number;
+    refCode: string;
     status: string;
+    paymentStatus: string;
+    fulfillmentStatus: string;
     createdAt: string;
+    customer: {
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
+    };
+    items: OrderItem[];
+    subtotal: number;
+    shippingTotal: number;
+    total: number;
+    channel: string;
+    timeline: OrderTimelineEvent[];
+    paymentMethod?: string;
+    transactionReference?: string;
+    deliveryTask?: {
+        id: string;
+        status: string;
+        riderName?: string;
+        trackingUrl?: string;
+    };
 }
 
-export const OrderService = {
-    list: async (storeId: string) => {
-        // Pass storeId as query param as required by controller
-        // AND x-store-id header is handled by interceptor, but controller checks `req.query.storeId`
-        // I should probably align them. Controller expects req.query.storeId.
-        const response = await api.get(`/orders?storeId=${storeId}`);
+export const OrdersService = {
+    getOrders: async (filters: any): Promise<Order[]> => {
+        const response = await api.get('/orders', { params: filters });
         return response.data;
     },
 
-    get: async (id: string) => {
-        // Missing get single order endpoint in Phase 7 controller?
-        // I only saw listOrdersHandler and createOrderHandler.
-        // I likely check list for now or I need to add `getOrderHandler`.
-        // Let's check controller again.
-        // List handler filters by storeId. 
-        // If I don't have get single, I might need to filter list or Add endpoint.
-        // Plan: Add `GET /:id` to orders-service.
+    getOrder: async (id: string): Promise<Order | null> => {
         const response = await api.get(`/orders/${id}`);
         return response.data;
     },
@@ -42,3 +62,4 @@ export const OrderService = {
         return response.data;
     }
 };
+

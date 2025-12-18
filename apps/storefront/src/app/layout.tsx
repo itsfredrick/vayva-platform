@@ -1,22 +1,38 @@
-import '@vayva/theme/css';
 import type { Metadata } from 'next';
-import { Manrope } from 'next/font/google';
+import { Inter, Space_Grotesk } from 'next/font/google';
+import './globals.css';
+import { StoreProvider } from '@/context/StoreContext';
+import { Suspense } from 'react';
 
-const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
-  title: 'Vayva storefront',
-  description: 'Vayva Platform',
+  title: 'Vayva Storefront',
+  description: 'Powered by Vayva',
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: any;
 }) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} font-sans antialiased min-h-screen`}>{children}</body>
+      <body className={`${spaceGrotesk.variable} ${inter.variable} font-sans antialiased bg-white text-black min-h-screen flex flex-col`}>
+        <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+          <StoreProvider>
+            {children}
+          </StoreProvider>
+        </Suspense>
+      </body>
     </html>
   );
 }

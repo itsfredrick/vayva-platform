@@ -1,0 +1,52 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - link "Vayva" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e9]
+        - generic [ref=e14]: Vayva
+      - generic [ref=e15]:
+        - img [ref=e18]
+        - heading "Get yourself a storefront + WhatsApp AI" [level=2] [ref=e20]
+        - paragraph [ref=e21]: Start selling online in minutes. No technical skills required. Your customers can shop and chat with AI assistance.
+      - generic [ref=e26]:
+        - link "Back to home" [ref=e27] [cursor=pointer]:
+          - /url: /
+          - img [ref=e28]
+          - text: Back to home
+        - link "Create account" [ref=e30] [cursor=pointer]:
+          - /url: /signup
+    - generic [ref=e31]:
+      - link "Having trouble? Get help" [ref=e33] [cursor=pointer]:
+        - /url: /help
+      - generic [ref=e36]:
+        - heading "Welcome back" [level=1] [ref=e37]
+        - paragraph [ref=e38]: Sign in to manage your store
+        - generic [ref=e39]:
+          - button "Continue with Google" [ref=e40] [cursor=pointer]:
+            - img [ref=e41]
+            - generic [ref=e46]: Continue with Google
+          - generic [ref=e51]: or
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - generic [ref=e54]: Email Address
+              - textbox "you@company.com" [ref=e55]
+            - generic [ref=e56]:
+              - generic [ref=e57]:
+                - generic [ref=e58]:
+                  - generic [ref=e59]: Password
+                  - textbox "••••••••" [ref=e60]
+                - button [ref=e61] [cursor=pointer]:
+                  - img [ref=e62]
+              - link "Forgot password?" [ref=e66] [cursor=pointer]:
+                - /url: /forgot-password
+            - button "Sign in" [ref=e67] [cursor=pointer]
+          - generic [ref=e68]:
+            - text: New here?
+            - link "Create an account" [ref=e69] [cursor=pointer]:
+              - /url: /signup
+  - alert [ref=e70]
+```
