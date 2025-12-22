@@ -1,15 +1,17 @@
 'use client';
 
+import { use } from 'react';
 import { LocaleKey } from '@/data/locales';
 import { AccountNav } from '@/components/account/AccountNav';
 
 export default function AccountLayout({
     children,
-    params: { lang },
+    params,
 }: {
     children: React.ReactNode;
-    params: { lang: string };
+    params: Promise<{ lang: string }>;
 }) {
+    const { lang } = use(params);
     const locale = (lang === 'tr' ? 'tr' : 'en') as LocaleKey;
 
     return (
