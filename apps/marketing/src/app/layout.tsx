@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { Footer } from '@/components/layout/footer';
 
 export default function RootLayout({
   children,
