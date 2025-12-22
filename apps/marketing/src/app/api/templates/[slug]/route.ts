@@ -38,7 +38,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
             homepageUrl: template.homepageUrl,
             updatedAt: template.updatedAt,
             version: template.versions[0]?.version || '0.0.0',
-            assets: template.assets.map(a => ({
+            assets: template.assets.map((a: any) => ({
                 type: a.type,
                 url: a.publicUrl || (a.type === 'preview_image' && template.repoUrl ? `https://opengraph.githubassets.com/1/${template.repoUrl.replace('https://github.com/', '')}` : null)
             }))
