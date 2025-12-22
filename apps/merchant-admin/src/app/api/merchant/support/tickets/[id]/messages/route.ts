@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { SupportService } from '@/lib/support';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!(session!.user as any)?.storeId) return new NextResponse('Unauthorized', { status: 401 });
 
@@ -11,11 +12,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     try {
         // Ensure ownership first
-        await SupportService.getTicketDetails(params.id, (session!.user as any).storeId);
+        await SupportService.getTicketDetails(id, (session!.user as any).storeId);
 
         const { storeId, id: userId } = (session!.user as any);
         const msg = await SupportService.addMessage(
-            params.id,
+            id,
             'merchant_user',
             userId,
             body.message

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@vayva/db';
 
-export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
-    const { token } = params;
+export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+    const { token } = await params;
 
     // Validate Accept Request (user must be logged in to accept, or we create account? 
     // Usually, accept invite means linking CURRENT user to store.

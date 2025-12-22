@@ -6,11 +6,11 @@ import { prisma } from '@vayva/db';
 import { executeApproval } from '@/lib/approvals/execute';
 import { EventBus } from '@/lib/events/eventBus';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
 
-    const { id } = params;
+    const { id } = await params;
 
     // Fetch request to check merchantId
     const request = await prisma.approval.findUnique({

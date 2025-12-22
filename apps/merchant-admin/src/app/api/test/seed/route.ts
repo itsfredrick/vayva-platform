@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@vayva/db';
-// @ts-ignore
 import { hash } from 'bcryptjs';
 
 // Only allow in development or test env

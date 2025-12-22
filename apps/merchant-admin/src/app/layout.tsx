@@ -1,6 +1,5 @@
 import { Space_Grotesk, Inter } from 'next/font/google';
 import type { Metadata } from 'next';
-import '@vayva/theme/css';
 import { AuthProvider } from '@/context/AuthContext';
 
 export const dynamic = 'force-dynamic';
