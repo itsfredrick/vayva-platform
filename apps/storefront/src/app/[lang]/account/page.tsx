@@ -1,11 +1,13 @@
 'use client';
 
+import { use } from 'react';
 import { LocaleKey, LOCALES } from '@/data/locales';
 import { Gift, Package, Utensils } from 'lucide-react';
 import Link from 'next/link';
 
-export default function AccountPage({ params }: { params: { lang: string } }) {
-    const lang = (params.lang === 'tr' ? 'tr' : 'en') as LocaleKey;
+export default function AccountPage({ params }: { params: Promise<{ lang: string }> }) {
+    const { lang: rawLang } = use(params);
+    const lang = (rawLang === 'tr' ? 'tr' : 'en') as LocaleKey;
     const t = LOCALES[lang].account.overview;
 
     return (
