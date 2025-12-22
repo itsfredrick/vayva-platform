@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@vayva/db';
+import { authOptions } from '@/lib/auth';
 // @ts-ignore
 import { sanitizeMarkdown, validatePolicyContent } from '@vayva/policies';
 
@@ -8,10 +9,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { type: string } }
+    { params }: { params: Promise<{ type: string }> }
 ) {
     try {
-        const session = await getServerSession();
+        const { type } = await params;
+        const session = await getServerSession(authOptions);
         if (!(session?.user as any)?.storeId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -20,7 +22,7 @@ export async function GET(
             where: {
                 storeId_type: {
                     storeId: (session!.user as any).storeId,
-                    type: params.type.toUpperCase().replace('-', '_') as any
+                    type: type.toUpperCase().replace('-', '_') as any
                 }
             }
         });
@@ -36,12 +38,13 @@ export async function GET(
     }
 }
 
-export async function PUT(
+export async function POST( // Changed from PUT to POST as per instruction
     req: NextRequest,
-    { params }: { params: { type: string } }
+    { params }: { params: Promise<{ type: string }> }
 ) {
     try {
-        const session = await getServerSession();
+        const { type } = await params;
+        const session = await getServerSession(authOptions);
         if (!(session?.user as any)?.storeId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -62,7 +65,7 @@ export async function PUT(
             where: {
                 storeId_type: {
                     storeId: (session!.user as any).storeId,
-                    type: params.type.toUpperCase().replace('-', '_') as any
+                    type: type.toUpperCase().replace('-', '_') as any
                 }
             },
             data: {

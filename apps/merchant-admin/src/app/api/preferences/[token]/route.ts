@@ -5,9 +5,10 @@ import { ConsentChannel, ConsentSource } from '@vayva/db';
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { token: string } }
+    { params }: { params: Promise<{ token: string }> }
 ) {
-    const payload = verifyPreferencesToken(params.token);
+    const { token } = await params;
+    const payload = verifyPreferencesToken(token);
     if (!payload) {
         return new NextResponse('Invalid or expired token', { status: 404 });
     }
@@ -25,9 +26,10 @@ export async function GET(
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { token: string } }
+    { params }: { params: Promise<{ token: string }> }
 ) {
-    const payload = verifyPreferencesToken(params.token);
+    const { token } = await params;
+    const payload = verifyPreferencesToken(token);
     if (!payload) {
         return new NextResponse('Invalid or expired token', { status: 401 });
     }

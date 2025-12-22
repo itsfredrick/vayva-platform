@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.0.2",
@@ -43,5 +44,8 @@
   },
   "prisma": {
     "schema": "infra/db/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3"
   }
 }

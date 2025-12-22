@@ -12,11 +12,11 @@ const WhatsAppProvider = {
     }
 };
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { text, type = 'transactional' } = body;
 
