@@ -45,7 +45,7 @@ export async function GET(request: Request) {
         });
 
         // Normalize response
-        const payload = templates.map(t => ({
+        const payload = templates.map((t: any) => ({
             id: t.id,
             slug: t.slug,
             name: t.name,
