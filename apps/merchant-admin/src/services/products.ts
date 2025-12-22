@@ -127,3 +127,7 @@ export const ProductsService = {
         return true;
     }
 };
+
+// Export alias for compatibility
+export const ProductService = ProductsService;
+
