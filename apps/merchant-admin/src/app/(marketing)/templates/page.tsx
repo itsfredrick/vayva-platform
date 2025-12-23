@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@vayva/ui';
+import { TemplateConfirmation } from '@/components/onboarding/TemplateConfirmation';
+import { SetupModeSelector } from '@/components/onboarding/SetupModeSelector';
 
 const TEMPLATES = [
     {
@@ -89,6 +91,11 @@ export default function TemplatesPage() {
     const [activeWorkflowStep, setActiveWorkflowStep] = useState('order');
     const [compareTemplates, setCompareTemplates] = useState<string[]>([]);
 
+    // Transition flow state
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [showModeSelector, setShowModeSelector] = useState(false);
+    const [templateToApply, setTemplateToApply] = useState<typeof TEMPLATES[0] | null>(null);
+
     const filteredTemplates = TEMPLATES.filter(t => {
         if (selectedCategory !== 'all' && t.category !== selectedCategory) return false;
         if (selectedVolume !== 'all' && t.volume !== selectedVolume) return false;
@@ -111,6 +118,48 @@ export default function TemplatesPage() {
             setCompareTemplates([...compareTemplates, templateId]);
         }
     };
+
+    const handleApplyTemplate = (template: typeof TEMPLATES[0]) => {
+        setTemplateToApply(template);
+        setShowConfirmation(true);
+        setSelectedTemplate(null); // Close preview modal
+    };
+
+    const handleConfirmationContinue = () => {
+        setShowConfirmation(false);
+        setShowModeSelector(true);
+    };
+
+    const handleConfirmationGoBack = () => {
+        setShowConfirmation(false);
+        setTemplateToApply(null);
+    };
+
+    const handleModeSelect = (mode: 'guided' | 'quick') => {
+        // Store template selection and redirect to appropriate flow
+        if (mode === 'guided') {
+            // Redirect to guided onboarding
+            window.location.href = `/onboarding/welcome?template=${templateToApply?.id}`;
+        } else {
+            // Redirect to quick setup
+            window.location.href = `/onboarding/quick-setup?template=${templateToApply?.id}`;
+        }
+    };
+
+    // Show transition screens if active
+    if (showConfirmation && templateToApply) {
+        return (
+            <TemplateConfirmation
+                template={templateToApply}
+                onContinue={handleConfirmationContinue}
+                onGoBack={handleConfirmationGoBack}
+            />
+        );
+    }
+
+    if (showModeSelector && templateToApply) {
+        return <SetupModeSelector onSelectMode={handleModeSelect} />;
+    }
 
     return (
         <div className="min-h-screen bg-white">
@@ -155,8 +204,8 @@ export default function TemplatesPage() {
                                                 key={cat.id}
                                                 onClick={() => setSelectedCategory(cat.id)}
                                                 className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${selectedCategory === cat.id
-                                                        ? 'bg-[#22C55E]/10 text-[#22C55E] font-semibold'
-                                                        : 'text-[#0F172A] hover:bg-gray-50'
+                                                    ? 'bg-[#22C55E]/10 text-[#22C55E] font-semibold'
+                                                    : 'text-[#0F172A] hover:bg-gray-50'
                                                     }`}
                                             >
                                                 {cat.label}
@@ -181,8 +230,8 @@ export default function TemplatesPage() {
                                                 key={vol.id}
                                                 onClick={() => setSelectedVolume(vol.id)}
                                                 className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${selectedVolume === vol.id
-                                                        ? 'bg-[#22C55E]/10 text-[#22C55E] font-semibold'
-                                                        : 'text-[#0F172A] hover:bg-gray-50'
+                                                    ? 'bg-[#22C55E]/10 text-[#22C55E] font-semibold'
+                                                    : 'text-[#0F172A] hover:bg-gray-50'
                                                     }`}
                                             >
                                                 {vol.label}
@@ -207,8 +256,8 @@ export default function TemplatesPage() {
                                                 key={size.id}
                                                 onClick={() => setSelectedTeamSize(size.id)}
                                                 className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${selectedTeamSize === size.id
-                                                        ? 'bg-[#22C55E]/10 text-[#22C55E] font-semibold'
-                                                        : 'text-[#0F172A] hover:bg-gray-50'
+                                                    ? 'bg-[#22C55E]/10 text-[#22C55E] font-semibold'
+                                                    : 'text-[#0F172A] hover:bg-gray-50'
                                                     }`}
                                             >
                                                 {size.label}
@@ -388,8 +437,8 @@ export default function TemplatesPage() {
                                         <button
                                             onClick={() => setActiveWorkflowStep(step.id)}
                                             className={`flex-shrink-0 px-4 py-3 rounded-lg border-2 transition-all ${activeWorkflowStep === step.id
-                                                    ? 'border-[#22C55E] bg-[#22C55E]/10'
-                                                    : 'border-gray-200 hover:border-gray-300'
+                                                ? 'border-[#22C55E] bg-[#22C55E]/10'
+                                                : 'border-gray-200 hover:border-gray-300'
                                                 }`}
                                         >
                                             <div className="text-2xl mb-1">{step.icon}</div>
@@ -411,8 +460,8 @@ export default function TemplatesPage() {
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
                                         className={`pb-3 px-2 text-sm font-semibold transition-colors ${activeTab === tab
-                                                ? 'text-[#22C55E] border-b-2 border-[#22C55E]'
-                                                : 'text-[#64748B] hover:text-[#0F172A]'
+                                            ? 'text-[#22C55E] border-b-2 border-[#22C55E]'
+                                            : 'text-[#64748B] hover:text-[#0F172A]'
                                             }`}
                                     >
                                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -483,16 +532,19 @@ export default function TemplatesPage() {
                                 </p>
                             </div>
                             <div className="flex gap-4">
-                                <Link href="/signup" className="flex-1">
-                                    <Button className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white py-4 text-lg font-semibold">
-                                        Apply template
-                                    </Button>
-                                </Link>
-                                <Link href="/signup" className="flex-1">
-                                    <Button variant="outline" className="w-full border-2 border-gray-300 py-4 text-lg font-semibold">
-                                        Customize first
-                                    </Button>
-                                </Link>
+                                <Button
+                                    onClick={() => currentTemplate && handleApplyTemplate(currentTemplate)}
+                                    className="flex-1 bg-[#22C55E] hover:bg-[#16A34A] text-white py-4 text-lg font-semibold"
+                                >
+                                    Apply template
+                                </Button>
+                                <Button
+                                    onClick={() => currentTemplate && handleApplyTemplate(currentTemplate)}
+                                    variant="outline"
+                                    className="flex-1 border-2 border-gray-300 py-4 text-lg font-semibold"
+                                >
+                                    Customize first
+                                </Button>
                             </div>
                         </div>
                     </div>
