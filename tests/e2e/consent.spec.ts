@@ -15,6 +15,12 @@ test.describe('Consent & Preferences Flow', () => {
             }
         });
 
+        if (!response.ok()) {
+            const body = await response.text();
+            console.error(`[Consent Test] API Error: ${response.status()} ${response.statusText()}`);
+            console.error(`[Consent Test] Response body:`, body);
+        }
+
         expect(response.ok()).toBeTruthy();
     });
 
@@ -28,6 +34,13 @@ test.describe('Consent & Preferences Flow', () => {
                 text: 'STOP'
             }
         });
+
+        if (!res.ok()) {
+            const body = await res.text();
+            console.error(`[Webhook Test] API Error: ${res.status()} ${res.statusText()}`);
+            console.error(`[Webhook Test] Response body:`, body);
+        }
+
         expect(res.ok()).toBeTruthy();
 
         // Verify via stats API (requires auth) -> skip for this simple run
