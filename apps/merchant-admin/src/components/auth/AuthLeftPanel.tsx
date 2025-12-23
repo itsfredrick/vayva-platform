@@ -11,15 +11,6 @@ interface AuthLeftPanelProps {
 export const AuthLeftPanel = ({ showSignInLink, showSignUpLink }: AuthLeftPanelProps) => {
     return (
         <div className="hidden lg:flex lg:w-[45%] bg-gray-50 flex-col justify-between p-12 relative">
-            {/* Top: Logo */}
-            <div>
-                <Link href="/" className="inline-flex items-center gap-2 group">
-                    <span className="text-2xl font-bold text-black">
-                        Vayva
-                    </span>
-                </Link>
-            </div>
-
             {/* Center: Context & Reassurance */}
             <div className="flex flex-col items-start justify-center flex-1 py-12 max-w-md">
                 {/* Subtle abstract illustration */}
