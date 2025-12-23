@@ -5,72 +5,135 @@ import Link from 'next/link';
 import { Button } from '@vayva/ui';
 import { TemplateConfirmation } from '@/components/onboarding/TemplateConfirmation';
 import { SetupModeSelector } from '@/components/onboarding/SetupModeSelector';
+import { UpgradeModal } from '@/components/onboarding/UpgradeModal';
+
+type PlanTier = 'free' | 'growth' | 'pro';
 
 const TEMPLATES = [
+    // 🟢 FREE PLAN — FOUNDATIONAL TEMPLATES
     {
-        id: 'retail',
-        name: 'Retail Selling',
+        id: 'simple-retail',
+        name: 'Simple Retail Selling',
         category: 'retail',
-        description: 'Structured selling for everyday WhatsApp orders.',
-        bestFor: 'Merchants selling physical products daily',
-        workflows: ['Orders', 'Payments', 'Deliveries', 'Records'],
-        setupTime: '5–10 minutes',
-        volume: 'medium',
+        tier: 'free' as PlanTier,
+        description: 'Orders, manual payments, basic delivery notes for solo sellers.',
+        bestFor: 'Solo merchants selling physical products',
+        workflows: ['Orders', 'Manual Payments', 'Delivery Notes'],
+        setupTime: '5 minutes',
+        volume: 'low',
         teamSize: 'solo',
-        configures: ['Order statuses', 'Payment tracking', 'Delivery workflow', 'Default reports'],
+        configures: ['Order statuses', 'Manual payment recording', 'Basic delivery notes', 'Single-user flow'],
+        customizable: ['Prices', 'Status names'],
+        constraints: ['Single user', 'Limited records history', 'No inventory automation', 'No advanced reports'],
+    },
+    {
+        id: 'solo-services',
+        name: 'Solo Services',
+        category: 'services',
+        tier: 'free' as PlanTier,
+        description: 'Bookings via WhatsApp with payment confirmation.',
+        bestFor: 'Service providers and consultants',
+        workflows: ['Bookings', 'Payment Confirmation', 'Customer Records'],
+        setupTime: '5 minutes',
+        volume: 'low',
+        teamSize: 'solo',
+        configures: ['Booking statuses', 'Payment confirmation', 'Simple customer records'],
+        customizable: ['Service types', 'Pricing'],
+        constraints: ['Single user', 'Limited records history', 'No team access', 'No advanced reports'],
+    },
+
+    // 🔵 GROWTH PLAN — OPERATIONAL TEMPLATES
+    {
+        id: 'structured-retail',
+        name: 'Structured Retail',
+        category: 'retail',
+        tier: 'growth' as PlanTier,
+        description: 'Full order lifecycle with inventory and delivery tracking.',
+        bestFor: 'Merchants with repeatable daily operations',
+        workflows: ['Orders', 'Payments', 'Inventory', 'Deliveries', 'Records'],
+        setupTime: '10 minutes',
+        volume: 'medium',
+        teamSize: 'small',
+        configures: ['Full order lifecycle', 'Payment reconciliation', 'Inventory tracking', 'Delivery status flow'],
         customizable: ['Prices', 'Status names', 'Staff roles', 'Workflow rules'],
+        capabilitiesUnlocked: ['Multi-staff access', 'Inventory workflows', 'Basic exports'],
     },
     {
         id: 'food-catering',
         name: 'Food & Catering',
         category: 'food',
-        description: 'Order scheduling and delivery for food businesses.',
+        tier: 'growth' as PlanTier,
+        description: 'Order batching and delivery coordination for food businesses.',
         bestFor: 'Food vendors and catering services',
         workflows: ['Orders', 'Payments', 'Deliveries', 'Inventory', 'Records'],
         setupTime: '10–15 minutes',
         volume: 'medium',
         teamSize: 'small',
-        configures: ['Order statuses', 'Payment tracking', 'Delivery workflow', 'Inventory alerts', 'Default reports'],
+        configures: ['Order batching', 'Delivery coordination', 'Repeat customer handling', 'Inventory alerts'],
         customizable: ['Menu items', 'Delivery zones', 'Staff roles', 'Workflow rules'],
-    },
-    {
-        id: 'services',
-        name: 'Services & Bookings',
-        category: 'services',
-        description: 'Appointment tracking for service providers.',
-        bestFor: 'Service providers and consultants',
-        workflows: ['Orders', 'Payments', 'Customers', 'Records'],
-        setupTime: '5–10 minutes',
-        volume: 'low',
-        teamSize: 'solo',
-        configures: ['Booking statuses', 'Payment tracking', 'Customer history', 'Default reports'],
-        customizable: ['Service types', 'Pricing', 'Staff roles', 'Workflow rules'],
+        capabilitiesUnlocked: ['Multi-staff access', 'Inventory workflows', 'Basic exports'],
     },
     {
         id: 'online-selling',
         name: 'Online Selling',
         category: 'online',
-        description: 'Full e-commerce with inventory management.',
+        tier: 'growth' as PlanTier,
+        description: 'High-volume handling with customer history and reports.',
         bestFor: 'Online stores with inventory management',
         workflows: ['Orders', 'Payments', 'Inventory', 'Deliveries', 'Customers', 'Records'],
-        setupTime: '15–20 minutes',
+        setupTime: '15 minutes',
         volume: 'high',
         teamSize: 'small',
-        configures: ['Order statuses', 'Payment tracking', 'Inventory tracking', 'Delivery workflow', 'Customer profiles', 'Default reports'],
+        configures: ['High-order volume handling', 'Customer history', 'Basic reports', 'Inventory tracking'],
         customizable: ['Product catalog', 'Pricing', 'Staff roles', 'Workflow rules'],
+        capabilitiesUnlocked: ['Multi-staff access', 'Inventory workflows', 'Basic exports'],
     },
+
+    // 🟣 PRO PLAN — ADVANCED / SCALE TEMPLATES
     {
         id: 'wholesale',
         name: 'Wholesale / Bulk Orders',
         category: 'wholesale',
-        description: 'Large order management for bulk selling.',
+        tier: 'pro' as PlanTier,
+        description: 'Complex pricing, partial payments, and delivery stages.',
         bestFor: 'Bulk sellers and distributors',
         workflows: ['Orders', 'Payments', 'Inventory', 'Deliveries', 'Records'],
-        setupTime: '10–15 minutes',
+        setupTime: '15 minutes',
         volume: 'high',
         teamSize: 'multi',
-        configures: ['Bulk order statuses', 'Payment terms', 'Inventory tracking', 'Delivery coordination', 'Default reports'],
+        configures: ['Complex pricing', 'Partial payments', 'Delivery stages', 'Bulk order statuses'],
         customizable: ['Minimum orders', 'Payment terms', 'Staff roles', 'Workflow rules'],
+        capabilitiesUnlocked: ['Unlimited staff', 'Full audit logs', 'Long-term data retention', 'Priority support'],
+    },
+    {
+        id: 'multi-branch',
+        name: 'Multi-Branch Operations',
+        category: 'retail',
+        tier: 'pro' as PlanTier,
+        description: 'Team roles, visibility across staff, consolidated records.',
+        bestFor: 'Businesses with multiple locations or branches',
+        workflows: ['Orders', 'Payments', 'Inventory', 'Deliveries', 'Team', 'Records'],
+        setupTime: '20 minutes',
+        volume: 'high',
+        teamSize: 'multi',
+        configures: ['Team roles', 'Visibility across staff', 'Consolidated records', 'Branch management'],
+        customizable: ['Branch structure', 'Staff permissions', 'Workflow rules', 'Reports'],
+        capabilitiesUnlocked: ['Unlimited staff', 'Full audit logs', 'Long-term data retention', 'Priority support'],
+    },
+    {
+        id: 'custom-advanced',
+        name: 'Custom Advanced Setup',
+        category: 'custom',
+        tier: 'pro' as PlanTier,
+        description: 'Full workflow customization with advanced reports and audit trails.',
+        bestFor: 'Businesses requiring complete operational control',
+        workflows: ['Customizable'],
+        setupTime: '30+ minutes',
+        volume: 'any',
+        teamSize: 'any',
+        configures: ['Full workflow customization', 'Advanced reports', 'Audit trails', 'Custom integrations'],
+        customizable: ['Everything'],
+        capabilitiesUnlocked: ['Unlimited staff', 'Full audit logs', 'Long-term data retention', 'Priority support'],
     },
 ];
 
@@ -96,6 +159,17 @@ export default function TemplatesPage() {
     const [showModeSelector, setShowModeSelector] = useState(false);
     const [templateToApply, setTemplateToApply] = useState<typeof TEMPLATES[0] | null>(null);
 
+    // Tier system state
+    const [userTier, setUserTier] = useState<PlanTier>('free'); // In production, get from auth context
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [upgradeTemplate, setUpgradeTemplate] = useState<typeof TEMPLATES[0] | null>(null);
+
+    // Helper function to check if template is accessible
+    const isTemplateAccessible = (templateTier: PlanTier): boolean => {
+        const tierHierarchy = { free: 0, growth: 1, pro: 2 };
+        return tierHierarchy[userTier] >= tierHierarchy[templateTier];
+    };
+
     const filteredTemplates = TEMPLATES.filter(t => {
         if (selectedCategory !== 'all' && t.category !== selectedCategory) return false;
         if (selectedVolume !== 'all' && t.volume !== selectedVolume) return false;
@@ -120,6 +194,14 @@ export default function TemplatesPage() {
     };
 
     const handleApplyTemplate = (template: typeof TEMPLATES[0]) => {
+        // Check if template is accessible based on user's tier
+        if (!isTemplateAccessible(template.tier)) {
+            setUpgradeTemplate(template);
+            setShowUpgradeModal(true);
+            setSelectedTemplate(null); // Close preview modal
+            return;
+        }
+
         setTemplateToApply(template);
         setShowConfirmation(true);
         setSelectedTemplate(null); // Close preview modal
@@ -159,6 +241,28 @@ export default function TemplatesPage() {
 
     if (showModeSelector && templateToApply) {
         return <SetupModeSelector onSelectMode={handleModeSelect} />;
+    }
+
+    // Show upgrade modal if user tries to access locked template
+    if (showUpgradeModal && upgradeTemplate) {
+        const features = upgradeTemplate.capabilitiesUnlocked || upgradeTemplate.configures;
+        return (
+            <>
+                {/* Render the main page in background */}
+                <div className="min-h-screen bg-white">
+                    {/* Page content will be here */}
+                </div>
+                <UpgradeModal
+                    requiredTier={upgradeTemplate.tier as 'growth' | 'pro'}
+                    templateName={upgradeTemplate.name}
+                    features={features}
+                    onClose={() => {
+                        setShowUpgradeModal(false);
+                        setUpgradeTemplate(null);
+                    }}
+                />
+            </>
+        );
     }
 
     return (
