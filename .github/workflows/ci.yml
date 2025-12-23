@@ -81,7 +81,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vayva_test?schema=public
         run: |
           pnpm --filter @vayva/db db:generate
-          pnpm --filter @vayva/db db:migrate
+          pnpm --filter @vayva/db db:push
 
       - name: E2E tests
         env:
