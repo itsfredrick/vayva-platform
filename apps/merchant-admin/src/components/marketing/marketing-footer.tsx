@@ -14,7 +14,7 @@ export function MarketingFooter() {
     };
 
     return (
-        <footer className="bg-[#0F172A] text-white">
+        <footer className="bg-white text-black border-t border-gray-200">
             {/* Main Footer Content */}
             <div className="max-w-7xl mx-auto px-6 py-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
@@ -22,11 +22,11 @@ export function MarketingFooter() {
                     <div className="lg:col-span-1">
                         <div className="mb-6">
                             <Link href="/" className="inline-block">
-                                <span className="text-2xl font-bold text-white">Vayva</span>
+                                <span className="text-2xl font-bold text-black">Vayva</span>
                             </Link>
                         </div>
 
-                        <p className="text-sm text-gray-400 leading-relaxed mb-6">
+                        <p className="text-sm text-gray-600 leading-relaxed mb-6">
                             Vayva is an operating system for businesses that sell on WhatsApp.
                             We help African merchants turn conversations into orders, payments,
                             deliveries, and reliable business records.
@@ -38,7 +38,7 @@ export function MarketingFooter() {
                                 href="https://twitter.com/vayva"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-[#22C55E] transition-colors"
+                                className="text-gray-600 hover:text-[#22C55E] transition-colors"
                                 aria-label="X (Twitter)"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@ export function MarketingFooter() {
                                 href="https://linkedin.com/company/vayva"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-[#22C55E] transition-colors"
+                                className="text-gray-600 hover:text-[#22C55E] transition-colors"
                                 aria-label="LinkedIn"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@ export function MarketingFooter() {
                                 href="https://instagram.com/vayva"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-[#22C55E] transition-colors"
+                                className="text-gray-600 hover:text-[#22C55E] transition-colors"
                                 aria-label="Instagram"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +74,7 @@ export function MarketingFooter() {
                                 href="https://facebook.com/vayva"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-[#22C55E] transition-colors"
+                                className="text-gray-600 hover:text-[#22C55E] transition-colors"
                                 aria-label="Facebook"
                             >
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -86,35 +86,35 @@ export function MarketingFooter() {
 
                     {/* Column 2 - Product */}
                     <div>
-                        <h3 className="text-sm font-semibold text-white mb-4">Product</h3>
+                        <h3 className="text-sm font-semibold text-black mb-4">Product</h3>
                         <ul className="space-y-3">
                             <li>
-                                <Link href="/how-it-works" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/how-it-works" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     How Vayva Works
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/features" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/features" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Features
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/pricing" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/pricing" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Pricing
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/templates" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/templates" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Templates
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/marketplace" className="text-sm text-gray-400 hover:text-white transition-colors">
-                                    Marketplace <span className="text-xs text-gray-500">(Coming Soon)</span>
+                                <Link href="/marketplace" className="text-sm text-gray-600 hover:text-black transition-colors">
+                                    Marketplace <span className="text-xs text-gray-400">(Coming Soon)</span>
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/store-builder" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/store-builder" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Store Builder
                                 </Link>
                             </li>
@@ -123,25 +123,25 @@ export function MarketingFooter() {
 
                     {/* Column 3 - Company */}
                     <div>
-                        <h3 className="text-sm font-semibold text-white mb-4">Company</h3>
+                        <h3 className="text-sm font-semibold text-black mb-4">Company</h3>
                         <ul className="space-y-3">
                             <li>
-                                <Link href="/about" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/about" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     About Vayva
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/careers" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/careers" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Careers
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/blog" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/blog" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Blog
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/contact" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/contact" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Contact
                                 </Link>
                             </li>
@@ -150,20 +150,20 @@ export function MarketingFooter() {
 
                     {/* Column 4 - Support */}
                     <div>
-                        <h3 className="text-sm font-semibold text-white mb-4">Support</h3>
+                        <h3 className="text-sm font-semibold text-black mb-4">Support</h3>
                         <ul className="space-y-3">
                             <li>
-                                <Link href="/help" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/help" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Help Center
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/status" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/status" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     System Status
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/community" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/community" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Community
                                 </Link>
                             </li>
@@ -172,45 +172,45 @@ export function MarketingFooter() {
 
                     {/* Column 5 - Legal & Compliance */}
                     <div>
-                        <h3 className="text-sm font-semibold text-white mb-4">Legal & Compliance</h3>
+                        <h3 className="text-sm font-semibold text-black mb-4">Legal & Compliance</h3>
                         <ul className="space-y-3">
                             <li>
-                                <Link href="/legal" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/legal" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Legal Hub
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/legal/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/legal/terms" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Terms of Service
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/legal/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/legal/privacy" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Privacy Policy
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/legal/acceptable-use" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/legal/acceptable-use" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Acceptable Use
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/legal/prohibited-items" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/legal/prohibited-items" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Prohibited Items
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/legal/refund-policy" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/legal/refund-policy" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     Refund Policy
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/legal/kyc-safety" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                <Link href="/legal/kyc-safety" className="text-sm text-gray-600 hover:text-black transition-colors">
                                     KYC & Safety
                                 </Link>
                             </li>
                             <li>
-                                <button className="text-sm text-gray-400 hover:text-white transition-colors text-left">
+                                <button className="text-sm text-gray-600 hover:text-black transition-colors text-left">
                                     Manage Cookies
                                 </button>
                             </li>
@@ -219,10 +219,10 @@ export function MarketingFooter() {
                 </div>
 
                 {/* Newsletter Section */}
-                <div className="mt-16 pt-12 border-t border-gray-800">
+                <div className="mt-16 pt-12 border-t border-gray-200">
                     <div className="max-w-md">
-                        <h3 className="text-lg font-semibold text-white mb-2">Stay updated.</h3>
-                        <p className="text-sm text-gray-400 mb-4">
+                        <h3 className="text-lg font-semibold text-black mb-2">Stay updated.</h3>
+                        <p className="text-sm text-gray-600 mb-4">
                             Product updates, operational insights, and platform announcements. No noise.
                         </p>
 
@@ -234,7 +234,7 @@ export function MarketingFooter() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Enter your email"
                                     required
-                                    className="flex-1 px-4 py-2 bg-white/10 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-[#22C55E]"
+                                    className="flex-1 px-4 py-2 bg-white border border-gray-300 rounded text-black placeholder-gray-400 focus:outline-none focus:border-[#22C55E]"
                                 />
                                 <button
                                     type="submit"
@@ -255,17 +255,17 @@ export function MarketingFooter() {
             </div>
 
             {/* Bottom Bar */}
-            <div className="border-t border-gray-800">
+            <div className="border-t border-gray-200">
                 <div className="max-w-7xl mx-auto px-6 py-6">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-600">
                             © 2025 Vayva Inc. Built for Africa.
                         </p>
                         <div className="flex gap-6">
-                            <Link href="/legal/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
+                            <Link href="/legal/privacy" className="text-sm text-gray-600 hover:text-black transition-colors">
                                 Privacy Policy
                             </Link>
-                            <Link href="/legal/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
+                            <Link href="/legal/terms" className="text-sm text-gray-600 hover:text-black transition-colors">
                                 Terms of Service
                             </Link>
                         </div>
