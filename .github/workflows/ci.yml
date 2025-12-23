@@ -83,6 +83,9 @@ jobs:
           pnpm --filter @vayva/db db:generate
           pnpm --filter @vayva/db db:push
 
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
       - name: E2E tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vayva_test?schema=public
