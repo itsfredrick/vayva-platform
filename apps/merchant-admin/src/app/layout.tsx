@@ -1,6 +1,7 @@
 import { Space_Grotesk, Inter } from 'next/font/google';
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/context/AuthContext';
+import './globals.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
+        <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`} suppressHydrationWarning>
             <head>
                 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
             </head>
