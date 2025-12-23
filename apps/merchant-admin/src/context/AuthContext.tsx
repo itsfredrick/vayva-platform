@@ -31,7 +31,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(data.user);
             setMerchant(data.merchant || null);
         } catch (error) {
-            console.error('Failed to fetch profile', error);
+            // API not available in development or user not authenticated - this is expected
+            // console.warn('Profile fetch skipped:', error instanceof Error ? error.message : 'API unavailable');
             setUser(null);
             setMerchant(null);
         }
