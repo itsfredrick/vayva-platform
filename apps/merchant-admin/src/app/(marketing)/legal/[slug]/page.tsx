@@ -9,8 +9,9 @@ export async function generateStaticParams() {
     }));
 }
 
-export default function LegalPage({ params }: { params: { slug: string } }) {
-    const document = getLegalDocument(params.slug);
+export default async function LegalPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+    const document = getLegalDocument(slug);
 
     if (!document) {
         notFound();

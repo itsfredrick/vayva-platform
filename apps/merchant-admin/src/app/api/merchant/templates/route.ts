@@ -5,7 +5,7 @@ import { prisma } from '@vayva/db';
 
 export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const templates = await prisma.templateManifest.findMany({
         where: { isArchived: false },

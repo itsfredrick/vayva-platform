@@ -8,7 +8,8 @@ import { ItemsCard, TimelineCard, CustomerCard, DeliveryCard } from '@/component
 import { DeliveryTaskModal, RefundModal } from '@/components/orders/OrderModals';
 import { Button, Icon, cn } from '@vayva/ui';
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
+export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = React.use(params);
     const router = useRouter();
     const [order, setOrder] = useState<Order | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -19,7 +20,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         const fetchOrder = async () => {
             setIsLoading(true);
             try {
-                const data = await OrdersService.getOrder(params.id);
+                const data = await OrdersService.getOrder(id);
                 setOrder(data);
             } catch (err) {
                 console.error('Fetch order detail error', err);
@@ -28,7 +29,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             }
         };
         fetchOrder();
-    }, [params.id]);
+    }, [id]);
 
     if (isLoading) return <AdminShell title="Order Loading..."><div className="p-12 text-center text-gray-400">Loading Order...</div></AdminShell>;
     if (!order) return <AdminShell title="Not Found"><div className="p-12 text-center text-gray-400">Order not found.</div></AdminShell>;

@@ -1,39 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getSessionUser } from '@/lib/session';
 import { prisma } from '@vayva/db';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession();
-        if (!(session?.user as any)?.storeId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // Get authenticated user from session
+        const sessionUser = await getSessionUser();
+
+        if (!sessionUser) {
+            return NextResponse.json(
+                { error: 'Not authenticated' },
+                { status: 401 }
+            );
         }
 
-        // Update onboarding status
-        await prisma.merchantOnboarding.update({
-            where: { storeId: (session!.user as any).storeId },
-            data: {
-                status: 'COMPLETE',
-                currentStepKey: 'completed',
-                completedAt: new Date(),
-                completedSteps: {
-                    set: ['welcome', 'identity', 'template', 'products', 'payments', 'delivery', 'policies']
-                }
-            }
+        // Mark onboarding as complete in a transaction
+        await prisma.$transaction([
+            // Update onboarding status
+            prisma.merchantOnboarding.update({
+                where: { storeId: sessionUser.storeId },
+                data: {
+                    status: 'COMPLETE',
+                    currentStep: 'complete',
+                    completedAt: new Date(),
+                },
+            }),
+            // Update store
+            prisma.store.update({
+                where: { id: sessionUser.storeId },
+                data: {
+                    onboardingCompleted: true,
+                    onboardingLastStep: 'complete',
+                },
+            }),
+        ]);
+
+        return NextResponse.json({
+            message: 'Onboarding completed successfully',
+            redirectUrl: '/admin/dashboard?welcome=true',
         });
 
-        // Mark onboarding as completed on store
-        await prisma.store.update({
-            where: { id: (session!.user as any).storeId },
-            data: {
-                onboardingCompleted: true,
-                onboardingStatus: 'COMPLETE'
-            }
-        });
-
-        return NextResponse.json({ ok: true, redirect: '/onboarding/live' });
     } catch (error) {
-        console.error('Error completing onboarding:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        console.error('Complete onboarding error:', error);
+        return NextResponse.json(
+            { error: 'Failed to complete onboarding' },
+            { status: 500 }
+        );
     }
 }

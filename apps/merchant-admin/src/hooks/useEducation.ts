@@ -1,7 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { EducationStateManager, GuidanceEligibility } from '@vayva/education/state';
+// TODO: Module @vayva/education/state not yet implemented
+// import { EducationStateManager, GuidanceEligibility } from '@vayva/education/state';
+
+type GuidanceEligibility = {
+    shouldShow: boolean;
+    reason?: string;
+};
+
+const EducationStateManager = {
+    checkEligibility: async (userId: string, guidanceId: string): Promise<GuidanceEligibility> => {
+        return { shouldShow: false };
+    },
+    markShown: async (userId: string, guidanceId: string) => { },
+    markCompleted: async (userId: string, guidanceId: string) => { },
+    dismiss: async (userId: string, guidanceId: string) => { },
+};
 
 export function useEducation(userId: string, guidanceId: string) {
     const [eligibility, setEligibility] = useState<GuidanceEligibility>({

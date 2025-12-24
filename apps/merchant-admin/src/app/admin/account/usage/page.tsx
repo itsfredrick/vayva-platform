@@ -1,105 +1,186 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { GlassPanel, Button, Icon } from '@vayva/ui';
-import { BillingService } from '@/services/billing.service';
-import { UsageStats } from '@/types/billing';
-import { Spinner } from '@/components/Spinner';
+import React, { useState, useEffect } from 'react';
+import { BarChart3, Loader2, TrendingUp } from 'lucide-react';
 
-function UsageBar({ label, current, limit, unit }: { label: string, current: number, limit: number, unit: string }) {
-    const isUnlimited = limit === -1;
-    const percentage = isUnlimited ? 0 : Math.min((current / limit) * 100, 100);
-    const displayLimit = isUnlimited ? 'Unlimited' : limit;
+interface UsageData {
+    orders: { used: number; limit: number | string };
+    whatsappMessages: { used: number; limit: number | string };
+    staffSeats: { used: number; limit: number | string };
+    templates: { unlocked: number | string };
+}
+
+export default function UsagePage() {
+    const [data, setData] = useState<UsageData | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchUsage();
+    }, []);
+
+    const fetchUsage = async () => {
+        try {
+            const res = await fetch('/api/account/usage');
+            if (!res.ok) throw new Error('Failed to fetch');
+            const json = await res.json();
+            setData(json);
+        } catch (error) {
+            console.error('Failed to load usage', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getPercentage = (used: number, limit: number | string): number => {
+        if (limit === 'unlimited') return 0;
+        return Math.min(100, (used / (limit as number)) * 100);
+    };
+
+    const getColorClass = (percentage: number): string => {
+        if (percentage < 70) return 'bg-green-500';
+        if (percentage < 90) return 'bg-yellow-500';
+        return 'bg-red-500';
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            </div>
+        );
+    }
+
+    if (!data) {
+        return <div className="text-center py-12 text-gray-500">Failed to load usage</div>;
+    }
 
     return (
-        <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-                <span className="text-text-secondary font-medium">{label}</span>
-                <span className="text-white font-bold">{current} <span className="text-text-secondary font-normal">/ {displayLimit} {unit}</span></span>
+        <div className="space-y-8">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Usage & Limits</h1>
+                <p className="text-gray-600 mt-1">
+                    Monitor your plan usage and limits
+                </p>
             </div>
-            <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                <div
-                    className={`h-full rounded-full transition-all duration-500 ${isUnlimited ? 'bg-primary w-full opacity-50' : 'bg-primary'}`}
-                    style={{ width: isUnlimited ? '100%' : `${percentage}%` }}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Orders */}
+                <UsageCard
+                    title="Orders This Month"
+                    used={data.orders.used}
+                    limit={data.orders.limit}
+                    icon={<BarChart3 className="w-6 h-6" />}
+                    getPercentage={getPercentage}
+                    getColorClass={getColorClass}
                 />
+
+                {/* WhatsApp Messages */}
+                <UsageCard
+                    title="WhatsApp Messages"
+                    used={data.whatsappMessages.used}
+                    limit={data.whatsappMessages.limit}
+                    icon={<TrendingUp className="w-6 h-6" />}
+                    getPercentage={getPercentage}
+                    getColorClass={getColorClass}
+                />
+
+                {/* Staff Seats */}
+                <UsageCard
+                    title="Staff Seats"
+                    used={data.staffSeats.used}
+                    limit={data.staffSeats.limit}
+                    icon={<BarChart3 className="w-6 h-6" />}
+                    getPercentage={getPercentage}
+                    getColorClass={getColorClass}
+                />
+
+                {/* Templates */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-blue-50 rounded-lg">
+                            <BarChart3 className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Templates</h3>
+                    </div>
+                    <p className="text-3xl font-bold text-gray-900">
+                        {data.templates.unlocked === 'unlimited' ? 'Unlimited' : data.templates.unlocked}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">Available templates</p>
+                </div>
+            </div>
+
+            {/* Upgrade Prompt */}
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Need More?</h3>
+                <p className="text-gray-700 mb-4">
+                    Upgrade your plan to unlock higher limits and more features
+                </p>
+                <a
+                    href="/admin/account/subscription"
+                    className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+                >
+                    View Plans
+                </a>
             </div>
         </div>
     );
 }
 
-export default function UsagePage() {
-    const [usage, setUsage] = useState<UsageStats | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const load = async () => {
-            const data = await BillingService.getUsage();
-            setUsage(data);
-            setIsLoading(false);
-        };
-        load();
-    }, []);
-
-    if (isLoading) return <div className="text-text-secondary flex items-center gap-2"><Spinner size="sm" /> Loading usage...</div>;
-    if (!usage) return null;
+function UsageCard({
+    title,
+    used,
+    limit,
+    icon,
+    getPercentage,
+    getColorClass,
+}: {
+    title: string;
+    used: number;
+    limit: number | string;
+    icon: React.ReactNode;
+    getPercentage: (used: number, limit: number | string) => number;
+    getColorClass: (percentage: number) => string;
+}) {
+    const percentage = getPercentage(used, limit);
+    const isUnlimited = limit === 'unlimited';
 
     return (
-        <div className="space-y-6 max-w-4xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <GlassPanel className="p-6 space-y-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Store Limits</h3>
-
-                    <UsageBar
-                        label="Products"
-                        current={usage.productsCount}
-                        limit={usage.productsLimit}
-                        unit="products"
-                    />
-
-                    <UsageBar
-                        label="Staff Accounts"
-                        current={usage.staffCount}
-                        limit={usage.staffLimit}
-                        unit="users"
-                    />
-                </GlassPanel>
-
-                <GlassPanel className="p-6 space-y-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Features</h3>
-
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-full bg-green-500/10 text-green-500">
-                                <Icon name={"MessageSquare" as any} size={16} />
-                            </div>
-                            <div>
-                                <h4 className="font-medium text-white">WhatsApp AI</h4>
-                                <p className="text-xs text-text-secondary">
-                                    {usage.waTrialEndsAt
-                                        ? `Trial ends ${new Date(usage.waTrialEndsAt).toLocaleDateString()}`
-                                        : 'Active'}
-                                </p>
-                            </div>
-                        </div>
-                        <span className="text-sm font-medium text-white">{usage.waConversationsCount} chats</span>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
-                        <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full ${usage.marketplaceListed ? 'bg-blue-500/10 text-blue-500' : 'bg-white/10 text-text-secondary'}`}>
-                                <Icon name={"Store" as any} size={16} />
-                            </div>
-                            <div>
-                                <h4 className="font-medium text-white">Marketplace Listing</h4>
-                                <p className="text-xs text-text-secondary">
-                                    {usage.marketplaceListed ? 'Active' : 'Upgrade to list on Vayva Market'}
-                                </p>
-                            </div>
-                        </div>
-                        {!usage.marketplaceListed && <Icon name={"Lock" as any} size={14} className="text-text-secondary" />}
-                    </div>
-                </GlassPanel>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                    {icon}
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             </div>
+
+            <div className="mb-4">
+                <p className="text-3xl font-bold text-gray-900">
+                    {used.toLocaleString()}
+                    {!isUnlimited && (
+                        <span className="text-lg font-normal text-gray-600">
+                            {' '}/ {typeof limit === 'number' ? limit.toLocaleString() : limit}
+                        </span>
+                    )}
+                </p>
+            </div>
+
+            {!isUnlimited && (
+                <>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div
+                            className={`h-2 rounded-full transition-all ${getColorClass(percentage)}`}
+                            style={{ width: `${percentage}%` }}
+                        ></div>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                        {percentage.toFixed(0)}% used
+                    </p>
+                </>
+            )}
+
+            {isUnlimited && (
+                <p className="text-sm text-green-600 font-medium">Unlimited usage</p>
+            )}
         </div>
     );
 }

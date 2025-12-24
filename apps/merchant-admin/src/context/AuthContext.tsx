@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { apiClient } from '@vayva/api-client';
-import { User, MerchantContext, UserRole, OnboardingStatus } from '@vayva/shared';
+import { User, MerchantContext, UserRole, OnboardingStatus, BusinessType } from '@vayva/shared';
 
 interface AuthContextType {
     user: User | null;
@@ -94,9 +94,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 return;
             }
 
-            // Onboarding Gating
-            if (pathname.startsWith('/admin') && merchant?.onboardingStatus !== OnboardingStatus.COMPLETE) {
-                router.push('/onboarding/resume');
+            // Enhanced Onboarding Gating
+            if (merchant) {
+                // Block dashboard access if onboarding incomplete
+                if (pathname.startsWith('/admin') && merchant.onboardingStatus !== OnboardingStatus.COMPLETE) {
+                    router.push('/onboarding/resume');
+                    return;
+                }
+
+                // Block direct onboarding access if already complete
+                if (pathname.startsWith('/onboarding') && merchant.onboardingStatus === OnboardingStatus.COMPLETE) {
+                    router.push('/admin/dashboard');
+                    return;
+                }
             }
         }
     }, [user, merchant, isLoading, pathname]);

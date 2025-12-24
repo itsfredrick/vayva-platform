@@ -8,17 +8,22 @@
         "db:generate": "prisma generate --schema=./prisma/schema.prisma",
         "build": "pnpm run db:generate",
         "db:push": "prisma db push --schema=./prisma/schema.prisma",
-        "db:migrate": "prisma migrate deploy --schema=./prisma/schema.prisma"
+        "db:migrate": "prisma migrate deploy --schema=./prisma/schema.prisma",
+        "db:seed": "tsx prisma/seed.ts"
     },
     "prisma": {
-        "schema": "prisma/schema.prisma"
+        "schema": "prisma/schema.prisma",
+        "seed": "tsx prisma/seed.ts"
     },
     "dependencies": {
         "@prisma/client": "5.7.0"
     },
     "devDependencies": {
+        "@types/bcryptjs": "^3.0.0",
+        "@types/node": "^20.0.0",
+        "bcryptjs": "^3.0.3",
         "prisma": "5.7.0",
-        "typescript": "^5.0.0",
-        "@types/node": "^20.0.0"
+        "tsx": "^4.6.2",
+        "typescript": "^5.0.0"
     }
 }

@@ -11,7 +11,7 @@ enum MessageIntent {
 export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!(session?.user as any)?.storeId) {
-        return new NextResponse('Unauthorized', { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);

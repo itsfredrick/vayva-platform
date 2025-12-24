@@ -1,7 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ActivationManager, ActivationStatus } from '@vayva/analytics/activation';
+// TODO: Module @vayva/analytics/activation not yet implemented
+// import { ActivationManager, ActivationStatus } from '@vayva/analytics/activation';
+
+type ActivationStatus = {
+    isActivated: boolean;
+    firstOrderCreated: boolean;
+    firstPaymentRecorded: boolean;
+    firstOrderCompleted: boolean;
+};
+
+const ActivationManager = {
+    checkActivation: async (userId: string): Promise<ActivationStatus> => {
+        // Stub implementation - replace when module is available
+        return {
+            isActivated: false,
+            firstOrderCreated: false,
+            firstPaymentRecorded: false,
+            firstOrderCompleted: false,
+        };
+    }
+};
 
 export function useActivation(userId: string) {
     const [status, setStatus] = useState<ActivationStatus>({

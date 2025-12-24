@@ -8,7 +8,7 @@ import { EventBus } from '@/lib/events/eventBus';
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!(session?.user as any)?.storeId) {
-        return new NextResponse('Unauthorized', { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { storeId, id: userId } = (session!.user as any);

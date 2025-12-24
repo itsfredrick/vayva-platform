@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     // Okay, implementing properly.
     /*
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     
     const invite = await prisma.staffInvite.findUnique({ where: { token } });
     if (!invite || invite.expiresAt < new Date()) {

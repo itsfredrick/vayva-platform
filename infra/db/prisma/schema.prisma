@@ -203,10 +203,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships Membership[] // Links user to multiple stores
-  tenantMemberships TenantMembership[] // Links user to tenants
+  memberships Membership[]
+  tenantMemberships TenantMembership[]
   sessions    MerchantSession[]
-  audits      AuditEvent[] // Actions performed by this user
   legalAcceptances LegalAcceptance[]
   dataRequests     DataRequest[]
 }
@@ -225,7 +224,6 @@ model OpsUser {
   updatedAt DateTime @updatedAt
 
   sessions  OpsSession[]
-  audits    AuditEvent[] // Ops actions
 }
 
 model CustomerAccount {
@@ -360,7 +358,6 @@ model Store {
   withdrawals       Withdrawal[]
   invoices          Invoice[]
   kycRecord         KycRecord?
-  auditEvents       AuditEvent[]
   notifications     Notification[]
   // Payment Provider Relations
   paymentAccounts   PaymentAccount[]
@@ -494,11 +491,26 @@ model Store {
   disputesV2         DisputeV2[]
   returnRequestsV2   ReturnRequestV2[]
   invoicesV2         InvoiceV2[]
-  supportTicketsV2   SupportTicketV2[]
   merchantApiKeys    MerchantApiKey[]
   idempotencyKeysV2  IdempotencyKeyV2[]
   inventoryItemsV2   InventoryItemV2[]
   statusIncidentsV2  StatusIncidentV2[]
+
+  // Global Notifications
+  notificationPreferences NotificationPreference?
+}
+
+model NotificationPreference {
+  id          String   @id @default(uuid())
+  storeId     String   @unique
+  channels    Json     @default("{\"in_app\": true, \"banner\": true, \"whatsapp\": false, \"email\": true}")
+  categories  Json     @default("{\"orders\": true, \"payments\": true, \"account\": true, \"system\": true}")
+  quietHours  Json     @default("{\"enabled\": false, \"start\": \"22:00\", \"end\": \"08:00\"}")
+
+  updatedAt   DateTime @updatedAt
+
+  store       Store    @relation(fields: [storeId], references: [id])
+  @@map("notification_preference")
 }
 
 model TemplateManifest {
@@ -1181,54 +1193,73 @@ model DeliveryProfile {
 // Support & Ticketing (NEW)
 // -----------------------------------------------------------------------------
 
+
 model SupportTicket {
   id              String   @id @default(uuid())
   storeId         String
+  store           Store    @relation(fields: [storeId], references: [id])
   
   customerId      String?
-  conversationId  String?  // Link to WhatsApp Conversation
-  orderId         String?
+  customer        Customer? @relation(fields: [customerId], references: [id])
   
-  ticketNumber    Int      @default(autoincrement())
+  // Optional links for context (can also be in metadata)
+  orderId         String?
+  order           Order?   @relation(fields: [orderId], references: [id])
+  
+  conversationId  String?
+  conversation    Conversation? @relation(fields: [conversationId], references: [id])
+  
+  type            String   // payment, order, wallet, kyc, etc. (replaces category)
+  status          String   @default("open") // open, in_review, awaiting_merchant, escalated, resolved, closed
+  priority        String   @default("medium") // low, medium, high, critical
+  
   subject         String
   description     String?  @db.Text
   
-  status          String   @default("OPEN") // OPEN, PENDING, RESOLVED, CLOSED
-  priority        String   @default("MEDIUM") // LOW, MEDIUM, HIGH
-  category        String?  // DELIVERY, PAYMENT, PRODUCT, GENERAL
-  
-  assignedTo      String?  // User ID
+  metadata        Json     @default("{}") // flex fields
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
-  store           Store    @relation(fields: [storeId], references: [id])
-  customer        Customer? @relation(fields: [customerId], references: [id])
-  conversation    Conversation? @relation(fields: [conversationId], references: [id])
-  order           Order?   @relation(fields: [orderId], references: [id])
   messages        TicketMessage[]
   
+  @@index([storeId])
   @@index([storeId, status])
-  @@index([storeId, customerId])
+  @@map("support_ticket")
 }
 
 model TicketMessage {
   id              String   @id @default(uuid())
-  storeId         String
   ticketId        String
+  ticket          SupportTicket @relation(fields: [ticketId], references: [id])
   
-  direction       String   // INBOUND, OUTBOUND, INTERNAL
-  channel         String   // WHATSAPP, EMAIL, SMS, INTERNAL
+  storeId         String?
+  store           Store?   @relation(fields: [storeId], references: [id])
   
-  body            String   @db.Text
-  attachments     Json?    // Array of { url, type, name }
+  sender          String   // 'merchant' | 'agent' | 'system'
+  senderId        String?  // UserId if applicable
   
-  createdBy       String?  // User ID if internal/outbound
+  message         String   @db.Text
+  attachments     Json     @default("[]")
   
   createdAt       DateTime @default(now())
   
-  store           Store    @relation(fields: [storeId], references: [id])
-  ticket          SupportTicket @relation(fields: [ticketId], references: [id])
+  @@index([ticketId])
+  @@map("ticket_message")
+}
+
+model Incident {
+  id               String   @id @default(uuid())
+  title            String
+  description      String?  @db.Text
+  status           String   // investigating, identified, monitoring, resolved
+  severity         String   // minor, major, critical
+  affectedServices Json     // ["payments", "webhooks"]
+  
+  createdAt        DateTime @default(now())
+  resolvedAt       DateTime?
+  
+  @@map("incident")
 }
 
 // -----------------------------------------------------------------------------
@@ -1687,47 +1718,8 @@ model JobDeadLetter {
 
 // --- SUPPORT & STATUS ---
 
-model SupportTicketV2 {
-  id          String   @id @default(uuid())
-  storeId     String   // Using storeId to match existing pattern instead of generic merchantId if possible, or mapping merchantId to Store.id
-  store       Store    @relation(fields: [storeId], references: [id])
-  
-  createdByUserId String
-  
-  type        String   // bug, feature, billing, other
-  subject     String
-  description String
-  status      String   @default("open") // open, in_progress, waiting, resolved, closed
-  priority    String   @default("normal") // low, normal, high, urgent
-  
-  attachments Json?    // Array of URLs
-  correlationId String?
-  
-  messages    SupportMessage[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@index([storeId, status])
-  @@map("support_ticket")
-}
 
-model SupportMessage {
-  id          String   @id @default(uuid())
-  ticketId    String
-  ticket      SupportTicketV2 @relation(fields: [ticketId], references: [id])
-  
-  senderType  String   // merchant_user, platform_admin, system
-  senderId    String?  // userId if applicable
-  
-  message     String
-  attachments Json?
-  
-  createdAt   DateTime @default(now())
-  
-  @@index([ticketId])
-  @@map("support_message")
-}
+
 
 model StatusIncident {
   id          String   @id @default(uuid())
@@ -2021,25 +2013,7 @@ model AiActionMessageLink {
 // Audit & Notifications
 // -----------------------------------------------------------------------------
 
-model AuditEvent {
-  id        String   @id @default(uuid())
-  storeId   String?
-  
-  actorId   String   // User or OpsUser ID
-  actorType String   // USER, OPS_USER, SYSTEM
-  
-  event     String   // LOGIN, SETTINGS_UPDATE, WITHDRAWAL_REQUEST
-  meta      Json?
-  ipAddress String?
-  
-  createdAt DateTime @default(now())
 
-  store     Store?   @relation(fields: [storeId], references: [id])
-  user      User?    @relation(fields: [actorId], references: [id], map: "AuditEvent_User_fkey")
-  opsUser   OpsUser? @relation(fields: [actorId], references: [id], map: "AuditEvent_OpsUser_fkey")
-
-  @@index([storeId])
-}
 
 model Notification {
   id          String   @id @default(uuid())
@@ -2053,9 +2027,12 @@ model Notification {
   entityType  String?
   entityId    String?
   metadata    Json     @default("{}")
+  category    String   @default("system")
+  channels    Json     @default("[\"in_app\"]")
   dedupeKey   String?  @unique
   isRead      Boolean  @default(false)
   readAt      DateTime?
+  resolvedAt  DateTime?
   createdAt   DateTime @default(now())
 
   store       Store    @relation(fields: [storeId], references: [id])
@@ -2113,6 +2090,11 @@ model Wallet {
   
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
+  // Two-Factor Authentication
+  twoFactorSecret      String?   // TOTP secret for 2FA
+  twoFactorEnabled     Boolean   @default(false)
+  twoFactorBackupCodes String[]  @default([]) // Backup codes for account recovery
 
   store             Store     @relation(fields: [storeId], references: [id])
 }
@@ -3861,10 +3843,10 @@ enum RiskSeverity {
 }
 
 enum RiskStatus {
-  NORMAL
-  WATCH
-  RESTRICTED
-  SUSPENDED
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
 enum EnforcementActionType {
@@ -3907,7 +3889,7 @@ model RiskProfile {
   merchantId        String     @unique
   
   merchantRiskScore Int        @default(0)
-  status            RiskStatus @default(NORMAL)
+  status            RiskStatus @default(LOW)
   
   lastEvaluatedAt   DateTime?
   metadata          Json?
@@ -4595,6 +4577,9 @@ model UserSession {
   userId          String
   sessionTokenHash String  @unique
   
+  // Enhanced tracking fields
+  device          String?  // Device information (e.g., "Chrome on Mac")
+  location        String?  // Location (e.g., "Lagos, Nigeria")
   ipAddress       String?
   userAgent       String?
   
@@ -4915,3 +4900,5 @@ model EmailSuppression {
 
   @@map("email_suppression")
 }
+
+

@@ -1,26 +1,25 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Icon, cn } from '@vayva/ui';
+import { Icon, cn, Button, Avatar } from '@vayva/ui';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { NotificationBell } from './notifications/NotificationBell';
+import { NotificationCenter } from './notifications/NotificationCenter';
+import { GlobalBanner } from './notifications/GlobalBanner';
 
 const NAV_ITEMS = [
-    { name: 'Overview', icon: 'LayoutDashboard', href: '/admin' },
+    { name: 'Overview', icon: 'LayoutDashboard', href: '/admin/dashboard' },
+    { name: 'Wallet', icon: 'Wallet', href: '/admin/wallet' },
+    { name: 'WhatsApp Agent', icon: 'MessageSquare', href: '/admin/wa-agent' },
     { name: 'Products', icon: 'Package', href: '/admin/products' },
     { name: 'Orders', icon: 'ShoppingBag', href: '/admin/orders' },
     { name: 'Customers', icon: 'Users', href: '/admin/customers' },
-    { name: 'Wallet', icon: 'Wallet', href: '/admin/wallet' },
-    { name: 'Inbox', icon: 'MessageSquare', href: '/dashboard/inbox' },
-    { name: 'Returns', icon: 'RotateCcw', href: '/admin/returns' },
-    { name: 'Disputes', icon: 'Scale', href: '/admin/disputes' },
-    { name: 'Risk', icon: 'Shield', href: '/admin/risk' },
-    { name: 'Team', icon: 'UserCog', href: '/dashboard/settings/team' },
-    { name: 'Reports', icon: 'BarChart', href: '/dashboard/reports' },
-    { name: 'Support', icon: 'LifeBuoy', href: '/dashboard/support' }, // Added
+    { name: 'Control Center', icon: 'Settings', href: '/admin/control-center' },
 ];
 
 interface AdminShellProps {
@@ -34,17 +33,41 @@ export const AdminShell = ({ children, title, breadcrumb, mode = 'admin' }: Admi
     const pathname = usePathname();
     const router = useRouter();
     const { user, merchant, logout } = useAuth();
-    const store = merchant as any;
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+
+    // Notification UI State
+    const [isNotifOpen, setIsNotifOpen] = useState(false);
 
     // Initial logic for "FD" avatar
     const initials = user ? `${user.firstName[0]}${user.lastName[0]}` : 'FD';
 
+    // Fallback Merchant Details (if context not ready)
+    const merchantName = (merchant as any)?.firstName || user?.firstName || 'Merchant';
+    const storeName = (merchant as any)?.businessName || 'My Store';
+
     // Store URL logic
-    const storeUrl = store?.status === 'published'
-        ? `https://${store.slug}.vayva.shop`
-        : `http://localhost:3001?store=${store?.slug}`;
+    const [storeLink, setStoreLink] = useState<string>('');
+    const [storeStatus, setStoreStatus] = useState<'live' | 'draft'>('draft');
+
+    useEffect(() => {
+        // Fetch real store status and URL from API
+        fetch('/api/storefront/url')
+            .then(res => res.json())
+            .then(data => setStoreLink(data.url))
+            .catch(() => setStoreLink('#'));
+
+        fetch('/api/storefront/status')
+            .then(res => res.json())
+            .then(data => setStoreStatus(data.status))
+            .catch(() => { });
+    }, []);
+
+    const handleVisitStore = (e: React.MouseEvent) => {
+        if (!storeLink || storeLink === '#') {
+            e.preventDefault();
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -54,29 +77,24 @@ export const AdminShell = ({ children, title, breadcrumb, mode = 'admin' }: Admi
         <div className="flex h-screen w-full bg-[#FBFCFC] overflow-hidden text-[#0B0B0B]">
             {/* A) COLLAPSIBLE SIDEBAR */}
             <motion.aside
-                className="h-full z-50 flex flex-col bg-[#0D1D1E] text-white relative shadow-2xl"
-                initial={{ width: 72 }}
-                animate={{ width: isSidebarExpanded ? 260 : 72 }}
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                className="h-full z-50 flex flex-col bg-white border-r border-gray-100 text-[#0B0B0B] relative"
+                initial={{ width: 80 }}
+                animate={{ width: isSidebarExpanded ? 260 : 80 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 onMouseEnter={() => setIsSidebarExpanded(true)}
                 onMouseLeave={() => setIsSidebarExpanded(false)}
             >
                 {/* Logo Area */}
-                <div className="h-[72px] flex items-center px-6 border-b border-white/10 shrink-0 overflow-hidden whitespace-nowrap">
-                    <Image
-                        src="/vayva-logo.png"
-                        alt="Vayva"
-                        width={48}
-                        height={48}
-                        className="shrink-0 mr-4 object-contain"
-                    />
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: isSidebarExpanded ? 1 : 0 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <h1 className="font-bold text-base tracking-tight text-white leading-none">Vayva</h1>
-                    </motion.div>
+                <div className="h-[100px] flex items-center justify-center shrink-0 py-4">
+                    <div className="relative w-20 h-20">
+                        <Image
+                            src="/brand-logo.png"
+                            alt="Vayva"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
                 </div>
 
                 {/* Nav Items */}
@@ -90,16 +108,16 @@ export const AdminShell = ({ children, title, breadcrumb, mode = 'admin' }: Admi
                                 key={item.name}
                                 href={isLocked ? '#' : item.href}
                                 className={cn(
-                                    "flex items-center gap-3 px-3.5 py-3 rounded-lg transition-all text-sm font-medium relative group whitespace-nowrap overflow-hidden",
+                                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium relative group whitespace-nowrap overflow-hidden",
                                     isActive && !isLocked
-                                        ? "bg-white text-[#0D1D1E] shadow-sm"
+                                        ? "bg-gray-100 text-black font-bold shadow-sm"
                                         : isLocked
-                                            ? "text-white/30 cursor-not-allowed"
-                                            : "text-white/70 hover:text-white hover:bg-white/5"
+                                            ? "text-gray-300 cursor-not-allowed"
+                                            : "text-gray-500 hover:text-black hover:bg-gray-50"
                                 )}
                             >
                                 {/* @ts-ignore */}
-                                <Icon name={item.icon} size={20} className="shrink-0" />
+                                <Icon name={item.icon} size={20} className={cn("shrink-0", isActive ? "text-black" : "text-gray-400")} />
                                 <motion.span
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: isSidebarExpanded ? 1 : 0, x: isSidebarExpanded ? 0 : -10 }}
@@ -115,13 +133,13 @@ export const AdminShell = ({ children, title, breadcrumb, mode = 'admin' }: Admi
                 </nav>
 
                 {/* Bottom Card - Control Center */}
-                <div className="p-3 mt-auto">
+                <div className="p-4 mt-auto border-t border-gray-100">
                     <Link href="/admin/control-center">
                         <div className={cn(
-                            "rounded-xl bg-white/5 border border-white/5 p-3 flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer group overflow-hidden whitespace-nowrap",
-                            !isSidebarExpanded && "justify-center px-0"
+                            "rounded-2xl bg-gray-50 border border-gray-100 p-3 flex items-center gap-3 hover:bg-gray-100 transition-all cursor-pointer group overflow-hidden whitespace-nowrap",
+                            !isSidebarExpanded && "justify-center px-0 border-none bg-transparent"
                         )}>
-                            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0 group-hover:bg-white group-hover:text-[#0D1D1E] transition-colors">
+                            <div className="w-9 h-9 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-900 shrink-0 shadow-sm group-hover:scale-105 transition-transform">
                                 <Icon name="LayoutTemplate" size={16} />
                             </div>
                             <motion.div
@@ -129,60 +147,28 @@ export const AdminShell = ({ children, title, breadcrumb, mode = 'admin' }: Admi
                                 animate={{ opacity: isSidebarExpanded ? 1 : 0, width: isSidebarExpanded ? 'auto' : 0 }}
                                 className="overflow-hidden"
                             >
-                                <p className="text-xs font-bold text-white">Control Center</p>
-                                <p className="text-[10px] text-white/50">Builder, Themes & Pages</p>
+                                <p className="text-xs font-bold text-gray-900">Control Center</p>
                             </motion.div>
                         </div>
                     </Link>
                 </div>
-
-                {/* User Dropdown Trigger (Collapsed Logic) */}
-                <div className="p-4 border-t border-white/10 flex items-center gap-3 overflow-hidden cursor-pointer hover:bg-white/5 transition-colors"
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    data-testid="dashboard-user-menu-trigger"
-                >
-                    <div className="w-8 h-8 rounded-full bg-white text-[#0D1D1E] flex items-center justify-center text-xs font-bold shrink-0">
-                        {initials}
-                    </div>
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: isSidebarExpanded ? 1 : 0 }}
-                        className="overflow-hidden"
-                    >
-                        <p className="text-sm font-medium text-white truncate w-32">{user?.firstName}</p>
-                    </motion.div>
-                </div>
             </motion.aside>
+
 
             {/* B) MAIN CONTENT */}
             <main className="flex-1 h-full flex flex-col relative overflow-hidden bg-[#F8F9FA]">
+
+                {/* GLOBAL BANNER INJECTION POINT */}
+                <GlobalBanner />
+
                 {/* Top Command Bar */}
                 <header className="h-[72px] w-full bg-white border-b border-gray-100 flex items-center justify-between px-8 shrink-0 relative z-40">
-                    <div className="flex items-center gap-4 text-sm text-[#525252]">
-                        <span className="font-medium text-[#0B0B0B]">Home</span>
-                        {breadcrumb && (
-                            <>
-                                <span className="text-gray-300">/</span>
-                                <span className="font-medium">{breadcrumb}</span>
-                            </>
-                        )}
-                        {title && title !== 'Overview' && (
-                            <>
-                                <span className="text-gray-300">/</span>
-                                <span className="font-medium text-[#0B0B0B]">{title}</span>
-                            </>
-                        )}
-                    </div>
-
-                    {/* Search - Center */}
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 w-[320px] hidden md:block">
-                        <div className="relative">
-                            <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                            <input
-                                type="text"
-                                placeholder="Search for anything..."
-                                className="w-full h-10 pl-10 pr-4 bg-gray-50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0B0B0B]/5 hover:bg-gray-100 transition-colors"
-                            />
+                    <div className="flex items-center gap-6">
+                        {/* Logo + Divider */}
+                        <div className="flex items-center gap-6">
+                            <h1 className="text-xl font-heading font-bold text-gray-900">
+                                Vayva
+                            </h1>
                         </div>
                     </div>
 
@@ -190,28 +176,52 @@ export const AdminShell = ({ children, title, breadcrumb, mode = 'admin' }: Admi
                     <div className="flex items-center gap-4">
                         {/* Visit Store Button */}
                         <a
-                            href={storeUrl}
+                            href={storeLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full text-xs font-bold hover:bg-gray-800 transition-colors"
-                            data-testid="dashboard-visit-store"
+                            onClick={handleVisitStore}
+                            className={cn(
+                                "hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-colors",
+                                storeStatus === 'live'
+                                    ? "bg-black text-white hover:bg-gray-800"
+                                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            )}
+                            title={storeStatus === 'draft' ? "Store is not live" : "Visit Store"}
                         >
                             Visit Store <Icon name="ExternalLink" size={12} />
                         </a>
 
-                        <button className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-[#0B0B0B] hover:bg-gray-50 rounded-full transition-colors relative">
-                            <Icon name="Bell" size={20} />
-                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button>
+                        {/* Search Action */}
+                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-900">
+                            <Icon name="Search" size={20} />
+                        </Button>
+
+                        {/* NOTIFICATION ENTRY POINT */}
+                        <NotificationBell
+                            isOpen={isNotifOpen}
+                            onClick={() => setIsNotifOpen(!isNotifOpen)}
+                        />
+
+                        {/* NOTIFICATION PANEL */}
+                        <NotificationCenter
+                            isOpen={isNotifOpen}
+                            onClose={() => setIsNotifOpen(false)}
+                        />
+
+                        <div className="h-6 w-px bg-gray-200 mx-1" />
 
                         {/* Avatar / User Menu */}
                         <div className="relative">
                             <button
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="w-9 h-9 rounded-full bg-[#0D1D1E] text-white flex items-center justify-center text-xs font-bold hover:ring-4 hover:ring-gray-100 transition-all"
-                                data-testid="dashboard-avatar-menu"
+                                className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-50 transition-colors"
                             >
-                                {initials}
+                                <Avatar
+                                    initials={initials}
+                                    className="bg-indigo-600"
+                                    size="sm"
+                                />
+                                <Icon name="ChevronDown" size={16} className="text-gray-400" />
                             </button>
 
                             <AnimatePresence>
@@ -223,21 +233,20 @@ export const AdminShell = ({ children, title, breadcrumb, mode = 'admin' }: Admi
                                         transition={{ duration: 0.1 }}
                                         className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden z-50 py-1"
                                     >
-                                        <div className="px-4 py-3 border-b border-gray-50">
-                                            <p className="text-sm font-bold text-[#0B0B0B]">{user?.firstName} {user?.lastName}</p>
-                                            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                                        <div className="px-4 py-3 border-b border-gray-50 mb-1">
+                                            <p className="text-sm font-bold text-gray-900">{merchantName}</p>
+                                            <p className="text-xs text-gray-500 truncate">{storeName}</p>
                                         </div>
                                         <div className="p-1">
                                             <Link href="/admin/account/overview">
                                                 <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#525252] hover:text-[#0B0B0B] hover:bg-gray-50 rounded-lg transition-colors text-left">
-                                                    <Icon name="User" size={16} />
+                                                    <Icon name="Settings" size={16} />
                                                     Account Overview
                                                 </button>
                                             </Link>
                                             <button
                                                 onClick={handleLogout}
                                                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left"
-                                                data-testid="dashboard-signout"
                                             >
                                                 <Icon name="LogOut" size={16} />
                                                 Sign out

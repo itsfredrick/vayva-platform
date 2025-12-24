@@ -9,7 +9,7 @@ import { randomBytes, createHash } from 'crypto';
 
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
     const { filename, fileUrl } = body;

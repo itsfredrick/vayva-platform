@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { StoreShell } from '@/components/storefront/store-shell';
 import { ProductCard, Product } from '@/components/storefront/product-card';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 
 const MOCK_PRODUCTS: Product[] = [
     { id: '1', name: 'Premium Cotton Tee', price: '₦ 12,000', image: '', slug: 'premium-cotton-tee', inStock: true },
@@ -20,9 +20,10 @@ const CATEGORIES = [
     { name: 'Footwear', image: 'hiking' },
 ];
 
-export default function StoreHomepage({ params }: { params: { slug: string } }) {
+export default function StoreHomepage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = React.use(params);
     return (
-        <StoreShell slug={params.slug}>
+        <StoreShell slug={slug}>
 
             {/* Hero Section */}
             <section className="relative h-[500px] flex items-center overflow-hidden">
@@ -43,12 +44,12 @@ export default function StoreHomepage({ params }: { params: { slug: string } }) 
                             Discover premium essentials crafted for the modern individual. Designed in Lagos, worn worldwide.
                         </p>
                         <div className="flex gap-4 justify-center md:justify-start">
-                            <Link href={`/store/${params.slug}/collections/all`}>
+                            <Link href={`/store/${slug}/collections/all`}>
                                 <Button size="lg" className="bg-primary text-black hover:bg-primary/90 rounded-full font-bold px-8">
                                     Shop Now
                                 </Button>
                             </Link>
-                            <Link href={`/store/${params.slug}/collections/new`}>
+                            <Link href={`/store/${slug}/collections/new`}>
                                 <Button size="lg" variant="outline" className="rounded-full px-8 text-white hover:bg-white/5 border-white/20">
                                     View Lookbook
                                 </Button>
@@ -71,7 +72,7 @@ export default function StoreHomepage({ params }: { params: { slug: string } }) 
                 <div className="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-hide">
                     <div className="flex gap-4 min-w-max">
                         {CATEGORIES.map(cat => (
-                            <Link key={cat.name} href={`/store/${params.slug}/collections/${cat.name.toLowerCase()}`}>
+                            <Link key={cat.name} href={`/store/${slug}/collections/${cat.name.toLowerCase()}`}>
                                 <div className="group flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
                                     <Icon name={cat.image as any} className="text-text-secondary group-hover:text-primary transition-colors" />
                                     <span className="font-bold text-white text-sm">{cat.name}</span>
@@ -90,14 +91,14 @@ export default function StoreHomepage({ params }: { params: { slug: string } }) 
                             <h2 className="text-3xl font-bold text-white mb-2">Featured Drops</h2>
                             <p className="text-text-secondary">Handpicked just for you.</p>
                         </div>
-                        <Link href={`/store/${params.slug}/collections/all`} className="text-primary hover:text-primary/80 text-sm font-bold flex items-center gap-1">
+                        <Link href={`/store/${slug}/collections/all`} className="text-primary hover:text-primary/80 text-sm font-bold flex items-center gap-1">
                             View All <Icon name="ArrowRight" size={16} />
                         </Link>
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                         {MOCK_PRODUCTS.map(product => (
-                            <ProductCard key={product.id} product={product} storeSlug={params.slug} />
+                            <ProductCard key={product.id} product={product} storeSlug={slug} />
                         ))}
                     </div>
                 </div>

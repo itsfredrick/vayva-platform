@@ -15,18 +15,16 @@ export interface CreateTicketDTO {
 export class SupportService {
 
     static async createTicket(data: CreateTicketDTO) {
-        return prisma.supportTicketV2.create({
+        return prisma.supportTicket.create({
             data: {
                 store: { connect: { id: data.storeId } },
-                createdByUserId: data.userId,
                 type: data.type,
                 subject: data.subject,
                 description: data.description,
                 priority: data.priority || 'normal',
-                correlationId: data.correlationId || null,
                 messages: {
                     create: {
-                        senderType: 'merchant_user',
+                        sender: 'merchant',
                         senderId: data.userId,
                         message: data.description
                     }
@@ -36,22 +34,22 @@ export class SupportService {
         });
     }
 
-    static async addMessage(ticketId: string, senderType: 'merchant_user' | 'platform_admin' | 'system', senderId: string, message: string) {
-        const msg = await prisma.supportMessage.create({
+    static async addMessage(ticketId: string, sender: string, senderId: string, message: string) {
+        const msg = await prisma.ticketMessage.create({
             data: {
                 ticket: { connect: { id: ticketId } },
-                senderType,
+                sender,
                 senderId,
                 message
             }
         });
 
         // Update ticket updated_at
-        await prisma.supportTicketV2.update({
+        await prisma.supportTicket.update({
             where: { id: ticketId },
             data: {
                 updatedAt: new Date(),
-                status: senderType === 'merchant_user' ? 'open' : undefined
+                status: sender === 'merchant' ? 'open' : undefined
             }
         });
 
@@ -59,7 +57,7 @@ export class SupportService {
     }
 
     static async getMerchantTickets(storeId: string) {
-        return prisma.supportTicketV2.findMany({
+        return prisma.supportTicket.findMany({
             where: { storeId },
             orderBy: { updatedAt: 'desc' },
             include: {
@@ -69,7 +67,7 @@ export class SupportService {
     }
 
     static async getTicketDetails(ticketId: string, storeId: string) {
-        const ticket = await prisma.supportTicketV2.findUnique({
+        const ticket = await prisma.supportTicket.findUnique({
             where: { id: ticketId },
             include: { messages: { orderBy: { createdAt: 'asc' } } }
         });

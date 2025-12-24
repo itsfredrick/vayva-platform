@@ -2,15 +2,16 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 
-export default function CheckoutPage({ params }: { params: { slug: string } }) {
+export default function CheckoutPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = React.use(params);
     return (
         <div className="min-h-screen bg-[#142210] text-white">
             {/* Simple Checkout Header */}
             <header className="border-b border-white/5 bg-[#142210]">
                 <div className="max-w-5xl mx-auto px-4 h-20 flex items-center justify-between">
-                    <Link href={`/store/${params.slug}`} className="flex items-center gap-2">
+                    <Link href={`/store/${slug}`} className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-black font-bold">V</div>
                         <span className="font-bold text-lg hidden md:block">Vayva Store</span>
                     </Link>
@@ -69,7 +70,7 @@ export default function CheckoutPage({ params }: { params: { slug: string } }) {
                         </div>
                     </section>
 
-                    <Link href={`/store/${params.slug}/order-confirmation`}>
+                    <Link href={`/store/${slug}/order-confirmation`}>
                         <Button size="lg" className="w-full rounded-full bg-primary text-black hover:bg-primary/90 font-bold h-12">
                             Pay Now ₦ 24,000
                         </Button>

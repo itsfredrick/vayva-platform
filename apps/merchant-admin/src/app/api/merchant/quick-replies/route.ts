@@ -5,7 +5,7 @@ import { prisma } from '@vayva/db';
 
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
     const { title, content, category } = body;
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const count = await prisma.quickReply.count({ where: { merchantId: (session!.user as any).storeId } });
 

@@ -1,83 +1,124 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { GlassPanel, Button, Icon } from '@vayva/ui';
-import { BillingService } from '@/services/billing.service';
-import { Invoice } from '@/types/billing';
-import { Spinner } from '@/components/Spinner';
+import React, { useState, useEffect } from 'react';
+import { Download, FileText, Loader2 } from 'lucide-react';
+
+interface Invoice {
+    id: string;
+    invoiceNumber: string;
+    date: string;
+    amount: number;
+    currency: string;
+    status: string;
+    pdfUrl: string;
+}
 
 export default function InvoicesPage() {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const load = async () => {
-            const data = await BillingService.getInvoices();
-            setInvoices(data);
-            setIsLoading(false);
-        };
-        load();
+        fetchInvoices();
     }, []);
 
-    if (isLoading) return <div className="text-text-secondary flex items-center gap-2"><Spinner size="sm" /> Loading invoices...</div>;
+    const fetchInvoices = async () => {
+        try {
+            const res = await fetch('/api/billing/invoices');
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+            setInvoices(data.invoices || []);
+        } catch (error) {
+            console.error('Failed to load invoices', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-white">Invoice History</h3>
-                <Button variant="outline" size="sm" disabled>Download All</Button>
+    const handleDownload = (pdfUrl: string) => {
+        window.open(pdfUrl, '_blank');
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+    < Loader2 className = "w-6 h-6 animate-spin text-gray-400" />
+            </div >
+        );
+    }
+
+return (
+    <div className="space-y-6">
+        <div>
+            <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
+            <p className="text-gray-600 mt-1">
+                View and download your billing invoices
+            </p>
+        </div>
+
+        {invoices.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No invoices yet</p>
             </div>
-
-            <GlassPanel className="overflow-hidden">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-white/5 text-text-secondary uppercase text-xs font-medium">
+        ) : (
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                            <th className="px-6 py-4">Date</th>
-                            <th className="px-6 py-4">Amount</th>
-                            <th className="px-6 py-4">Status</th>
-                            <th className="px-6 py-4">Invoice ID</th>
-                            <th className="px-6 py-4 text-right">Action</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Invoice
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Amount
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Action
+                            </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {invoices.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-text-secondary">
-                                    No invoices found.
+                    <tbody className="divide-y divide-gray-200">
+                        {invoices.map((invoice) => (
+                            <tr key={invoice.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {invoice.invoiceNumber}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {new Date(invoice.date).toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    ₦{(invoice.amount / 100).toLocaleString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`
+                                            inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                            ${invoice.status === 'PAID' ? 'bg-green-100 text-green-800' : ''}
+                                            ${invoice.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : ''}
+                                            ${invoice.status === 'FAILED' ? 'bg-red-100 text-red-800' : ''}
+                                        `}>
+                                        {invoice.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                    <button
+                                        onClick={() => handleDownload(invoice.pdfUrl)}
+                                        className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        Download PDF
+                                    </button>
                                 </td>
                             </tr>
-                        ) : (
-                            invoices.map((invoice) => (
-                                <tr key={invoice.id} className="hover:bg-white/5 transition-colors">
-                                    <td className="px-6 py-4 text-white">
-                                        {new Date(invoice.date).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 text-white font-medium">
-                                        ₦{invoice.amount.toLocaleString()}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${invoice.status === 'paid' ? 'bg-green-500/10 text-green-500' :
-                                            invoice.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                'bg-red-500/10 text-red-500'
-                                            }`}>
-                                            {invoice.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-text-secondary">
-                                        {invoice.id}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <Button variant="ghost" size="sm" className="gap-2">
-                                            <Icon name={"Download" as any} size={14} />
-                                            Download
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
+                        ))}
                     </tbody>
                 </table>
-            </GlassPanel>
-        </div>
-    );
+            </div>
+        )}
+    </div>
+);
 }

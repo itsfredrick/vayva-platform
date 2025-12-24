@@ -1,30 +1,23 @@
 'use client';
 
-import { AdminShell } from '@/components/admin-shell';
-import { Button, cn } from '@vayva/ui';
-import { api } from '@/services/api';
-import Link from 'next/link';
+import React, { Suspense } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { RetailOverview as DashboardOverview } from '@/components/dashboard/overview/RetailOverview';
+
+function DashboardContent() {
+    const { isLoading } = useAuth();
+
+    if (isLoading) {
+        return <div className="p-12 text-center text-gray-400 font-medium">Loading your workspace...</div>;
+    }
+
+    return <DashboardOverview />;
+}
 
 export default function DashboardPage() {
     return (
-        <AdminShell
-            title="Overview"
-            breadcrumb="Dashboard"
-        >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
-                    <h3 className="text-text-secondary text-sm mb-1">Total Sales</h3>
-                    <div className="text-2xl font-bold text-white">$0.00</div>
-                </div>
-                <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
-                    <h3 className="text-text-secondary text-sm mb-1">Active Orders</h3>
-                    <div className="text-2xl font-bold text-white">0</div>
-                </div>
-                <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
-                    <h3 className="text-text-secondary text-sm mb-1">Store Status</h3>
-                    <div className="inline-flex items-center px-2 py-1 rounded bg-yellow-500/20 text-yellow-500 text-sm font-medium">Draft</div>
-                </div>
-            </div>
-        </AdminShell>
+        <Suspense fallback={<div className="p-12 text-center text-gray-400 font-medium">Initializing...</div>}>
+            <DashboardContent />
+        </Suspense>
     );
 }

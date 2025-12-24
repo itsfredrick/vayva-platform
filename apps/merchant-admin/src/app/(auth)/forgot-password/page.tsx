@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
         setError(null);
 
         try {
-            await AuthService.forgotPassword(email);
+            await AuthService.forgotPassword({ email });
             setSuccess(true);
         } catch (err: any) {
             console.error(err);

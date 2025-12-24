@@ -5,7 +5,7 @@ import { prisma } from '@vayva/db';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const session = await getServerSession(authOptions);
-    if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
 

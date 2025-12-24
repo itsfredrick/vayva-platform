@@ -3,11 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { StoreShell } from '@/components/storefront/store-shell';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 
-export default function CartPage({ params }: { params: { slug: string } }) {
+export default function CartPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = React.use(params);
     return (
-        <StoreShell slug={params.slug}>
+        <StoreShell slug={slug}>
             <div className="max-w-7xl mx-auto px-4 py-8 md:py-16">
                 <h1 className="text-3xl font-bold text-white mb-8">Shopping Cart</h1>
 
@@ -67,12 +68,12 @@ export default function CartPage({ params }: { params: { slug: string } }) {
                                 </div>
                             </div>
 
-                            <Link href={`/store/${params.slug}/checkout`}>
+                            <Link href={`/store/${slug}/checkout`}>
                                 <Button className="w-full h-12 rounded-full bg-primary text-black hover:bg-primary/90 font-bold mb-3">
                                     Checkout
                                 </Button>
                             </Link>
-                            <Link href={`/store/${params.slug}/collections/all`}>
+                            <Link href={`/store/${slug}/collections/all`}>
                                 <Button variant="ghost" className="w-full text-text-secondary hover:text-white">Continue Shopping</Button>
                             </Link>
                         </div>

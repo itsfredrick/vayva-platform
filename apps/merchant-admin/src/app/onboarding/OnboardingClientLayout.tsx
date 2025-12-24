@@ -1,11 +1,11 @@
 'use client';
 
 import { Suspense } from 'react';
-import { usePathname } from 'next/navigation';
-import { Button, Icon } from '@vayva/ui';
+import { usePathname, useRouter } from 'next/navigation';
+import { Button, Icon, cn } from '@vayva/ui';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { OnboardingStepId } from '@/types/onboarding';
-import Link from 'next/link';
+import { VayvaLogo } from '@/components/VayvaLogo';
 
 interface StepDef {
     id: OnboardingStepId;
@@ -15,31 +15,31 @@ interface StepDef {
 
 const STEPS: StepDef[] = [
     { id: 'welcome', path: '/onboarding/welcome', label: 'Welcome' },
-    { id: 'identity', path: '/onboarding/identity', label: 'Identity' },
-    { id: 'store-details', path: '/onboarding/store-details', label: 'Store Details' },
-    { id: 'brand', path: '/onboarding/brand', label: 'Branding' },
-    { id: 'delivery', path: '/onboarding/delivery', label: 'Pickup Location' },
-    { id: 'templates', path: '/onboarding/templates', label: 'Template' },
-    { id: 'products', path: '/onboarding/products', label: 'Products' },
-    { id: 'payments', path: '/onboarding/payments', label: 'Payments' },
+    { id: 'setup-path', path: '/onboarding/setup-path', label: 'Start' },
+    { id: 'business', path: '/onboarding/business', label: 'Business Basics' },
     { id: 'whatsapp', path: '/onboarding/whatsapp', label: 'WhatsApp' },
-    { id: 'kyc', path: '/onboarding/kyc', label: 'KYC' },
+    { id: 'templates', path: '/onboarding/templates', label: 'Templates' },
+    { id: 'order-flow', path: '/onboarding/order-flow', label: 'Order Flow' },
+    { id: 'payments', path: '/onboarding/payments', label: 'Payments' },
+    { id: 'delivery', path: '/onboarding/delivery', label: 'Delivery' },
+    { id: 'team', path: '/onboarding/team', label: 'Team' },
+    { id: 'kyc', path: '/onboarding/kyc', label: 'Identity' },
     { id: 'review', path: '/onboarding/review', label: 'Review' },
 ];
 
 export function OnboardingClientLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const { loading, completeOnboarding } = useOnboarding();
+    const router = useRouter();
+    const { loading, handleSaveExit } = useOnboarding();
 
     // Find current step index
-    // Fallback to -1 if we are on root /onboarding (which should redirect, but handling safe render)
     const currentStepIndex = STEPS.findIndex(s => pathname.startsWith(s.path));
+    const isFirstStep = currentStepIndex <= 0;
 
-    const handleSaveExit = () => {
-        // In reality, state is auto-saved on change/next. 
-        // We can just redirect to dashboard directly or via "complete" if valid.
-        // For "Save & Exit" usually implies incomplete, so we just go to dashboard.
-        window.location.href = '/admin';
+    const handleBack = () => {
+        if (currentStepIndex > 0) {
+            router.push(STEPS[currentStepIndex - 1].path);
+        }
     };
 
     if (loading) {
@@ -47,7 +47,7 @@ export function OnboardingClientLayout({ children }: { children: React.ReactNode
             <div className="min-h-screen bg-[#F5F5F7] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center animate-pulse">
-                        <span className="text-white font-bold text-xl">V</span>
+                        <VayvaLogo className="w-8 h-8 text-white" />
                     </div>
                     <p className="text-gray-500 font-medium">Loading setup...</p>
                 </div>
@@ -60,40 +60,37 @@ export function OnboardingClientLayout({ children }: { children: React.ReactNode
             {/* Header */}
             <header className="h-16 px-6 lg:px-8 bg-white border-b border-gray-200 flex items-center justify-between sticky top-0 z-50">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[#46EC13] rounded-lg flex items-center justify-center">
-                        <span className="font-bold text-black">V</span>
-                    </div>
-                    <span className="font-heading font-bold text-black text-lg">Setup Guide</span>
+                    <img src="/logo-icon.png" alt="Vayva Logo" className="w-16 h-16 object-contain" />
+                    <span className="font-bold text-lg">Vayva</span>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="hidden md:flex flex-col items-end mr-4">
-                        <span className="text-xs font-bold text-black uppercase tracking-wider">
-                            Step {currentStepIndex + 1} of {STEPS.length}
-                        </span>
-                        <div className="w-32 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
-                            <div
-                                className="h-full bg-[#46EC13] transition-all duration-500 ease-out"
-                                style={{ width: `${((currentStepIndex + 1) / STEPS.length) * 100}%` }}
-                            />
-                        </div>
-                    </div>
+                    {!isFirstStep && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleBack}
+                            className="text-gray-500 hover:text-black hover:bg-gray-100 flex items-center gap-2"
+                        >
+                            <Icon name="ArrowLeft" size={16} />
+                            Back
+                        </Button>
+                    )}
 
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={handleSaveExit}
                         className="text-gray-500 hover:text-black hover:bg-gray-100"
                     >
-                        Save & Exit
+                        Having trouble? Get help
                     </Button>
                 </div>
             </header>
 
             <main className="flex-1 flex max-w-[1440px] mx-auto w-full">
                 {/* Sidebar Stepper - Hidden on mobile */}
-                <aside className="hidden lg:block w-72 py-8 px-6 border-r border-gray-200 h-[calc(100vh-64px)] overflow-y-auto sticky top-16 bg-white/50 backdrop-blur-sm">
-                    <div className="space-y-1">
+                <aside className="hidden lg:flex flex-col w-72 py-8 px-6 border-r border-gray-200 h-[calc(100vh-64px)] overflow-y-auto sticky top-16 bg-white/50 backdrop-blur-sm">
+                    <div className="space-y-1 flex-1">
                         {STEPS.map((step, index) => {
                             const isActive = index === currentStepIndex;
                             const isCompleted = index < currentStepIndex;
@@ -102,30 +99,37 @@ export function OnboardingClientLayout({ children }: { children: React.ReactNode
                             return (
                                 <div
                                     key={step.id}
-                                    className={`
-                                        flex items-center gap-3 p-2.5 rounded-lg transition-all duration-200
-                                        ${isActive ? 'bg-white shadow-sm ring-1 ring-black/5' : 'hover:bg-black/5'}
-                                        ${isPending ? 'opacity-50' : 'opacity-100'}
-                                    `}
+                                    className={cn(
+                                        "flex items-center gap-3 p-2.5 rounded-lg transition-all duration-200",
+                                        isActive ? "bg-white shadow-sm ring-1 ring-black/5" : "hover:bg-black/5",
+                                        isPending ? "opacity-50" : "opacity-100"
+                                    )}
                                 >
-                                    <div className={`
-                                        w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors
-                                        ${isCompleted ? 'bg-black text-white' : isActive ? 'bg-[#46EC13] text-black' : 'bg-gray-200 text-gray-500'}
-                                    `}>
+                                    <div className={cn(
+                                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors",
+                                        isCompleted ? "bg-black text-white" : isActive ? "bg-[#46EC13] text-black" : "bg-gray-200 text-gray-500"
+                                    )}>
                                         {isCompleted ? <Icon name="Check" size={12} /> : index + 1}
                                     </div>
-                                    <span className={`text-sm font-medium ${isActive ? 'text-black' : 'text-gray-600'}`}>
+                                    <span className={cn("text-sm font-medium", isActive ? "text-black" : "text-gray-600")}>
                                         {step.label}
                                     </span>
                                 </div>
                             );
                         })}
                     </div>
+
+                    <div className="pt-6 mt-6 border-t border-gray-200">
+                        <Button variant="ghost" className="w-full justify-start text-gray-500 hover:text-black" onClick={handleSaveExit}>
+                            <Icon name="LogOut" size={16} className="mr-2" />
+                            Save & Exit
+                        </Button>
+                    </div>
                 </aside>
 
                 {/* Content Area */}
                 <div className="flex-1 min-w-0 bg-[#F5F5F7]">
-                    <div className="max-w-3xl mx-auto p-6 md:p-12 pb-32">
+                    <div className="w-full mx-auto p-6 md:p-12 pb-32">
                         <Suspense fallback={
                             <div className="h-64 flex items-center justify-center">
                                 <Icon name={"Loader2" as any} className="w-8 h-8 animate-spin text-gray-400" />

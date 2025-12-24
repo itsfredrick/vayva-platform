@@ -5,7 +5,7 @@ import { prisma } from '@vayva/db';
 
 export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const storeId = (session!.user as any).storeId;
     const { searchParams } = new URL(req.url);

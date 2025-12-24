@@ -1,79 +1,200 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { GlassPanel, Button, Icon } from '@vayva/ui';
-import { AccountService } from '@/services/account.service';
-import { SecurityState } from '@/types/account';
-import { Spinner } from '@/components/Spinner';
+import React, { useState } from 'react';
+import { Lock, Shield, Smartphone, Loader2, CheckCircle } from 'lucide-react';
 
 export default function SecurityPage() {
-    const [security, setSecurity] = useState<SecurityState | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [changingPassword, setChangingPassword] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    useEffect(() => {
-        const load = async () => {
-            const data = await AccountService.getSecurityState();
-            setSecurity(data);
-            setLoading(false);
-        };
-        load();
-    }, []);
+    const handlePasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setMessage(null);
 
-    if (loading || !security) return <div className="text-text-secondary"><Spinner size="sm" /> Loading security settings...</div>;
+        if (newPassword !== confirmPassword) {
+            setMessage({ type: 'error', text: 'New passwords do not match' });
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            setMessage({ type: 'error', text: 'Password must be at least 8 characters' });
+            return;
+        }
+
+        setChangingPassword(true);
+
+        try {
+            const res = await fetch('/api/security/password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to change password');
+            }
+
+            setMessage({ type: 'success', text: 'Password changed successfully!' });
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error: any) {
+            setMessage({ type: 'error', text: error.message });
+        } finally {
+            setChangingPassword(false);
+        }
+    };
 
     return (
-        <div className="space-y-6 max-w-2xl">
-            <GlassPanel className="p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Password</h3>
-                <div className="flex items-center justify-between">
+        <div className="max-w-3xl space-y-8">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Security Settings</h1>
+                <p className="text-gray-600 mt-1">
+                    Manage your password and security preferences
+                </p>
+            </div>
+
+            {/* Password Change */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                        <Lock className="w-5 h-5 text-blue-600" />
+                    </div>
                     <div>
-                        <p className="text-sm text-text-secondary">
-                            Last changed {new Date(security.lastPasswordChange).toLocaleDateString()}
+                        <h3 className="text-lg font-semibold text-gray-900">Change Password</h3>
+                        <p className="text-sm text-gray-600">Update your password regularly for security</p>
+                    </div>
+                </div>
+
+                {message && (
+                    <div className={`
+                        mb-6 p-4 rounded-lg border flex items-start gap-3
+                        ${message.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}
+                    `}>
+                        {message.type === 'success' && <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />}
+                        <p className={`text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+                            {message.text}
                         </p>
                     </div>
-                    <Button variant="outline">Change Password</Button>
-                </div>
-            </GlassPanel>
+                )}
 
-            <GlassPanel className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-white">Wallet PIN</h3>
-                    <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${security.walletPinSet ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                        {security.walletPinSet ? 'Active' : 'Not Set'}
-                    </span>
-                </div>
-                <p className="text-sm text-text-secondary mb-4">
-                    Your Wallet PIN is required for withdrawals and sensitive actions.
-                </p>
-                <div className="flex gap-2">
-                    <Button variant="primary">
-                        {security.walletPinSet ? 'Change PIN' : 'Set PIN'}
-                    </Button>
-                </div>
-            </GlassPanel>
+                <form onSubmit={handlePasswordChange} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                            Current Password
+                        </label>
+                        <input
+                            type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                    </div>
 
-            <GlassPanel className="p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Active Sessions</h3>
-                <div className="space-y-4">
-                    {security.activeSessions.map(session => (
-                        <div key={session.id} className="flex items-center justify-between p-3 rounded bg-white/5">
-                            <div className="flex items-center gap-3">
-                                <Icon name={"Laptop" as any} className="text-text-secondary" />
-                                <div>
-                                    <p className="text-white text-sm font-medium">{session.device} {session.isCurrent && <span className="text-green-500 text-xs ml-2">(Current)</span>}</p>
-                                    <p className="text-xs text-text-secondary">{session.location} • {session.lastActive}</p>
-                                </div>
-                            </div>
-                            {!session.isCurrent && (
-                                <Button variant="ghost" size="sm" className="text-red-500">Revoke</Button>
-                            )}
-                        </div>
-                    ))}
-                    <div className="pt-2">
-                        <Button variant="outline" className="w-full text-red-500 border-red-500/20 hover:bg-red-500/10">Sign out of all other sessions</Button>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                            New Password
+                        </label>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                            minLength={8}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                            Confirm New Password
+                        </label>
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={changingPassword}
+                        className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                        {changingPassword ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Updating...
+                            </>
+                        ) : (
+                            'Update Password'
+                        )}
+                    </button>
+                </form>
+            </div>
+
+            {/* Two-Factor Authentication */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-purple-50 rounded-lg">
+                        <Smartphone className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
+                        <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
                     </div>
                 </div>
-            </GlassPanel>
+
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-4">
+                        Two-factor authentication is currently <span className="font-semibold text-gray-900">disabled</span>
+                    </p>
+                    <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
+                        Enable 2FA
+                    </button>
+                </div>
+            </div>
+
+            {/* Active Sessions */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-orange-50 rounded-lg">
+                        <Shield className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Active Sessions</h3>
+                        <p className="text-sm text-gray-600">Manage devices where you're currently logged in</p>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div>
+                            <p className="font-medium text-gray-900">Current Session</p>
+                            <p className="text-sm text-gray-600">Chrome on Mac • Lagos, Nigeria</p>
+                        </div>
+                        <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                            Active Now
+                        </span>
+                    </div>
+                </div>
+
+                <button className="mt-4 text-sm text-red-600 hover:text-red-700 font-medium">
+                    Logout All Other Sessions
+                </button>
+            </div>
         </div>
     );
 }

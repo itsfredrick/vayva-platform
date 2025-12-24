@@ -186,7 +186,7 @@ export default function PricingPage() {
 
                                 <Link href="/signup">
                                     <Button
-                                        variant={tier.ctaVariant}
+                                        variant={tier.ctaVariant === 'default' ? 'primary' : tier.ctaVariant as any}
                                         className={`w-full ${tier.ctaVariant === 'default'
                                             ? 'bg-[#22C55E] hover:bg-[#16A34A] text-white'
                                             : 'border-2 border-gray-300'

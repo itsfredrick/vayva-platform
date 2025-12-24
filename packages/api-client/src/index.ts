@@ -1,6 +1,7 @@
 import { AuthMeResponse } from '@vayva/shared';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+// Use relative path to work with Next.js API routes in all environments
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 class ApiClient {
     private async request<T>(path: string, options: RequestInit = {}): Promise<T> {

@@ -5,7 +5,7 @@ import { ReportsService } from '@/lib/reports';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
     const session = await getServerSession(authOptions);
-    if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { type } = await params; // 'orders', 'payments', 'reconciliation'
 

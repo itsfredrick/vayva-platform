@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { MarketShell } from '@/components/market/market-shell';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 
 const MOCK_PRODUCT = {
     id: '1',
@@ -21,7 +21,8 @@ const MOCK_PRODUCT = {
     desc: 'Brand new factory sealed MacBook Pro M3 Max. 1 year Apple Warranty included. Fast shipping within Lagos.',
 };
 
-export default function MarketPDP({ params }: { params: { id: string } }) {
+export default function MarketPDP({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = React.use(params);
     const [qty, setQty] = useState(1);
 
     return (
