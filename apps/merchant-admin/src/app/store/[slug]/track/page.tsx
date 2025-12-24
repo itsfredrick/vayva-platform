@@ -2,11 +2,12 @@
 
 import React from 'react';
 import { StoreShell } from '@/components/storefront/store-shell';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 
-export default function TrackOrderPage({ params }: { params: { slug: string } }) {
+export default function TrackOrderPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = React.use(params);
     return (
-        <StoreShell slug={params.slug}>
+        <StoreShell slug={slug}>
             <div className="max-w-2xl mx-auto px-4 py-16">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-white mb-2">Track Your Order</h1>

@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -6,43 +7,52 @@ import { prisma } from '@vayva/db';
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!(session?.user as any)?.storeId) {
-        return new NextResponse('Unauthorized', { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { ids, mark_all } = body;
+    try {
+        const body = await req.json();
+        const { notificationId, markAll } = body;
+        const storeId = (session!.user as any).storeId;
 
-    if (mark_all) {
-        await prisma.notification.updateMany({
-            where: {
-                storeId: (session!.user as any).storeId,
-                isRead: false
-            },
-            data: {
-                isRead: true,
-                readAt: new Date()
-            }
-        });
-    } else if (ids && Array.isArray(ids) && ids.length > 0) {
-        await prisma.notification.updateMany({
-            where: {
-                storeId: (session!.user as any).storeId,
-                id: { in: ids },
-                isRead: false
-            },
-            data: {
-                isRead: true,
-                readAt: new Date()
-            }
-        });
-    }
-
-    const unreadCount = await prisma.notification.count({
-        where: {
-            storeId: (session!.user as any).storeId,
-            isRead: false
+        if (markAll) {
+            await prisma.notification.updateMany({
+                where: {
+                    storeId,
+                    isRead: false
+                },
+                data: {
+                    isRead: true,
+                    readAt: new Date()
+                }
+            });
+            return NextResponse.json({ success: true, message: 'All notifications marked as read' });
         }
-    });
 
-    return NextResponse.json({ ok: true, unread_count: unreadCount });
+        if (notificationId) {
+            // Verify ownership
+            const notification = await prisma.notification.findUnique({
+                where: { id: notificationId }
+            });
+
+            if (!notification || notification.storeId !== storeId) {
+                return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
+            }
+
+            const updated = await prisma.notification.update({
+                where: { id: notificationId },
+                data: {
+                    isRead: true,
+                    readAt: new Date()
+                }
+            });
+            return NextResponse.json({ success: true, notification: updated });
+        }
+
+        return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+
+    } catch (error) {
+        console.error('Error marking notification read:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
 }

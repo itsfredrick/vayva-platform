@@ -17,3 +17,6 @@ export * from './motion/index';
 export * from './components/legal/LegalContentRenderer';
 export * from './components/legal/LegalPageLayout';
 export * from './states/ErrorState';
+export * from './components/Modal';
+export * from './components/Button';
+export * from './components/Avatar';

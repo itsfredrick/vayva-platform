@@ -3,7 +3,7 @@
 import React from 'react';
 import { MarketShell } from '@/components/market/market-shell';
 import { MarketProductCard, MarketProduct } from '@/components/market/market-product-card';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 
 const MOCK_PRODUCTS: MarketProduct[] = [
     { id: '1', name: 'MacBook Pro M3 Max', price: '₦ 3,500,000', image: '', sellerName: 'TechDepot', sellerVerified: true, inStock: true, rating: 4.8 },
@@ -11,7 +11,8 @@ const MOCK_PRODUCTS: MarketProduct[] = [
     { id: '3', name: 'Magic Keyboard', price: '₦ 450,000', image: '', sellerName: 'TechDepot', sellerVerified: true, inStock: true, rating: 4.9 },
 ];
 
-export default function SellerProfilePage({ params }: { params: { id: string } }) {
+export default function SellerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = React.use(params);
     const sellerName = 'TechDepot'; // derived from params id in real app
 
     return (

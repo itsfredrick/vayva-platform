@@ -3,7 +3,7 @@
 import React from 'react';
 import { StoreShell } from '@/components/storefront/store-shell';
 import { ProductCard, Product } from '@/components/storefront/product-card';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 import { formatNGN } from '@/config/pricing';
 
 const MOCK_PRODUCTS: Product[] = [
@@ -15,11 +15,12 @@ const MOCK_PRODUCTS: Product[] = [
     { id: '6', name: 'Graphic Hoodie', price: formatNGN(25000), image: '', slug: 'graphic-hoodie', inStock: true },
 ];
 
-export default function CollectionPage({ params }: { params: { slug: string, collection: string } }) {
-    const collectionName = params.collection.charAt(0).toUpperCase() + params.collection.slice(1);
+export default function CollectionPage({ params }: { params: Promise<{ slug: string, collection: string }> }) {
+    const { slug, collection } = React.use(params);
+    const collectionName = collection.charAt(0).toUpperCase() + collection.slice(1);
 
     return (
-        <StoreShell slug={params.slug}>
+        <StoreShell slug={slug}>
             <div className="max-w-7xl mx-auto px-4 py-8">
 
                 {/* Header */}
@@ -48,7 +49,7 @@ export default function CollectionPage({ params }: { params: { slug: string, col
                 {/* Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
                     {MOCK_PRODUCTS.map(product => (
-                        <ProductCard key={product.id} product={product} storeSlug={params.slug} />
+                        <ProductCard key={product.id} product={product} storeSlug={slug} />
                     ))}
                 </div>
 

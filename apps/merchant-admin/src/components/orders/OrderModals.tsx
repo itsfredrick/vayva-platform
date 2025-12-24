@@ -19,11 +19,29 @@ export const DeliveryTaskModal = ({ isOpen, onClose, order }: DeliveryTaskModalP
 
     const handleSubmit = async () => {
         setLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setLoading(false);
-        onClose();
-        alert('Delivery Task Created!');
+        try {
+            const res = await fetch('/api/shipments/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orderId: order.id,
+                    deliveryOptionType: 'KWIK', // Defaulting to Kwik for now
+                    trackingCode: `TASK-${Date.now().toString().slice(-6)}` // Mock tracking
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to create shipment');
+
+            alert('Delivery Task Created & Order Fulfilled!');
+            onClose();
+            // Ideally trigger refresh of order details here
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            alert('Failed to create delivery task');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

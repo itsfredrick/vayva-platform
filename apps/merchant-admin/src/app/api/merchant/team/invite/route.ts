@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!(session?.user as any)?.id) return new NextResponse('Unauthorized', { status: 401 });
+    if (!(session?.user as any)?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const cookieStore = await cookies();
     const storeId = cookieStore.get('x-active-store-id')?.value;

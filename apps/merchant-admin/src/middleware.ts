@@ -9,9 +9,10 @@ export function middleware(request: NextRequest) {
     const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline'; 
-    style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data:;
-    font-src 'self';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    img-src 'self' blob: data: https://*.vayva.ng;
+    font-src 'self' https://fonts.gstatic.com;
+    connect-src 'self' http://localhost:4000 https://*.vayva.ng;
     object-src 'none';
     base-uri 'self';
     form-action 'self';

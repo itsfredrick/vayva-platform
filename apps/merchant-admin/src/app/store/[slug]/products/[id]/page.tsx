@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { StoreShell } from '@/components/storefront/store-shell';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 
 const MOCK_PRODUCT = {
     id: '1',
@@ -16,20 +16,21 @@ const MOCK_PRODUCT = {
     sizes: ['S', 'M', 'L', 'XL'],
 };
 
-export default function ProductDetailPage({ params }: { params: { slug: string, id: string } }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ slug: string, id: string }> }) {
+    const { slug, id } = React.use(params);
     const [selectedColor, setSelectedColor] = useState(MOCK_PRODUCT.colors[0]);
     const [selectedSize, setSelectedSize] = useState(MOCK_PRODUCT.sizes[1]);
     const [qty, setQty] = useState(1);
 
     return (
-        <StoreShell slug={params.slug}>
+        <StoreShell slug={slug}>
             <div className="max-w-7xl mx-auto px-4 py-8 md:py-16">
 
                 {/* Breadcrumb */}
                 <div className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-8 flex items-center gap-2">
-                    <Link href={`/store/${params.slug}`} className="hover:text-white">Home</Link>
+                    <Link href={`/store/${slug}`} className="hover:text-white">Home</Link>
                     <Icon name="ChevronRight" size={14} />
-                    <Link href={`/store/${params.slug}/collections/all`} className="hover:text-white">Products</Link>
+                    <Link href={`/store/${slug}/collections/all`} className="hover:text-white">Products</Link>
                     <Icon name="ChevronRight" size={14} />
                     <span className="text-white">{MOCK_PRODUCT.name}</span>
                 </div>

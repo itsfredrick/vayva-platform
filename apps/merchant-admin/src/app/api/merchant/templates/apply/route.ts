@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!(session?.user as any)?.id) return new NextResponse('Unauthorized', { status: 401 });
+    if (!(session?.user as any)?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Infer Store ID from header/cookie (Middleware usually sets this)
     // For V1 MVP, pass in body or look at cookie

@@ -6,19 +6,20 @@ import { AdminShell } from '@/components/admin-shell';
 import { ProductsService, Product } from '@/services/products';
 import { Button, Icon, cn } from '@vayva/ui';
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = React.use(params);
     const router = useRouter();
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const load = async () => {
-            const data = await ProductsService.getProduct(params.id);
+            const data = await ProductsService.getProduct(id);
             setProduct(data);
             setIsLoading(false);
         };
         load();
-    }, [params.id]);
+    }, [id]);
 
     if (isLoading) return <AdminShell title="Loading..."><div className="p-12 text-center">Loading Product...</div></AdminShell>;
     if (!product) return <AdminShell title="Not Found"><div className="p-12 text-center">Product not found.</div></AdminShell>;

@@ -6,7 +6,8 @@ import { CustomersService, Customer, CustomerOrderSummary, CustomerNote } from '
 import { CustomerOrdersTable, NotesSection } from '@/components/customers/CustomerComponents';
 import { Button, Icon, cn } from '@vayva/ui';
 
-export default function CustomerProfilePage({ params }: { params: { id: string } }) {
+export default function CustomerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = React.use(params);
     const [customer, setCustomer] = useState<Customer | null>(null);
     const [orders, setOrders] = useState<CustomerOrderSummary[]>([]);
     const [notes, setNotes] = useState<CustomerNote[]>([]);
@@ -18,9 +19,9 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
             setLoading(true);
             try {
                 const [custData, ordersData, notesData] = await Promise.all([
-                    CustomersService.getCustomer(params.id),
-                    CustomersService.getCustomerOrders(params.id),
-                    CustomersService.getNotes(params.id)
+                    CustomersService.getCustomer(id),
+                    CustomersService.getCustomerOrders(id),
+                    CustomersService.getNotes(id)
                 ]);
                 setCustomer(custData);
                 setOrders(ordersData);
@@ -30,10 +31,10 @@ export default function CustomerProfilePage({ params }: { params: { id: string }
             }
         };
         loadData();
-    }, [params.id]);
+    }, [id]);
 
     const handleAddNote = async (content: string) => {
-        const newNote = await CustomersService.addNote(params.id, content);
+        const newNote = await CustomersService.addNote(id, content);
         setNotes(prev => [newNote, ...prev]);
     };
 

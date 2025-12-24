@@ -11,7 +11,9 @@ export const Icon = ({ name, size = 24, ...props }: IconProps) => {
     const LucideIcon = icons[name];
 
     if (!LucideIcon) {
-        console.warn(`Icon ${name} not found`);
+        if (process.env.NODE_ENV === 'development') {
+            console.warn(`Icon ${name} not found`);
+        }
         return null;
     }
 

@@ -9,7 +9,7 @@ export async function POST(
 ) {
     const { type } = await params;
     const session = await getServerSession(authOptions);
-    if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
         const policy = await prisma.merchantPolicy.update({

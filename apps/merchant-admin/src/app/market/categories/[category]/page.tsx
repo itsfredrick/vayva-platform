@@ -11,8 +11,9 @@ const MOCK_PRODUCTS: MarketProduct[] = [
     { id: '5', name: 'PlayStation 5 Slim', price: '₦ 650,000', image: '', sellerName: 'GamingArea', sellerVerified: true, inStock: true, rating: 4.7 },
 ];
 
-export default function MarketCategoryPage({ params }: { params: { category: string } }) {
-    const categoryName = params.category.charAt(0).toUpperCase() + params.category.slice(1);
+export default function MarketCategoryPage({ params }: { params: Promise<{ category: string }> }) {
+    const { category } = React.use(params);
+    const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
 
     return (
         <MarketShell>

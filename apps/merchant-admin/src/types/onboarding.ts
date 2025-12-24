@@ -1,92 +1,95 @@
-export type PlanType = 'starter' | 'growth' | 'pro';
+export type PlanType = 'free' | 'growth' | 'pro';
 
 export type OnboardingStepId =
     | 'welcome'
-    | 'identity'
-    | 'store-details'
-    | 'brand'
-    | 'delivery'
-    | 'templates'
-    | 'products'
-    | 'payments'
+    | 'setup-path'
+    | 'business'
     | 'whatsapp'
+    | 'templates'
+    | 'order-flow'
+    | 'payments'
+    | 'delivery'
+    | 'team'
     | 'kyc'
-    | 'review';
+    | 'review'
+    | 'complete';
 
 export interface OnboardingState {
     isComplete: boolean;
     currentStep: OnboardingStepId;
     lastUpdatedAt: string; // ISO date
+    completedSteps?: string[]; // Track completed steps
 
-    // Step 1: Goals
-    enabledChannels?: {
-        storefront: boolean;
-        whatsappAi: boolean;
-        market: boolean;
+    // Master Prompt Global State
+    whatsappConnected: boolean;
+    templateSelected: boolean;
+    kycStatus: 'not_started' | 'pending' | 'verified' | 'failed';
+    plan: PlanType;
+
+    // Step 1: Welcome & Intent
+    intent?: {
+        segment: 'retail' | 'food' | 'services' | 'mixed';
     };
 
-    // Step 2: Identity (Merged into MerchantProfile usually, but kept here for wizard state)
-    identity?: {
-        fullName: string;
-        email: string;
-        phone: string;
-    };
+    // Step 2: Setup Path
+    setupPath?: 'guided' | 'blank';
 
-    // Step 3: Store Details
-    storeDetails?: {
-        storeName: string;
+    // Step 3: Business Basics
+    business?: {
+        name: string;
+        email: string; // Pre-filled where possible
         category: string;
-        state: string;
-        city: string;
-        slug: string;
+        logo?: string; // Base64 or URL
+        location: {
+            city: string;
+            state: string;
+        };
+        description?: string;
     };
 
-    // Step 4: Branding
-    branding?: {
-        logoUrl?: string;
-        coverUrl?: string;
-        brandColor?: string;
-    };
-
-    // Step 5: Pickup Location
-    pickupLocation?: {
-        address: string;
-        contactName: string;
-        phone: string;
-        notes?: string;
-    };
-
-    // Step 6: Template
-    template?: {
-        selectedTemplateId: string;
-        meta?: Record<string, any>;
-    };
-
-    // Step 7: Products (State tracking mainly, products saved to DB)
-    products?: {
-        hasAddedProducts: boolean;
-        count: number;
-    };
-
-    // Step 8: Payments
-    payments?: {
-        isConfigured: boolean;
-        paystackCustomerId?: string;
-    };
-
-    // Step 9: WhatsApp
+    // Step 4: WhatsApp (See whatsappConnected flag)
     whatsapp?: {
-        mode: 'own' | 'vayva';
-        number: string;
-        status: 'pending' | 'connected';
+        number?: string;
     };
 
-    // Step 10: KYC
+    // Step 5: Template (Only if setupPath === 'guided')
+    template?: {
+        id: string;
+        name: string;
+    };
+
+    // Step 6: Order Flow
+    orderFlow?: {
+        statuses: string[]; // e.g. ['New', 'Confirmed', 'Paid', ...]
+    };
+
+    // Step 7: Payments
+    payments?: {
+        method: 'transfer' | 'cash' | 'pos' | 'mixed';
+        details?: {
+            bankName?: string;
+            accountNumber?: string;
+            accountName?: string;
+        };
+        proofRequired: boolean; // "Attach proof"
+    };
+
+    // Step 8: Delivery
+    delivery?: {
+        policy: 'required' | 'sometimes' | 'pickup_only';
+        stages: string[]; // e.g. ['Preparing', 'Out for delivery', 'Delivered']
+        proofRequired: boolean;
+    };
+
+    // Step 9: Team
+    team?: {
+        type: 'solo' | 'small' | 'large';
+        invites?: Array<{ email: string; role: 'viewer' | 'staff' | 'admin' }>;
+    };
+
+    // Step 10: KYC (See kycStatus flag)
     kyc?: {
-        bvn?: string;
-        nin?: string;
-        ninLast4?: string;
-        bvnLast4?: string;
-        status: 'pending' | 'verified' | 'failed' | 'rejected' | 'not_started';
+        method?: 'bvn' | 'nin' | 'govt_id';
+        data?: Record<string, any>;
     };
 }

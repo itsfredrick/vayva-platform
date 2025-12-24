@@ -1,135 +1,122 @@
-'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { ControlCenterCard } from '@/components/control-center/ControlCenterCard';
-import { Button, GlassPanel, Icon } from '@vayva/ui';
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { ControlCenterState, SubscriptionPlan } from '@vayva/shared';
+import { ControlCenterHeader } from '@/components/control-center/ControlCenterHeader';
+import { TemplateGallery } from '@/components/control-center/TemplateGallery';
+import { DomainSettings } from '@/components/control-center/DomainSettings';
+import { SalesChannels } from '@/components/control-center/SalesChannels';
+import { IntegrationsList } from '@/components/control-center/IntegrationsList';
+import { UsageAndSystem } from '@/components/control-center/UsageAndSystem';
 
 export default function ControlCenterPage() {
-    const [config, setConfig] = React.useState<any>(null);
-    const [loading, setLoading] = React.useState(true);
+    const [state, setState] = useState<ControlCenterState | null>(null);
+    const [loading, setLoading] = useState(true);
+    // Mock user plan - in real app would come from useAuth/useMerchant
+    const currentPlan = SubscriptionPlan.GROWTH;
 
-    React.useEffect(() => {
-        // Mock fetching config and KYC status
-        const load = async () => {
-            // In a real app we'd fetch specific KYC status here or from context
-            // For now we assume the user is 'starter' and KYC is PENDING by default for this flow
-            // unless we toggled it. 
-            // Let's implement a visual toggle for testing if needed, or just stick to the requirements.
-            // Requirement: "If KYC verified: allow Publish Store".
-            setLoading(false);
+    useEffect(() => {
+        const fetchAll = async () => {
+            try {
+                const [templates, domains, integrations, channels, usage] = await Promise.all([
+                    fetch('/api/control-center/templates').then(r => r.json()),
+                    fetch('/api/control-center/domains').then(r => r.json()),
+                    fetch('/api/control-center/integrations').then(r => r.json()),
+                    fetch('/api/control-center/channels').then(r => r.json()),
+                    fetch('/api/control-center/usage').then(r => r.json())
+                ]);
+
+                // Construct initial system status
+                // In a real app, backend would aggregate this. Here we self-diagnose for demo.
+                const issues = [];
+                const webChannel = channels.find((c: any) => c.type === 'website');
+                const domainsActive = domains.some((d: any) => d.status === 'active');
+
+                if (webChannel?.status === 'enabled' && !domainsActive) {
+                    issues.push({
+                        id: 'iss_1',
+                        message: 'Website is enabled but no domain is active.',
+                        severity: 'warning' as const,
+                        actionUrl: '#domains'
+                    });
+                }
+
+                setState({
+                    templates,
+                    domains,
+                    integrations,
+                    channels,
+                    usage: {
+                        orders: usage.orders,
+                        products: usage.products,
+                        templates: usage.templates
+                    },
+                    systemStatus: {
+                        healthy: issues.length === 0,
+                        issues
+                    }
+                });
+
+            } catch (err) {
+                console.error("Failed to load control center", err);
+            } finally {
+                setLoading(false);
+            }
         };
-        load();
+
+        fetchAll();
     }, []);
 
-    // Real Status Hook
-    const { summary } = require('@/context/WalletContext').useWallet?.() || { summary: null };
-    const isKycVerified = summary?.kycStatus === 'VERIFIED';
-    const isPublished = config?.isPublished || false;
+    const handleUseTemplate = async (id: string) => {
+        // Optimistic update or reload
+        // In real app, call API
+        console.log("Use template", id);
+    };
+
+    const handleAddDomain = () => {
+        console.log("Add domain");
+    };
+
+    if (loading || !state) {
+        return (
+            <div className="animate-pulse space-y-8 max-w-7xl mx-auto pb-20">
+                <div className="h-20 bg-gray-100 rounded-xl w-full"></div>
+                <div className="h-64 bg-gray-100 rounded-xl w-full"></div>
+                <div className="h-40 bg-gray-100 rounded-xl w-full"></div>
+            </div>
+        );
+    }
 
     return (
-        <div className="mx-auto max-w-6xl space-y-8 p-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Control Center</h1>
-                    <p className="mt-2 text-text-secondary">Manage your storefront presence and settings.</p>
-                </div>
-                <div className="flex gap-3">
-                    <Link href="/admin/control-center/preview" target="_blank">
-                        <Button variant="secondary" className="gap-2">
-                            <Icon name={"Eye" as any} size={16} />
-                            Preview
-                        </Button>
-                    </Link>
-                    <Button
-                        variant="primary"
-                        className="gap-2"
-                        disabled={!isKycVerified || loading}
-                        isLoading={loading}
-                        onClick={async () => {
-                            setLoading(true);
-                            try {
-                                const response = await fetch('/v1/orders/publish', { method: 'POST' });
-                                if (response.ok) {
-                                    window.location.reload();
-                                }
-                            } catch (e) {
-                                console.error('Publish Error', e);
-                            } finally {
-                                setLoading(false);
-                            }
-                        }}
-                        title={!isKycVerified ? "Verify KYC to publish" : "Publish Store"}
-                    >
-                        <Icon name={"Globe" as any} size={16} />
-                        {isPublished ? 'Update Live Store' : 'Publish Store'}
-                    </Button>
-                </div>
-            </div>
+        <div className="max-w-7xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <ControlCenterHeader healthy={state.systemStatus.healthy} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <ControlCenterCard
-                    title="Templates"
-                    description="Choose and customize your store theme."
-                    icon="Layout"
-                    href="/admin/control-center/templates"
-                    status="Active: Vayva Storefront"
-                />
-                <ControlCenterCard
-                    title="Branding"
-                    description="Logos, colors, and typography."
-                    icon="Palette"
-                    href="/admin/control-center/branding"
-                />
-                <ControlCenterCard
-                    title="Pages"
-                    description="Manage About, Contact, and custom pages."
-                    icon="FileText"
-                    href="/admin/control-center/pages"
-                />
-                <ControlCenterCard
-                    title="Navigation"
-                    description="Configure header and footer links."
-                    icon="Menu"
-                    href="/admin/control-center/navigation"
-                />
-                <ControlCenterCard
-                    title="Policies"
-                    description="Returns, shipping, and privacy policies."
-                    icon="Shield"
-                    href="/admin/control-center/policies"
-                />
-                <ControlCenterCard
-                    title="Domains"
-                    description="Connect your custom domain."
-                    icon="Globe"
-                    href="/admin/control-center/domains"
-                    status="Coming Soon"
+            <TemplateGallery
+                templates={state.templates}
+                currentPlan={currentPlan}
+                onUseTemplate={handleUseTemplate}
+            />
 
-                />
-            </div>
+            <hr className="my-12 border-gray-100" />
 
-            {/* Quick Status / Gating Info */}
-            <GlassPanel className={`p-6 mt-8 flex items-center justify-between border-l-4 ${isKycVerified ? 'border-l-green-500 bg-green-500/5' : 'border-l-yellow-500 bg-yellow-500/5'}`}>
-                <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-full ${isKycVerified ? 'bg-green-500/20 text-green-500' : 'bg-yellow-500/20 text-yellow-500'}`}>
-                        <Icon name={(isKycVerified ? "CheckCircle" : "AlertCircle") as any} size={24} />
-                    </div>
-                    <div>
-                        <h4 className="font-medium text-white">{isPublished ? 'Store is Live' : (isKycVerified ? 'Ready to Publish' : 'Store is Offline')}</h4>
-                        <p className="text-sm text-text-secondary">
-                            {isPublished
-                                ? 'Your store is visible to customers.'
-                                : (isKycVerified ? 'You can now publish your store.' : 'Verify your business details (KYC) to go live.')}
-                        </p>
-                    </div>
-                </div>
-                {!isKycVerified && (
-                    <Link href="/admin/onboarding/review">
-                        <Button variant="outline" size="sm">Complete Verification</Button>
-                    </Link>
-                )}
-            </GlassPanel>
+            <DomainSettings
+                domains={state.domains}
+                onAddDomain={handleAddDomain}
+            />
+
+            <SalesChannels channels={state.channels} />
+
+            <hr className="my-12 border-gray-100" />
+
+            <IntegrationsList integrations={state.integrations} />
+
+            <hr className="my-12 border-gray-100" />
+
+            <UsageAndSystem
+                usage={state.usage}
+                systemStatus={state.systemStatus}
+            />
         </div>
     );
 }

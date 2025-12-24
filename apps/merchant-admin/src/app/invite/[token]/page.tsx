@@ -3,11 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { AuthShell } from '@/components/auth-shell';
-import { GlassPanel , Input , Button } from '@vayva/ui';
+import { GlassPanel, Input, Button } from '@vayva/ui';
 
-export default function AcceptInvitePage({ params }: { params: { token: string } }) {
+export default function AcceptInvitePage({ params }: { params: Promise<{ token: string }> }) {
     // Mock logic: token 'valid' shows form, 'invalid' shows error
-    const isValid = params.token !== 'invalid';
+    const { token } = React.use(params);
+    const isValid = token !== 'invalid';
 
     return (
         <AuthShell>

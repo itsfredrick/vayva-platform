@@ -1,126 +1,141 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Icon, GlassPanel } from '@vayva/ui';
+import { Button, Icon, cn } from '@vayva/ui';
 import { useOnboarding } from '@/context/OnboardingContext';
-import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
-export default function ReviewPage() {
-    const { state, completeOnboarding, goToStep } = useOnboarding();
-    const { user } = useAuth();
-    const router = useRouter();
-    const [loading, setLoading] = useState(false);
+// Master Prompt Step 11: Review (Expanded)
+// Change Impact: Warn if editing critical sections
+// Confidence Check: "I confirm" checkbox
+// No forced upgrades or spam
 
-    const isKycPending = (state?.kyc?.status as string) === 'pending' || (state?.kyc?.status as string) === 'PENDING';
-    const isKYCVerified = (state?.kyc?.status as string) === 'verified' || (state?.kyc?.status as string) === 'VERIFIED';
+export default function ReviewPage() {
+    const { state, completeOnboarding } = useOnboarding();
+    const [confirmed, setConfirmed] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const router = useRouter();
+
+    if (!state) return <div className="flex items-center justify-center min-h-screen"><Icon name="Loader" className="animate-spin" size={24} /></div>;
 
     const handleFinish = async () => {
-        setLoading(true);
-        // Save status
+        setIsSubmitting(true);
         await completeOnboarding();
-        // Logic inside completeOnboarding redirects to dashboard or we do it here
     };
 
-    if (!state) return null;
+    const handleEdit = (path: string, critical: boolean) => {
+        if (critical) {
+            // In a real app we might show a warning dialog here
+            // For now, prompt: "Changing this might reset dependent settings"
+            if (!confirm("Changing this section might require you to re-do subsequent steps. Continue?")) return;
+        }
+        router.push(path);
+    };
+
+    const sections = [
+        {
+            title: 'Identity & Location',
+            path: '/onboarding/business',
+            critical: false,
+            items: [
+                { label: 'Business Name', value: state.business?.name },
+                { label: 'Location', value: state.business?.location?.city },
+            ]
+        },
+        {
+            title: 'Operations Model',
+            path: '/onboarding/templates',
+            critical: true, // Changing template resets flow often
+            items: [
+                { label: 'Template', value: state.template?.name },
+                { label: 'Complexity', value: 'Standard' }, // derived
+            ]
+        },
+        {
+            title: 'Money & Logistics',
+            path: '/onboarding/payments',
+            critical: false,
+            items: [
+                { label: 'Payments', value: state.payments?.method === 'mixed' ? 'Multiple' : state.payments?.method },
+                { label: 'Delivery', value: state.delivery?.policy },
+            ]
+        },
+        {
+            title: 'Compliance',
+            path: '/onboarding/kyc',
+            critical: false,
+            items: [
+                { label: 'Verification', value: state.kycStatus === 'verified' ? 'Verified' : 'Pending' },
+                { label: 'Team', value: state.team?.type === 'solo' ? 'Solo' : `${state.team?.invites?.length || 0} Invites` },
+            ]
+        }
+    ];
 
     return (
-        <div className="max-w-2xl mx-auto pb-20">
-            <div className="mb-8 text-center">
-                <div className="w-16 h-16 bg-[#46EC13] rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-slow">
-                    <Icon name="Check" className="text-black" size={32} />
+        <div className="max-w-4xl mx-auto pb-24">
+            <div className="text-center mb-12">
+                <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold mb-4 border border-green-100">
+                    <Icon name="Check" size={14} /> Setup Complete
                 </div>
-                <h1 className="text-3xl font-bold text-black mb-2">You're almost there!</h1>
-                <p className="text-gray-600">Review your details before we launch your store.</p>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Review your system</h1>
+                <p className="text-gray-500">Confirm your configuration before launching.</p>
             </div>
 
-            <div className="space-y-6">
-                {/* Store Summary */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-black">Store Profile</h3>
-                        <Button variant="ghost" size="sm" onClick={() => goToStep('store-details')}>Edit</Button>
+            <div className="grid md:grid-cols-2 gap-6 mb-12">
+                {sections.map((section, idx) => (
+                    <div key={idx} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="font-bold text-gray-900">{section.title}</h3>
+                            <button
+                                onClick={() => handleEdit(section.path, section.critical)}
+                                className="text-gray-400 hover:text-black p-2 rounded-full hover:bg-gray-100 transition-colors"
+                            >
+                                <Icon name="Edit" size={16} />
+                            </button>
+                        </div>
+                        <div className="space-y-3 relative z-10">
+                            {section.items.map((item, i) => (
+                                <div key={i} className="flex justify-between text-sm">
+                                    <span className="text-gray-500">{item.label}</span>
+                                    <span className="font-medium text-gray-900 capitalize">{item.value || '-'}</span>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Subtle background decoration */}
+                        <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-gray-50 rounded-full z-0 group-hover:scale-110 transition-transform" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <p className="text-gray-500">Store Name</p>
-                            <p className="font-medium text-black">{state.storeDetails?.storeName}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500">Store URL</p>
-                            <p className="font-medium text-black">vayva.shop/{state.storeDetails?.slug}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500">Contact</p>
-                            <p className="font-medium text-black">{state.identity?.fullName}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500">Phone</p>
-                            <p className="font-medium text-black">{state.identity?.phone}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Operations */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-black">Operations</h3>
-                        <Button variant="ghost" size="sm" onClick={() => goToStep('delivery')}>Edit</Button>
-                    </div>
-                    <div className="text-sm space-y-2">
-                        <div>
-                            <p className="text-gray-500">Pickup Address</p>
-                            <p className="font-medium text-black">{state.pickupLocation?.address}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500">Primary Channel</p>
-                            <p className="font-medium text-black">Online Storefront {state.enabledChannels?.market ? '+ One Market' : ''}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Verification Status */}
-                <div className={`p-6 rounded-2xl border ${isKycPending ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
-                    <div className="flex items-start gap-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isKycPending ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
-                            <Icon name={isKycPending ? 'Clock' : 'ShieldCheck'} />
-                        </div>
-                        <div>
-                            <h3 className={`font-bold ${isKYCVerified ? 'text-green-900' : 'text-yellow-900'}`}>
-                                {isKYCVerified ? 'Identity Verified' : (isKycPending ? 'Verification Pending' : 'Submission Required')}
-                            </h3>
-                            <p className={`text-sm mt-1 ${isKYCVerified ? 'text-green-700' : 'text-yellow-700'}`}>
-                                {isKYCVerified
-                                    ? "Your identity has been verified. Your store will be live immediately after setup."
-                                    : (isKycPending
-                                        ? "Your store will be launched soon after verification. You can proceed to your dashboard now."
-                                        : "Please complete the identity verification step to launch your store.")
-                                }
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                ))}
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 lg:static lg:bg-transparent lg:border-none lg:p-0 lg:mt-8">
-                <div className="max-w-2xl mx-auto flex gap-4">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => goToStep('kyc')}
-                        className="flex-1 text-gray-500 hover:text-black hidden lg:flex"
-                    >
-                        Back
-                    </Button>
-                    <Button
-                        onClick={handleFinish}
-                        className="w-full !bg-black !text-white h-14 text-lg rounded-xl shadow-xl hover:scale-[1.02] transition-transform"
-                        isLoading={loading}
-                    >
-                        {isKycPending ? 'Go to Dashboard' : 'Launch My Store'}
-                        <Icon name="Rocket" className="ml-2" />
-                    </Button>
+            {/* Confidence Check & CTA */}
+            <div className="bg-white border border-gray-200 p-8 rounded-3xl shadow-xl max-w-lg mx-auto">
+                <div className="flex items-start gap-4 mb-6 cursor-pointer" onClick={() => setConfirmed(!confirmed)}>
+                    <div className={cn(
+                        "w-6 h-6 rounded border-2 flex items-center justify-center shrink-0 transition-colors mt-0.5",
+                        confirmed ? "bg-black border-black text-white" : "border-gray-300 bg-white"
+                    )}>
+                        {confirmed && <Icon name="Check" size={16} />}
+                    </div>
+                    <div className="text-sm select-none">
+                        <span className="font-bold text-gray-900 block mb-1">I confirm this setup matches my business.</span>
+                        <span className="text-gray-500">This helps Vayva personalize your dashboard defaults. You can change settings anytime.</span>
+                    </div>
                 </div>
+
+                <Button
+                    onClick={handleFinish}
+                    disabled={!confirmed || isSubmitting}
+                    className={cn(
+                        "!bg-black text-white h-14 w-full rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3",
+                        (!confirmed || isSubmitting) && "opacity-50 cursor-not-allowed"
+                    )}
+                >
+                    {isSubmitting ? (
+                        <>Launching Vayva...</>
+                    ) : (
+                        <>Finish & Launch <Icon name="ArrowRight" size={20} /></>
+                    )}
+                </Button>
             </div>
         </div>
     );

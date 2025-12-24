@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { OpsShell } from '@/components/ops/ops-shell';
 import { RiskChip } from '@/components/ops/risk-chip';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 
 const MOCK_MERCHANT = {
     id: '1',
@@ -19,7 +19,8 @@ const MOCK_MERCHANT = {
     gmv: '₦ 45.2M'
 };
 
-export default function OpsMerchantDetailPage({ params }: { params: { id: string } }) {
+export default function OpsMerchantDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = React.use(params);
     return (
         <OpsShell
             title={`Merchant: ${MOCK_MERCHANT.name}`}

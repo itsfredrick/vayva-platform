@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { Icon } from '@vayva/ui';
 
-export default function MerchantAdminDetail({ params }: { params: { id: string } }) {
+export default function MerchantAdminDetail({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = React.use(params);
     const [snapshot, setSnapshot] = useState<any>(null);
     const [activeTab, setActiveTab] = useState('overview');
     const [reason, setReason] = useState('');
@@ -12,10 +13,10 @@ export default function MerchantAdminDetail({ params }: { params: { id: string }
 
     useEffect(() => {
         // Fetch snapshot via Admin API
-        fetch(`/api/admin/ops/merchant-snapshot?merchant_id=${params.id}`)
+        fetch(`/api/admin/ops/merchant-snapshot?merchant_id=${id}`)
             .then(res => res.json())
             .then(data => setSnapshot(data));
-    }, [params.id]);
+    }, [id]);
 
     if (!snapshot) return <div className="p-8">Loading mission control...</div>;
 
@@ -27,7 +28,7 @@ export default function MerchantAdminDetail({ params }: { params: { id: string }
             if (modalAction === 'fix_readiness') {
                 res = await fetch('/api/admin/ops/merchant-snapshot/fix', {
                     method: 'POST',
-                    body: JSON.stringify({ merchant_id: params.id, mode: 'safe' })
+                    body: JSON.stringify({ merchant_id: id, mode: 'safe' })
                 });
             } else if (modalAction === 'grant_pro') {
                 // TODO: Endpoint
@@ -36,7 +37,7 @@ export default function MerchantAdminDetail({ params }: { params: { id: string }
             } else if (modalAction === 'force_publish') {
                 res = await fetch('/api/admin/store/publish/override', {
                     method: 'POST',
-                    body: JSON.stringify({ merchant_id: params.id, reason })
+                    body: JSON.stringify({ merchant_id: id, reason })
                 });
             }
 

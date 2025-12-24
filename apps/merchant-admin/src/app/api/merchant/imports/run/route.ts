@@ -6,7 +6,7 @@ import { validateRow } from '@/lib/imports/csv';
 
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
-    if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { jobId } = await req.json();
 

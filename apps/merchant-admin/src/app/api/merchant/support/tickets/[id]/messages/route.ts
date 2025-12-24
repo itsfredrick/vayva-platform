@@ -6,7 +6,7 @@ import { SupportService } from '@/lib/support';
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-    if (!(session!.user as any)?.storeId) return new NextResponse('Unauthorized', { status: 401 });
+    if (!(session!.user as any)?.storeId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
 

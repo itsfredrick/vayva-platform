@@ -6,11 +6,13 @@ import { prisma } from '@vayva/db';
 export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!(session?.user as any)?.storeId) {
-        return new NextResponse('Unauthorized', { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status') || 'unread'; // 'unread' | 'all'
+    const category = searchParams.get('category');
+    const type = searchParams.get('type');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const cursor = searchParams.get('cursor');
 
@@ -20,6 +22,14 @@ export async function GET(req: NextRequest) {
 
     if (status === 'unread') {
         where.isRead = false;
+    }
+
+    if (category && category !== 'all') {
+        where.category = category;
+    }
+
+    if (type && type !== 'all') {
+        where.type = type;
     }
 
     const notifications = await prisma.notification.findMany({
@@ -46,7 +56,11 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({
-        items: notifications,
+        items: notifications.map(n => ({
+            ...n,
+            type: n.severity, // Map DB severity to UI type
+            message: n.body   // Map DB body to UI message
+        })),
         next_cursor: nextCursor,
         unread_count: unreadCount
     });

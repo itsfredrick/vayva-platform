@@ -8,6 +8,9 @@ import { SplitAuthLayout } from '@/components/auth/SplitAuthLayout';
 
 export default function SignupPage() {
     const router = useRouter();
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [businessName, setBusinessName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -38,10 +41,9 @@ export default function SignupPage() {
             await AuthService.register({
                 email,
                 password,
-                firstName: '',
-                lastName: '',
-                phone: '',
-                plan: 'STARTER',
+                firstName,
+                lastName,
+                businessName,
             });
             // Redirect to verify page
             router.push(`/verify?email=${encodeURIComponent(email)}`);
@@ -94,6 +96,54 @@ export default function SignupPage() {
                         {error}
                     </div>
                 )}
+
+                {/* First Name */}
+                <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-900 mb-2">
+                        First name
+                    </label>
+                    <input
+                        id="firstName"
+                        type="text"
+                        placeholder="John"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                        className="w-full h-12 px-4 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                    />
+                </div>
+
+                {/* Last Name */}
+                <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-900 mb-2">
+                        Last name
+                    </label>
+                    <input
+                        id="lastName"
+                        type="text"
+                        placeholder="Doe"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                        className="w-full h-12 px-4 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                    />
+                </div>
+
+                {/* Business Name */}
+                <div>
+                    <label htmlFor="businessName" className="block text-sm font-medium text-gray-900 mb-2">
+                        Business name
+                    </label>
+                    <input
+                        id="businessName"
+                        type="text"
+                        placeholder="Your Business Ltd"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        required
+                        className="w-full h-12 px-4 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                    />
+                </div>
 
                 {/* Business Email */}
                 <div>

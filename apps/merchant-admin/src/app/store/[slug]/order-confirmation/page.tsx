@@ -3,11 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { StoreShell } from '@/components/storefront/store-shell';
-import { Button , Icon } from '@vayva/ui';
+import { Button, Icon } from '@vayva/ui';
 
-export default function OrderConfirmationPage({ params }: { params: { slug: string } }) {
+export default function OrderConfirmationPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = React.use(params);
     return (
-        <StoreShell slug={params.slug}>
+        <StoreShell slug={slug}>
             <div className="max-w-3xl mx-auto px-4 py-16 text-center">
                 <div className="w-20 h-20 bg-state-success rounded-full flex items-center justify-center text-black mx-auto mb-6">
                     <Icon name="Check" size={40} />
@@ -41,10 +42,10 @@ export default function OrderConfirmationPage({ params }: { params: { slug: stri
                 </div>
 
                 <div className="flex gap-4 justify-center">
-                    <Link href={`/store/${params.slug}/track`}>
+                    <Link href={`/store/${slug}/track`}>
                         <Button variant="outline" className="border-white/10 text-white hover:bg-white/5">Track Order</Button>
                     </Link>
-                    <Link href={`/store/${params.slug}/collections/all`}>
+                    <Link href={`/store/${slug}/collections/all`}>
                         <Button className="bg-primary text-black hover:bg-primary/90">Continue Shopping</Button>
                     </Link>
                 </div>
