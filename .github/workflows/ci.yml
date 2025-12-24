@@ -59,6 +59,8 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vayva_test?schema=public
         run: pnpm install --frozen-lockfile
 
       - name: Lint (fail fast)

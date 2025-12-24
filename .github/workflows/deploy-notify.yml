@@ -10,7 +10,7 @@ jobs:
     
     steps:
       - name: Notify Slack on Success
-        if: github.event.deployment_status.state == 'success'
+        if: github.event.deployment_status.state == 'success' && secrets.SLACK_WEBHOOK_URL != ''
         uses: slackapi/slack-github-action@v1
         with:
           payload: |
@@ -58,7 +58,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify Slack on Failure
-        if: github.event.deployment_status.state == 'failure'
+        if: github.event.deployment_status.state == 'failure' && secrets.SLACK_WEBHOOK_URL != ''
         uses: slackapi/slack-github-action@v1
         with:
           payload: |
