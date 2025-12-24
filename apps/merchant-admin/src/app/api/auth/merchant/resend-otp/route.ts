@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmail, updateUser } from '@/lib/mockDb';
+import { prisma } from '@vayva/db';
 
 export async function POST(request: NextRequest) {
     try {
@@ -15,7 +15,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Find user
-        const user = findUserByEmail(email);
+        const user = await prisma.user.findUnique({
+            where: { email }
+        });
+
         if (!user) {
             return NextResponse.json(
                 { error: 'User not found' },
@@ -23,12 +26,27 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Generate new verification code
+        // Generate new OTP code
         const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-        updateUser(user.id, { verificationCode: newCode });
 
-        // In production, send email here
-        console.log(`[DEV] New verification code for ${email}: ${newCode}`);
+        // Create new OTP
+        await prisma.otpCode.create({
+            data: {
+                userId: user.id,
+                code: newCode,
+                type: 'EMAIL_VERIFICATION',
+                expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+            }
+        });
+
+        // Send email via Resend
+        const { ResendEmailService } = await import('@/lib/email/resend');
+        await ResendEmailService.sendOTPEmail(email, newCode, user.firstName);
+
+        // Log to console in development
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[DEV] New verification code for ${email}: ${newCode}`);
+        }
 
         return NextResponse.json({
             message: 'Verification code sent successfully'

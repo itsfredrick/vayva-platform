@@ -8,7 +8,7 @@ interface CreateTicketBody {
     subject: string;
     description?: string;
     priority?: string;
-    category?: string;
+    type?: string;
     orderId?: string;
     conversationId?: string;
 }
@@ -16,20 +16,18 @@ interface CreateTicketBody {
 interface UpdateTicketBody {
     status?: string;
     priority?: string;
-    assignedTo?: string;
 }
 
 interface AddMessageBody {
-    body: string;
-    channel?: string; // INTERNAL, OUTBOUND
-    direction?: string;
+    message: string;
+    sender?: string;
+    senderId?: string;
     attachments?: any;
-    userId?: string;
 }
 
 export const SupportController = {
     createTicket: async (req: FastifyRequest<{ Body: CreateTicketBody }>, reply: FastifyReply) => {
-        const { storeId, customerId, subject, description, priority, category, orderId, conversationId } = req.body;
+        const { storeId, customerId, subject, description, priority, type, orderId, conversationId } = req.body;
 
         const ticket = await prisma.supportTicket.create({
             data: {
@@ -37,17 +35,17 @@ export const SupportController = {
                 customerId,
                 subject,
                 description,
-                priority: (priority || 'MEDIUM') as any,
-                category,
+                priority: (priority || 'medium') as any,
+                type: type || 'general',
                 orderId,
                 conversationId,
-                status: 'OPEN',
+                status: 'open',
                 messages: {
                     create: description ? [{
                         storeId,
-                        body: description,
-                        direction: 'INBOUND', // Assuming created from inquiry
-                        channel: 'INTERNAL'
+                        message: description,
+                        sender: 'merchant',
+                        senderId: null
                     } as any] : []
                 }
             }
@@ -56,13 +54,12 @@ export const SupportController = {
         return reply.status(201).send(ticket);
     },
 
-    getTickets: async (req: FastifyRequest<{ Querystring: { storeId: string, status?: string, assignedTo?: string } }>, reply: FastifyReply) => {
-        const { storeId, status, assignedTo } = req.query;
+    getTickets: async (req: FastifyRequest<{ Querystring: { storeId: string, status?: string } }>, reply: FastifyReply) => {
+        const { storeId, status } = req.query;
         const tickets = await prisma.supportTicket.findMany({
             where: {
                 storeId,
-                status: (status as any) || undefined,
-                assignedTo: assignedTo || undefined
+                status: (status as any) || undefined
             },
             include: {
                 customer: true,
@@ -99,20 +96,19 @@ export const SupportController = {
 
     addMessage: async (req: FastifyRequest<{ Params: { id: string }, Body: AddMessageBody }>, reply: FastifyReply) => {
         const { id } = req.params;
-        const { body, channel, direction, attachments, userId } = req.body;
+        const { message, sender, senderId, attachments } = req.body;
 
         const ticket = await prisma.supportTicket.findUnique({ where: { id } });
         if (!ticket) return reply.status(404).send({ error: "Ticket not found" });
 
-        const message = await prisma.ticketMessage.create({
+        const ticketMessage = await prisma.ticketMessage.create({
             data: {
                 storeId: ticket.storeId,
                 ticketId: id,
-                body,
-                channel: (channel || 'INTERNAL') as any,
-                direction: (direction || 'INTERNAL') as any,
-                attachments,
-                createdBy: userId
+                message,
+                sender: (sender || 'merchant') as any,
+                senderId,
+                attachments: attachments || []
             }
         });
 
@@ -122,6 +118,6 @@ export const SupportController = {
             data: { updatedAt: new Date() }
         });
 
-        return reply.status(201).send(message);
+        return reply.status(201).send(ticketMessage);
     }
 };

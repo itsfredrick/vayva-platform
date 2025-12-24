@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
-import { mockUsers } from '@/lib/mockDb';
+import { prisma } from '@vayva/db';
 
 // DEV ONLY: Helper endpoint to reset user password
 export async function POST(request: NextRequest) {
@@ -14,8 +14,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Email and newPassword required' }, { status: 400 });
     }
 
-    const userIndex = mockUsers.findIndex(u => u.email === email);
-    if (userIndex === -1) {
+    const user = await prisma.user.findUnique({
+        where: { email }
+    });
+
+    if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
@@ -23,7 +26,10 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hash(newPassword, 10);
 
     // Update password
-    mockUsers[userIndex].password = hashedPassword;
+    await prisma.user.update({
+        where: { email },
+        data: { password: hashedPassword }
+    });
 
     return NextResponse.json({
         message: 'Password reset successfully',
