@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockUsers } from '@/lib/mockDb';
+import { prisma } from '@vayva/db';
 
 // DEV ONLY: Helper endpoint to retrieve verification codes
 export async function GET(request: NextRequest) {
@@ -11,24 +11,55 @@ export async function GET(request: NextRequest) {
     const email = searchParams.get('email');
 
     if (!email) {
-        // Return all users with their verification codes
-        const users = mockUsers.map(u => ({
-            email: u.email,
-            verificationCode: u.verificationCode,
-            emailVerified: u.emailVerified
-        }));
-        return NextResponse.json({ users });
+        // Return all recent OTP codes
+        const otps = await prisma.otpCode.findMany({
+            where: {
+                expiresAt: {
+                    gte: new Date()
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        email: true,
+                        emailVerified: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            take: 10
+        });
+
+        return NextResponse.json({ otps });
     }
 
-    // Find specific user
-    const user = mockUsers.find(u => u.email === email);
+    // Find specific user's OTP
+    const user = await prisma.user.findUnique({
+        where: { email },
+        include: {
+            otpCodes: {
+                where: {
+                    expiresAt: {
+                        gte: new Date()
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                take: 1
+            }
+        }
+    });
+
     if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     return NextResponse.json({
         email: user.email,
-        verificationCode: user.verificationCode,
+        verificationCode: user.otpCodes[0]?.code || 'No active code',
         emailVerified: user.emailVerified
     });
 }

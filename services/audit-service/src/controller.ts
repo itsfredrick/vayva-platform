@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { prisma } from '@vayva/db';
+import { prisma, Prisma } from '@vayva/db';
 
 const auditSchema = z.object({
     action: z.string(),
@@ -15,18 +15,19 @@ const auditSchema = z.object({
 export const emitAuditHandler = async (req: FastifyRequest, reply: FastifyReply) => {
     const body = auditSchema.parse(req.body);
 
-    const event = await prisma.auditEvent.create({
+    const event = await prisma.auditLog.create({
         data: {
-            event: body.action,
+            action: body.action,
             actorId: body.userId || body.opsUserId || 'SYSTEM',
             actorType: body.userId ? 'USER' : (body.opsUserId ? 'OPS_USER' : 'SYSTEM'),
-            meta: {
-                ...body.metadata,
-                resource: body.resource,
-                resourceId: body.resourceId
-            },
+            actorLabel: body.userId || body.opsUserId || 'SYSTEM',
+            entityType: body.resource,
+            entityId: body.resourceId,
+            beforeState: Prisma.JsonNull,
+            afterState: body.metadata || Prisma.JsonNull,
             storeId: body.storeId,
-            ipAddress: (req.headers['x-forwarded-for'] as string) || req.ip
+            ipAddress: (req.headers['x-forwarded-for'] as string) || req.ip,
+            correlationId: body.metadata?.correlationId || `audit-${Date.now()}`
         }
     });
 
@@ -37,7 +38,7 @@ export const listAuditEventsHandler = async (req: FastifyRequest, reply: Fastify
     const storeId = req.headers['x-store-id'] as string;
     if (!storeId) return reply.status(400).send({ error: 'Store ID required' });
 
-    const events = await prisma.auditEvent.findMany({
+    const events = await prisma.auditLog.findMany({
         where: { storeId },
         orderBy: { createdAt: 'desc' },
         take: 100
