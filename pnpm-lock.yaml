@@ -18,6 +18,9 @@ importers:
       '@types/bcryptjs':
         specifier: ^3.0.0
         version: 3.0.0
+      '@types/jsonwebtoken':
+        specifier: ^9.0.10
+        version: 9.0.10
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.27
@@ -48,6 +51,9 @@ importers:
       eslint-plugin-react-hooks:
         specifier: ^7.0.1
         version: 7.0.1(eslint@8.57.1)
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
       prettier:
         specifier: ^3.0.0
         version: 3.7.4

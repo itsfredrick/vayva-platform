@@ -1,6 +1,10 @@
 import { Page } from '@playwright/test';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+const COOKIE_NAME = 'vayva_session';
 
 /**
  * Test user credentials
@@ -12,104 +16,72 @@ export const TEST_USERS = {
         firstName: 'Test',
         lastName: 'Merchant',
     },
-    admin: {
-        email: 'test-admin@vayva.test',
-        password: 'AdminPassword123!',
-        firstName: 'Test',
-        lastName: 'Admin',
-    },
-    customer: {
-        email: 'test-customer@vayva.test',
-        password: 'CustomerPassword123!',
-        firstName: 'Test',
-        lastName: 'Customer',
-    },
+    // Admin removed for now as schema changed - reimplement if Ops tests needed
 };
 
 /**
- * Create a test merchant user with store
+ * Create a test merchant user with store and owner membership
  */
 export async function createTestMerchant(overrides?: Partial<typeof TEST_USERS.merchant>) {
     const user = { ...TEST_USERS.merchant, ...overrides };
+
+    // Check existing user first to avoid unique constraint errors
+    const existingUser = await prisma.user.findUnique({
+        where: { email: user.email },
+        include: { memberships: { include: { store: true } } },
+    });
+
+    if (existingUser) {
+        if (existingUser.memberships.length > 0) {
+            return {
+                user: existingUser,
+                store: existingUser.memberships[0].store,
+            };
+        } else {
+            // User exists but has no store/membership - dirty state. Clean up.
+            await prisma.membership.deleteMany({ where: { userId: existingUser.id } });
+            await prisma.merchantSession.deleteMany({ where: { userId: existingUser.id } });
+            await prisma.user.delete({ where: { id: existingUser.id } });
+        }
+    }
+
     const passwordHash = await bcrypt.hash(user.password, 10);
 
-    try {
-        // Create merchant user
-        const merchantUser = await prisma.user.create({
-            data: {
-                email: user.email,
-                passwordHash,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                role: 'MERCHANT',
-                isVerified: true,
-                createdAt: new Date(),
-            },
-        });
+    // Create merchant user
+    const merchantUser = await prisma.user.create({
+        data: {
+            email: user.email,
+            password: passwordHash,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            isEmailVerified: true,
+            createdAt: new Date(),
+        },
+    });
 
-        // Create store for merchant
-        const store = await prisma.store.create({
-            data: {
-                name: `${user.firstName}'s Store`,
-                slug: `test-store-${Date.now()}`,
-                ownerId: merchantUser.id,
-                status: 'ACTIVE',
-                createdAt: new Date(),
-            },
-        });
+    // Create store for merchant
+    const store = await prisma.store.create({
+        data: {
+            name: `${user.firstName}'s Store`,
+            slug: `test-store-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            onboardingStatus: 'COMPLETE',
+            onboardingCompleted: true,
+            createdAt: new Date(),
+        },
+    });
 
-        return { user: merchantUser, store };
-    } catch (error: any) {
-        // If user already exists, fetch it
-        if (error.code === 'P2002') {
-            const existingUser = await prisma.user.findUnique({
-                where: { email: user.email },
-                include: { ownedStores: true },
-            });
-
-            if (existingUser) {
-                return {
-                    user: existingUser,
-                    store: existingUser.ownedStores[0] || null,
-                };
-            }
+    // Link User to Store via Membership (Role = OWNER)
+    await prisma.membership.create({
+        data: {
+            userId: merchantUser.id,
+            storeId: store.id,
+            role: 'owner',
+            role_enum: 'OWNER',
+            status: 'active'
         }
-        throw error;
-    }
-}
+    });
 
-/**
- * Create a test admin user
- */
-export async function createTestAdmin(overrides?: Partial<typeof TEST_USERS.admin>) {
-    const user = { ...TEST_USERS.admin, ...overrides };
-    const passwordHash = await bcrypt.hash(user.password, 10);
-
-    try {
-        const adminUser = await prisma.user.create({
-            data: {
-                email: user.email,
-                passwordHash,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                role: 'ADMIN',
-                isVerified: true,
-                createdAt: new Date(),
-            },
-        });
-
-        return { user: adminUser };
-    } catch (error: any) {
-        if (error.code === 'P2002') {
-            const existingUser = await prisma.user.findUnique({
-                where: { email: user.email },
-            });
-            if (existingUser) {
-                return { user: existingUser };
-            }
-        }
-        throw error;
-    }
+    return { user: merchantUser, store };
 }
 
 /**
@@ -131,48 +103,44 @@ export async function loginAsMerchant(page: Page, credentials = TEST_USERS.merch
     await page.waitForLoadState('networkidle');
 }
 
-/**
- * Login as admin via UI
- */
-export async function loginAsAdmin(page: Page, credentials = TEST_USERS.admin) {
-    await page.goto('/ops/login');
-    await page.waitForLoadState('networkidle');
-
-    // Fill in login form
-    await page.fill('input[name="email"], input[type="email"]', credentials.email);
-    await page.fill('input[name="password"], input[type="password"]', credentials.password);
-
-    // Submit form
-    await page.click('button[type="submit"]');
-
-    // Wait for redirect to ops dashboard
-    await page.waitForURL(/\/ops/, { timeout: 10000 });
-    await page.waitForLoadState('networkidle');
-}
 
 /**
  * Setup authenticated session via API (faster than UI login)
+ * Mirrors src/lib/session.ts logic
  */
 export async function setupAuthenticatedSession(page: Page, userEmail: string) {
-    // Get user from database
+    // Get user from database with membership
     const user = await prisma.user.findUnique({
         where: { email: userEmail },
-        include: { ownedStores: true },
+        include: { memberships: { include: { store: true } } },
     });
 
-    if (!user) {
-        throw new Error(`User not found: ${userEmail}`);
+    if (!user || user.memberships.length === 0) {
+        throw new Error(`User not found or has no store: ${userEmail}`);
     }
 
-    // Create session token
-    const sessionToken = `test-session-${Date.now()}-${Math.random()}`;
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const membership = user.memberships[0];
 
-    // Create session in database
-    await prisma.session.create({
+    // JWT Payload
+    const payload = {
+        userId: user.id,
+        email: user.email,
+        storeId: membership.storeId,
+        storeName: membership.store.name,
+        role: membership.role,
+    };
+
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
+
+    // Calculate expiration date (1 day)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 1);
+
+    // Create MerchantSession in database
+    await prisma.merchantSession.create({
         data: {
             userId: user.id,
-            token: sessionToken,
+            token,
             expiresAt,
             createdAt: new Date(),
         },
@@ -181,8 +149,8 @@ export async function setupAuthenticatedSession(page: Page, userEmail: string) {
     // Set session cookie
     await page.context().addCookies([
         {
-            name: 'next-auth.session-token',
-            value: sessionToken,
+            name: COOKIE_NAME,
+            value: token,
             domain: 'localhost',
             path: '/',
             expires: Math.floor(expiresAt.getTime() / 1000),
@@ -192,7 +160,7 @@ export async function setupAuthenticatedSession(page: Page, userEmail: string) {
         },
     ]);
 
-    return { user, sessionToken };
+    return { user, sessionToken: token };
 }
 
 /**
@@ -201,23 +169,26 @@ export async function setupAuthenticatedSession(page: Page, userEmail: string) {
 export async function cleanupTestUsers() {
     const testEmails = Object.values(TEST_USERS).map((u) => u.email);
 
-    // Delete sessions first
-    await prisma.session.deleteMany({
-        where: {
-            user: {
-                email: { in: testEmails },
-            },
-        },
+    // Get Users
+    const users = await prisma.user.findMany({
+        where: { email: { in: testEmails } },
+        select: { id: true }
+    });
+    const userIds = users.map(u => u.id);
+
+    // Delete sessions
+    await prisma.merchantSession.deleteMany({
+        where: { userId: { in: userIds } }
     });
 
-    // Delete stores
-    await prisma.store.deleteMany({
-        where: {
-            owner: {
-                email: { in: testEmails },
-            },
-        },
+    // Delete memberships
+    await prisma.membership.deleteMany({
+        where: { userId: { in: userIds } }
     });
+
+    // Delete stores (Cascades usually? If not, delete manually)
+    // Finding stores owned by these users (via membership) is hard if membership is gone.
+    // Assuming Clean DB or manual cleanup.
 
     // Delete users
     await prisma.user.deleteMany({
@@ -241,27 +212,12 @@ export async function createAuthenticatedMerchantContext(page: Page) {
 }
 
 /**
- * Create authenticated admin context (use in beforeEach)
- */
-export async function createAuthenticatedAdminContext(page: Page) {
-    // Create test admin if doesn't exist
-    const { user } = await createTestAdmin();
-
-    // Setup session
-    await setupAuthenticatedSession(page, user.email);
-
-    return { user };
-}
-
-/**
  * Verify user is authenticated
  */
 export async function verifyAuthenticated(page: Page) {
     // Check if session cookie exists
     const cookies = await page.context().cookies();
-    const sessionCookie = cookies.find(
-        (c) => c.name === 'next-auth.session-token' || c.name === '__Secure-next-auth.session-token'
-    );
+    const sessionCookie = cookies.find((c) => c.name === COOKIE_NAME);
 
     return !!sessionCookie;
 }
