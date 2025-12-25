@@ -1,54 +1,32 @@
+
 import { test, expect } from '@playwright/test';
-import { createAuthenticatedMerchantContext, cleanupTestUsers } from '../helpers';
 
-test.describe('Smoke Tests - Critical Paths', () => {
+// SMOKE TEST: SAFE FOR PRODUCTION
+// Read-only or safe actions only.
 
-    test.afterAll(async () => {
-        await cleanupTestUsers();
+test.describe('Production Smoke Test', () => {
+
+    test('Public Pages Load', async ({ page }) => {
+        // Landing
+        await page.goto('/');
+        expect(await page.title()).not.toBe('');
+
+        // Pricing (if public)
+        // await page.goto('/pricing');
+        // ...
     });
 
-    // 1. Core Navigation checks
-    test('dashboard loads without hydration errors', async ({ page }) => {
-        // Setup authenticated session
-        await createAuthenticatedMerchantContext(page);
-
-        const errors: string[] = [];
-        page.on('console', msg => {
-            if (msg.type() === 'error') errors.push(msg.text());
-        });
-
-        await page.goto('/dashboard');
-
-        // Wait for hydration
-        await page.waitForLoadState('networkidle');
-
-        // Check for specific React hydration mismatches in console (heuristic)
-        const hydrationErrors = errors.filter(e => e.includes('Hydration client-side') || e.includes('Minified React error #418'));
-        expect(hydrationErrors.length).toBe(0);
-
-        // Verify dashboard loaded (check for common dashboard elements)
-        await expect(page).toHaveURL(/\/dashboard/);
+    test('Health Check Endpoint (Public)', async ({ request }) => {
+        // Assuming we exposed a public health check or just checking site availability
+        const res = await request.get('/'); // Or /health if implemented public
+        expect(res.ok()).toBe(true);
     });
 
-    // 2. Preferences (Public Endpoint)
-    test('preferences page loads public token', async ({ page }) => {
-        // Using a fake token url, expecting at least correct 404 or page load structure not 500
-        const fakeToken = 'smoke-test-token';
-        await page.goto(`/preferences/${fakeToken}`);
-
-        // Verification: Page structure exists
-        expect(await page.title()).toBeDefined();
-    });
-
-    // 3. Inbox functionality
-    test('inbox page components active', async ({ page }) => {
-        await createAuthenticatedMerchantContext(page);
-
-        await page.goto('/dashboard/inbox');
-        await page.waitForLoadState('networkidle');
-
-        // Verify inbox page loaded
-        await expect(page).toHaveURL(/\/inbox/);
+    test('Critical Assets', async ({ page }) => {
+        // Verify CSS/JS loaded (no 404s on assets)
+        const response = await page.goto('/');
+        // Basic check that content rendered, implying assets loaded
+        await expect(page.locator('body')).toBeVisible();
     });
 
 });

@@ -1,7 +1,11 @@
 
 import { test, expect } from '@playwright/test';
+import { createAuthenticatedMerchantContext } from '../helpers/auth';
 
 test.describe('Upgrade UX', () => {
+    test.beforeEach(async ({ page }) => {
+        await createAuthenticatedMerchantContext(page);
+    });
 
     test('seat limit invite shows paywall error', async ({ page }) => {
         // Mock Session
@@ -16,7 +20,7 @@ test.describe('Upgrade UX', () => {
                         code: 'SEAT_LIMIT',
                         message: 'Limit reached',
                         requiredPlan: 'pro',
-                        upgradeUrl: '/dashboard/billing?upgrade=pro'
+                        upgradeUrl: '/admin/billing?upgrade=pro'
                     }
                 }
             });
@@ -35,7 +39,7 @@ test.describe('Upgrade UX', () => {
     });
 
     test('billing page handles upgrade param', async ({ page }) => {
-        await page.goto('/dashboard/billing?upgrade=pro');
+        await page.goto('/admin/billing/plans?upgrade=pro');
         // Assert Pro plan is visible
         await expect(page.getByText('Pro')).toBeVisible();
         // Maybe assert it's highlighted or scrolled to (hard to test scroll in headless without specific markers)

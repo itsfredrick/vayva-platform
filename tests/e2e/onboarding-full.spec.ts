@@ -68,7 +68,7 @@ test.describe('Onboarding Full Flow', () => {
 
         // Test "Go to Dashboard" works
         await page.click('text=Go to Dashboard');
-        await expect(page).toHaveURL('/dashboard');
+        await expect(page).toHaveURL('/admin');
     });
 
     test('resume onboarding from mid-point', async ({ page }) => {

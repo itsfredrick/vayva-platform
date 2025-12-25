@@ -24,11 +24,11 @@ test.describe('Dashboard Navigation Guard', () => {
             await createAuthenticatedMerchantContext(page);
 
             // Navigate to dashboard
-            await page.goto('/dashboard');
+            await page.goto('/admin');
             await page.waitForLoadState('networkidle');
 
             // Verify we're on dashboard (not redirected to login)
-            await expect(page).toHaveURL(/\/dashboard/);
+            await expect(page).toHaveURL(/\/admin/);
 
             // Check that navigation links exist
             const navLinks = page.locator('nav a, [role="navigation"] a');
@@ -44,7 +44,7 @@ test.describe('Dashboard Navigation Guard', () => {
             await createAuthenticatedMerchantContext(page);
 
             // Test navigation to different sections
-            const sections = ['/dashboard', '/dashboard/orders', '/dashboard/products'];
+            const sections = ['/admin', '/admin/orders', '/admin/products'];
 
             for (const section of sections) {
                 await page.goto(section);

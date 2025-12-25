@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // V1: Direct call to Gateway. 
 // Ideally via Next.js Proxy/BFF but keeping it simple client-side for "A1"
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export const api = axios.create({
     baseURL: API_URL,

@@ -30,6 +30,7 @@ Copy and paste these exact values into the **Environment Variables** section.
 | `NEXTAUTH_URL` | Same as `NEXT_PUBLIC_APP_URL` |
 | `NEXT_PUBLIC_API_URL` | `https://your-project-name.vercel.app/api` |
 | `NEXTAUTH_SECRET` | Generate a new random secure string (e.g., `openssl rand -base64 32`). |
+| `JWT_SECRET` | Same as `NEXTAUTH_SECRET` (used for custom sessions). |
 
 ### 🟢 Values to Copy (From your local setup)
 

@@ -3,9 +3,12 @@ import { test, expect } from '@playwright/test';
 import { AnalyticsService } from '../../apps/merchant-admin/src/lib/analytics/analyticsService';
 import { prisma } from '@vayva/db';
 
+import { createAuthenticatedMerchantContext } from '../helpers/auth';
+
 test.describe('Analytics System', () => {
 
     test('can ingest event via service', async () => {
+        // ... (no change needed here as it is service test)
         const merchantId = 'test_ana_merch';
 
         await AnalyticsService.trackEvent({
@@ -27,10 +30,22 @@ test.describe('Analytics System', () => {
     // API test omitted, relying on service test + dashboard visual
 
     test('merchant dashboard shows analytics', async ({ page }) => {
-        await page.goto('/dashboard/analytics');
+        await createAuthenticatedMerchantContext(page);
+
+        await page.route('**/analytics/overview*', async route => {
+            await route.fulfill({
+                json: {
+                    kpis: { netSales: 50000, orders: 10, paymentSuccessRate: 98, deliverySuccessRate: 95 },
+                    healthScore: 85
+                }
+            });
+        });
+
+        await page.goto('/admin/analytics');
         await page.screenshot({ path: 'analytics-dashboard.png' });
-        await expect(page.getByText('Analytics 📊')).toBeVisible();
-        await expect(page.getByText('Total Visitors')).toBeVisible();
+        await expect(page.getByText('Business Overview')).toBeVisible();
+        await expect(page.getByText('Net Sales')).toBeVisible();
     });
+
 
 });

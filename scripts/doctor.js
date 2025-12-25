@@ -2,12 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const net = require('net');
 
-const REQUIRED_PORTS = [3000, 3001, 3002, 3003];
+const REQUIRED_PORTS = [3000, 3001, 3002, 3004];
 const APPS = [
     { name: 'Merchant Admin', port: 3000 },
     { name: 'Storefront', port: 3001 },
-    { name: 'Marketplace', port: 3002 },
-    { name: 'Ops Console', port: 3003 }
+    { name: 'Ops Console', port: 3002 },
+    { name: 'Marketplace', port: 3004 }
 ];
 
 console.log('\x1b[1m\x1b[36m%s\x1b[0m', '🩺 Vayva Doctor: Checking System Health...\n');

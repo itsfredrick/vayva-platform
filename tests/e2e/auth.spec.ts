@@ -15,7 +15,7 @@ test.describe('Authentication Flows', () => {
     });
 
     test('protected route redirects to login', async ({ page }) => {
-        await page.goto('/dashboard');
+        await page.goto('/admin');
         await expect(page).toHaveURL(/.*signin.*/); // Changed from login to signin
     });
 

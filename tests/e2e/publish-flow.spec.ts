@@ -15,7 +15,7 @@ test.describe('Publish Flow', () => {
             await route.fulfill({ json });
         });
 
-        await page.goto('/dashboard');
+        await page.goto('/admin');
 
         // Check for Blocked UI
         await expect(page.getByText('Issues preventing Go Live')).toBeVisible();
@@ -41,7 +41,7 @@ test.describe('Publish Flow', () => {
             await route.fulfill({ json: { success: true } });
         });
 
-        await page.goto('/dashboard');
+        await page.goto('/admin');
 
         // Click Go Live
         await page.getByRole('button', { name: 'Go Live Now' }).click();

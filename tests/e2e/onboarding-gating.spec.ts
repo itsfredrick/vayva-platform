@@ -40,12 +40,12 @@ test.describe.skip('Onboarding Gating System', () => {
         expect(page.url()).toContain('/onboarding');
 
         // 4. Attempt to navigate directly to dashboard
-        await page.goto('http://localhost:3000/admin/dashboard');
+        await page.goto('http://localhost:3000/admin/admin');
 
         // 5. Should be redirected back to onboarding
         await page.waitForURL(/\/onboarding/);
         expect(page.url()).toContain('/onboarding');
-        expect(page.url()).not.toContain('/admin/dashboard');
+        expect(page.url()).not.toContain('/admin/admin');
     });
 
     test('Save & Exit logs user out and allows resume', async ({ page }) => {
@@ -130,8 +130,8 @@ test.describe.skip('Onboarding Gating System', () => {
         }
 
         // 3. After completion, should redirect to dashboard
-        await page.waitForURL(/\/admin\/dashboard/, { timeout: 10000 });
-        expect(page.url()).toContain('/admin/dashboard');
+        await page.waitForURL(/\/admin\/admin/, { timeout: 10000 });
+        expect(page.url()).toContain('/admin/admin');
 
         // 4. Verify dashboard displays signup data
         // Look for welcome message with first name
@@ -159,7 +159,7 @@ test.describe.skip('Onboarding Gating System', () => {
 
         // Test various dashboard routes
         const dashboardRoutes = [
-            '/admin/dashboard',
+            '/admin/admin',
             '/admin/settings',
             '/admin/orders',
             '/admin/products',
@@ -212,7 +212,7 @@ test.describe.skip('Onboarding Gating System', () => {
         // In reality, you'd go through all steps properly
 
         // 4. Navigate to dashboard
-        await page.goto('http://localhost:3000/admin/dashboard');
+        await page.goto('http://localhost:3000/admin/admin');
 
         // 5. Verify firstName appears in welcome message
         const welcomeText = page.locator(`text=/Welcome back.*${testData.firstName}/i`);

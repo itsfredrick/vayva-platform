@@ -3,8 +3,8 @@ const https = require('http');
 const ENDPOINTS = [
     { name: 'Merchant Admin', url: 'http://localhost:3000/api/health' },
     { name: 'Storefront', url: 'http://localhost:3001/api/health' },
-    { name: 'Marketplace', url: 'http://localhost:3002/api/health' },
-    { name: 'Ops Console', url: 'http://localhost:3003/api/health' }
+    { name: 'Ops Console', url: 'http://localhost:3002/api/health' },
+    { name: 'Marketplace', url: 'http://localhost:3004/api/health' }
 ];
 
 console.log('🔥 Vayva Smoke Test: Checking Application Health...\n');
