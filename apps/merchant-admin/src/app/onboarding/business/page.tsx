@@ -148,6 +148,7 @@ export default function BusinessBasicsPage() {
                         </label>
                         <Input
                             id="businessName"
+                            data-testid="onboarding-business-name"
                             placeholder="e.g. Lagos Kitchen"
                             value={formData.name}
                             onChange={(e) => handleChange('name', e.target.value)}
@@ -208,6 +209,7 @@ export default function BusinessBasicsPage() {
 
                 <div className="mt-10">
                     <Button
+                        data-testid="onboarding-business-continue"
                         onClick={handleContinue}
                         disabled={!isFormValid}
                         className="!bg-black text-white h-12 px-8 rounded-xl text-base shadow-lg hover:shadow-xl transition-all w-full md:w-auto"

@@ -68,7 +68,8 @@ export function GoLiveCard() {
     if (loading) return <div className="h-48 bg-gray-100 rounded-xl animate-pulse"></div>;
     if (!status) return null;
 
-    const { isLive, readiness } = status;
+    const isLive = status?.isLive;
+    const readiness = status?.readiness || {};
     const isReady = readiness.level === 'ready';
     const blockers = readiness.issues?.filter((i: any) => i.severity === 'blocker') || [];
 

@@ -1,17 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { StoreShell } from '@/components/storefront/store-shell';
 import { ProductCard, Product } from '@/components/storefront/product-card';
 import { Button, Icon } from '@vayva/ui';
 
-const MOCK_PRODUCTS: Product[] = [
-    { id: '1', name: 'Premium Cotton Tee', price: '₦ 12,000', image: '', slug: 'premium-cotton-tee', inStock: true },
-    { id: '2', name: 'Slim Fit Chinos', price: '₦ 18,500', image: '', slug: 'slim-fit-chinos', inStock: true },
-    { id: '3', name: 'Vintage Denim Jacket', price: '₦ 45,000', image: '', slug: 'vintage-denim-jacket', inStock: false },
-    { id: '4', name: 'Leather Sneakers', price: '₦ 35,000', image: '', slug: 'leather-sneakers', inStock: true },
-];
 
 const CATEGORIES = [
     { name: 'Men', image: 'man' },
@@ -22,6 +16,32 @@ const CATEGORIES = [
 
 export default function StoreHomepage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = React.use(params);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Fetch real products from API
+        fetch('/api/products/items?status=ACTIVE&limit=4')
+            .then(res => res.json())
+            .then(data => {
+                // Transform API data to Product format
+                const transformedProducts = data.map((item: any) => ({
+                    id: item.id,
+                    name: item.name,
+                    price: `₦ ${item.price.toLocaleString()}`,
+                    image: '', // TODO: Add product images
+                    slug: item.id,
+                    inStock: item.inventory?.quantity > 0
+                }));
+                setProducts(transformedProducts);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Failed to fetch products:', err);
+                setLoading(false);
+            });
+    }, []);
+
     return (
         <StoreShell slug={slug}>
 
@@ -97,9 +117,24 @@ export default function StoreHomepage({ params }: { params: Promise<{ slug: stri
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                        {MOCK_PRODUCTS.map(product => (
-                            <ProductCard key={product.id} product={product} storeSlug={slug} />
-                        ))}
+                        {loading ? (
+                            // Loading skeleton
+                            [1, 2, 3, 4].map(i => (
+                                <div key={i} className="animate-pulse">
+                                    <div className="bg-white/5 h-64 rounded-2xl mb-4"></div>
+                                    <div className="bg-white/5 h-4 rounded w-3/4 mb-2"></div>
+                                    <div className="bg-white/5 h-4 rounded w-1/2"></div>
+                                </div>
+                            ))
+                        ) : products.length > 0 ? (
+                            products.map((product: Product) => (
+                                <ProductCard key={product.id} product={product} storeSlug={slug} />
+                            ))
+                        ) : (
+                            <div className="col-span-full text-center py-12">
+                                <p className="text-text-secondary">No products available yet.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>

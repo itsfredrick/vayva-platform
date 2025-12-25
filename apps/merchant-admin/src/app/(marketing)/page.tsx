@@ -28,7 +28,7 @@ export default function LandingPage() {
                     {/* CTAs */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
                         <Link href="/signup">
-                            <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-8 py-4 text-lg font-semibold">
+                            <Button data-testid="landing-get-started" className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-8 py-4 text-lg font-semibold">
                                 Create account
                             </Button>
                         </Link>

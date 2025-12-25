@@ -8,17 +8,28 @@ test.describe('Inventory System', () => {
     const productId = 'prod_test_inv_001';
 
     test.beforeAll(async () => {
+        // Ensure store exists
+        await prisma.store.upsert({
+            where: { id: merchantId },
+            update: {},
+            create: {
+                id: merchantId,
+                name: 'Inventory Test Store',
+                slug: merchantId
+            }
+        });
+
         // Cleanup
-        await prisma.stockMovement.deleteMany({ where: { merchantId } });
-        await prisma.stockReservation.deleteMany({ where: { merchantId } });
-        await prisma.inventoryItem.deleteMany({ where: { merchantId } });
+        await prisma.stock_movement.deleteMany({ where: { merchantId } });
+        await prisma.stock_reservation.deleteMany({ where: { merchantId } });
+        await prisma.inventory_item.deleteMany({ where: { merchantId } });
     });
 
     test('full inventory lifecycle', async () => {
         // 1. Set Initial Stock to 5
         await InventoryService.setStock(merchantId, productId, null, 5, { type: 'system', label: 'Test Init' });
 
-        const item = await prisma.inventoryItem.findFirst({ where: { merchantId, productId } });
+        const item = await prisma.inventory_item.findFirst({ where: { merchantId, productId } });
         expect(item?.onHand).toBe(5);
         expect(item?.reserved).toBe(0);
 
@@ -26,7 +37,7 @@ test.describe('Inventory System', () => {
         const draftId = 'draft_001';
         await InventoryService.reserveStock(merchantId, draftId, [{ productId, variantId: null, quantity: 2 }]);
 
-        const itemReserved = await prisma.inventoryItem.findFirst({ where: { merchantId, productId } });
+        const itemReserved = await prisma.inventory_item.findFirst({ where: { merchantId, productId } });
         expect(itemReserved?.onHand).toBe(5);
         expect(itemReserved?.reserved).toBe(2);
         // Available = 5 - 2 = 3
@@ -43,7 +54,7 @@ test.describe('Inventory System', () => {
         // 4. Confirm Reservation (Sale)
         await InventoryService.confirmReservation(merchantId, draftId, 'ord_001');
 
-        const itemSold = await prisma.inventoryItem.findFirst({ where: { merchantId, productId } });
+        const itemSold = await prisma.inventory_item.findFirst({ where: { merchantId, productId } });
         expect(itemSold?.onHand).toBe(3); // 5 - 2
         expect(itemSold?.reserved).toBe(0); // Released 2
 
@@ -53,7 +64,7 @@ test.describe('Inventory System', () => {
         await InventoryService.reserveStock(merchantId, draftCancel, [{ productId, variantId: null, quantity: 1 }]);
         await InventoryService.releaseReservation(merchantId, draftCancel);
 
-        const itemReleased = await prisma.inventoryItem.findFirst({ where: { merchantId, productId } });
+        const itemReleased = await prisma.inventory_item.findFirst({ where: { merchantId, productId } });
         expect(itemReleased?.onHand).toBe(3); // Unchanged
         expect(itemReleased?.reserved).toBe(0); // Released
     });

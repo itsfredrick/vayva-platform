@@ -9,9 +9,29 @@ test.describe('Customer Accounts', () => {
     const email = 'shopper@example.com';
 
     test.beforeAll(async () => {
+        // Ensure store exists
+        await prisma.store.upsert({
+            where: { id: storeId },
+            update: {},
+            create: {
+                id: storeId,
+                name: 'Customer Test Store',
+                slug: storeId
+            }
+        });
+
         // Cleanup
-        await prisma.customerUser.deleteMany({ where: { storeId } });
-        await prisma.orderCustomerLink.deleteMany({ where: { storeId } });
+        // Delete orders first (fk constraint)
+        await prisma.order.deleteMany({ where: { storeId } });
+        // Delete customers (fk constraint)
+        await prisma.customer.deleteMany({ where: { storeId, email } });
+
+        // Find account
+        const account = await prisma.customerAccount.findUnique({ where: { email } });
+        if (account) {
+            await prisma.customerSession.deleteMany({ where: { customerId: account.id } });
+            await prisma.customerAccount.delete({ where: { id: account.id } });
+        }
     });
 
     test('Auth Flow', async () => {
@@ -27,24 +47,48 @@ test.describe('Customer Accounts', () => {
         // Validate
         const session = await CustomerAuthService.validateSession(sessionToken);
         expect(session).toBeTruthy();
-        expect(session?.customerUserId).toBe(user.id);
+        expect(session?.customerId).toBe(user.id);
     });
 
     test('Order Access Control', async () => {
-        // Setup User
-        const user = await prisma.customerUser.findFirst({ where: { storeId, email } });
-        // Setup Order Link
-        const orderId = 'ord_123';
-        await prisma.orderCustomerLink.create({
-            data: {
-                orderId,
+        // Setup Customer (Store-specific)
+        let customer;
+        try {
+            customer = await prisma.customer.create({
+                data: {
+                    storeId,
+                    email,
+                    firstName: 'Shopper',
+                    lastName: 'Test'
+                }
+            });
+        } catch (e) {
+            customer = await prisma.customer.findFirst({
+                where: { storeId, email }
+            });
+        }
+
+        if (!customer) throw new Error('Failed to create/find customer');
+
+        // Setup Order
+        const orderId = 'ord_cust_123';
+
+        // Ensure order exists with customerId
+        await prisma.order.upsert({
+            where: { id: orderId },
+            update: { customerId: customer.id },
+            create: {
+                id: orderId,
+                refCode: orderId,
                 storeId,
-                customerUserId: user!.id
+                customerId: customer.id,
+                subtotal: 5000,
+                total: 5000
             }
         });
 
         // Valid Access
-        const detail = await CustomerOrderService.getOrderDetail(storeId, user!.id, orderId);
+        const detail = await CustomerOrderService.getOrderDetail(storeId, customer.id, orderId);
         expect(detail.id).toBe(orderId);
 
         // Invalid Access (Other User)

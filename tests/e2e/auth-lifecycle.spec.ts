@@ -12,8 +12,8 @@ test.describe('Account Lifecycle & Security', () => {
     test.beforeAll(async () => {
         // Cleanup with safe checks in case schema is partial (though we fixed it)
         try {
-            await prisma.userEmailVerification.deleteMany({ where: { userId } });
-            await prisma.passwordResetToken.deleteMany({ where: { userId } });
+            await prisma.user_email_verification.deleteMany({ where: { userId } });
+            await prisma.password_reset_token.deleteMany({ where: { userId } });
             await prisma.merchantAccountLifecycle.deleteMany({ where: { merchantId } });
         } catch (e) {
             console.warn('Cleanup failed, schema might be missing models yet in test env', e);
@@ -24,7 +24,7 @@ test.describe('Account Lifecycle & Security', () => {
         // Request
         await AuthFlowService.requestEmailVerification(userId, email);
 
-        const record = await prisma.userEmailVerification.findUnique({ where: { userId } });
+        const record = await prisma.user_email_verification.findUnique({ where: { userId } });
         expect(record).toBeTruthy();
         expect(record?.tokenHash).toBeTruthy();
 
@@ -36,7 +36,7 @@ test.describe('Account Lifecycle & Security', () => {
     test('password reset flow', async () => {
         await AuthFlowService.requestPasswordReset(email);
 
-        const tokens = await prisma.passwordResetToken.findMany({ where: { userId: 'mock_user_id' } });
+        const tokens = await prisma.password_reset_token.findMany({ where: { userId: 'mock_user_id' } });
         expect(tokens.length).toBeGreaterThan(0);
         expect(tokens[0].tokenHash).not.toBe('plain_token');
     });

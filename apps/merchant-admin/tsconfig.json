@@ -27,6 +27,9 @@
         "paths": {
             "@/*": [
                 "./src/*"
+            ],
+            "@vayva/db": [
+                "../../infra/db/src/client.ts"
             ]
         }
     },

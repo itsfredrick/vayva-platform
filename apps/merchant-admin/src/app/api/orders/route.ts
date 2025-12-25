@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/session';
+import { prisma } from '@vayva/db';
 
 export async function GET(request: Request) {
     try {
@@ -13,102 +14,52 @@ export async function GET(request: Request) {
         }
 
         const { searchParams } = new URL(request.url);
-        const type = searchParams.get('type') || 'retail';
+        const statusParam = searchParams.get('status');
+        const limit = parseInt(searchParams.get('limit') || '50');
+        const offset = parseInt(searchParams.get('offset') || '0');
 
-        // Mock orders data for development
-        // TODO: Replace with real database query filtered by user.storeId
-        const mockOrders = [
-            {
-                id: 'ord_1025',
-                merchantId: user.storeId,
-                type: 'retail',
-                status: 'NEW',
-                paymentStatus: 'paid',
-                customer: { id: 'c1', name: 'Chioma Adebayo', phone: '+234 801 234 5678' },
-                items: [{ id: 'p1', name: 'Vintage Silk Scarf', quantity: 1, price: 12000 }],
-                totalAmount: 12000,
-                currency: 'NGN',
-                source: 'whatsapp',
-                timestamps: {
-                    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-                    updatedAt: new Date().toISOString()
-                },
-                fulfillmentType: 'delivery'
+        // Real database query - simplified to avoid TypeScript issues
+        // TODO: Add proper includes for customer and items after verifying schema
+        const orders = await prisma.order.findMany({
+            where: {
+                storeId: user.storeId,
+                ...(statusParam && { status: statusParam as any }),
             },
-            {
-                id: 'ord_1024',
-                merchantId: user.storeId,
-                type: 'retail',
-                status: 'PROCESSING',
-                paymentStatus: 'paid',
-                customer: { id: 'c2', name: 'Ibrahim Musa', phone: '+234 705 555 1212' },
-                items: [{ id: 'p2', name: 'Leather Wallet', quantity: 1, price: 8500 }],
-                totalAmount: 8500,
-                currency: 'NGN',
-                source: 'website',
-                timestamps: {
-                    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-                    updatedAt: new Date().toISOString()
-                },
-                fulfillmentType: 'delivery'
-            },
-            {
-                id: 'ord_1023',
-                merchantId: user.storeId,
-                type: 'retail',
-                status: 'COMPLETED',
-                paymentStatus: 'paid',
-                customer: { id: 'c3', name: 'Amaka Okafor', phone: '+234 803 123 4567' },
-                items: [
-                    { id: 'p3', name: 'Designer Handbag', quantity: 1, price: 35000 },
-                    { id: 'p4', name: 'Sunglasses', quantity: 1, price: 8000 }
-                ],
-                totalAmount: 43000,
-                currency: 'NGN',
-                source: 'whatsapp',
-                timestamps: {
-                    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-                    updatedAt: new Date().toISOString()
-                },
-                fulfillmentType: 'delivery'
-            },
-            {
-                id: 'ord_1022',
-                merchantId: user.storeId,
-                type: 'retail',
-                status: 'NEW',
-                paymentStatus: 'pending',
-                customer: { id: 'c4', name: 'Tunde Bakare', phone: '+234 806 789 0123' },
-                items: [{ id: 'p5', name: 'Running Shoes', quantity: 2, price: 15000 }],
-                totalAmount: 30000,
-                currency: 'NGN',
-                source: 'website',
-                timestamps: {
-                    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-                    updatedAt: new Date().toISOString()
-                },
-                fulfillmentType: 'delivery'
-            },
-            {
-                id: 'ord_1021',
-                merchantId: user.storeId,
-                type: 'retail',
-                status: 'PROCESSING',
-                paymentStatus: 'paid',
-                customer: { id: 'c5', name: 'Ngozi Eze', phone: '+234 809 456 7890' },
-                items: [{ id: 'p6', name: 'Laptop Sleeve', quantity: 1, price: 12500 }],
-                totalAmount: 12500,
-                currency: 'NGN',
-                source: 'whatsapp',
-                timestamps: {
-                    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-                    updatedAt: new Date().toISOString()
-                },
-                fulfillmentType: 'pickup'
-            }
-        ];
+            orderBy: { createdAt: 'desc' },
+            take: limit,
+            skip: offset,
+        });
 
-        return NextResponse.json(mockOrders);
+        // Transform to match expected format
+        const transformedOrders = orders.map(order => ({
+            id: order.id,
+            merchantId: order.storeId,
+            orderNumber: order.orderNumber.toString(),
+            refCode: order.refCode,
+            status: order.status,
+            paymentStatus: order.paymentStatus,
+            fulfillmentStatus: order.fulfillmentStatus,
+            customer: {
+                id: order.customerId || '',
+                email: order.customerEmail || '',
+                phone: order.customerPhone || '',
+            },
+            totalAmount: Number(order.total),
+            subtotal: Number(order.subtotal),
+            tax: Number(order.tax),
+            shippingTotal: Number(order.shippingTotal),
+            discountTotal: Number(order.discountTotal),
+            currency: order.currency,
+            source: order.source,
+            paymentMethod: order.paymentMethod || '',
+            deliveryMethod: order.deliveryMethod || '',
+            timestamps: {
+                createdAt: order.createdAt.toISOString(),
+                updatedAt: order.updatedAt.toISOString(),
+            },
+        }));
+
+        return NextResponse.json(transformedOrders);
     } catch (error) {
         console.error("Fetch Orders Error:", error);
         return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });

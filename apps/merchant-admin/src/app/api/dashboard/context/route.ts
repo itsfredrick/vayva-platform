@@ -1,21 +1,42 @@
 import { NextResponse } from 'next/server';
-import { BusinessType } from '@vayva/shared';
+import { getSessionUser } from '@/lib/session';
+import { prisma } from '@vayva/db';
 
 export async function GET(request: Request) {
-    // In a real app, we'd get the session here.
-    // const session = await getSession();
+    try {
+        // Get real session
+        const user = await getSessionUser();
+        if (!user) {
+            return NextResponse.json(
+                { error: 'Unauthorized - Please login' },
+                { status: 401 }
+            );
+        }
 
-    // Mock Context Data based on "Master Execution" prompt requirements
-    const data = {
-        firstName: 'Fred',
-        initials: 'FD',
-        businessType: BusinessType.RETAIL, // Default, client override via URL handled in frontend for now, or here if we passed it.
-        // For Review purposes, let's randomized or just hardcode a happy path
-        storeStatus: 'LIVE',           // LIVE, DRAFT
-        paymentStatus: 'CONNECTED',    // CONNECTED, PENDING
-        whatsappStatus: 'ATTENTION',   // CONNECTED, ATTENTION
-        kycStatus: 'VERIFIED',         // VERIFIED, REVIEW, ACTION
-    };
+        // Get store details
+        const store = await prisma.store.findUnique({
+            where: { id: user.storeId },
+        });
 
-    return NextResponse.json(data);
+        // Get wallet for KYC status
+        const wallet = await prisma.wallet.findUnique({
+            where: { storeId: user.storeId },
+        });
+
+        // Real context data from database
+        const data = {
+            firstName: user.firstName || 'User',
+            initials: (user.firstName?.[0] || 'U') + (user.lastName?.[0] || ''),
+            businessType: 'RETAIL', // TODO: Add to store schema
+            storeStatus: store?.onboardingStatus === 'COMPLETE' ? 'LIVE' : 'DRAFT',
+            paymentStatus: 'CONNECTED', // TODO: Check payment integration
+            whatsappStatus: 'ATTENTION', // TODO: Check WhatsApp integration
+            kycStatus: wallet?.kycStatus || 'NOT_STARTED',
+        };
+
+        return NextResponse.json(data);
+    } catch (error) {
+        console.error("Dashboard Context Error:", error);
+        return NextResponse.json({ error: "Failed to fetch context" }, { status: 500 });
+    }
 }
