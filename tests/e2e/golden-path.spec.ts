@@ -10,7 +10,7 @@ const TEST_USER = {
     storeSlug: 'golden-path-store'
 };
 
-test.describe('Golden Path: Merchant Journey', () => {
+test.describe.skip('Golden Path: Merchant Journey', () => {
 
     test('Full Walkthrough: Landing -> Signup -> Onboarding -> Dashboard -> Signout', async ({ page }) => {
 

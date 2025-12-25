@@ -9,7 +9,7 @@ export default defineConfig({
     fullyParallel: false, // Sequential for Golden Path to avoid state collisions
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: 1, // One worker to ensure sequential execution of the golden path
+    workers: process.env.CI ? 2 : 1, // Use 2 workers in CI to avoid timeouts
     reporter: [['html'], ['list']],
     globalSetup: './tests/global-setup.ts',
     globalTeardown: './tests/global-teardown.ts',
