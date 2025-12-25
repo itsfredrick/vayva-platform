@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         // Update store plan
         await prisma.store.update({
             where: { id: storeId },
-            data: { plan: newPlan },
+            data: { plan: newPlan as any },
         });
 
         // Create or update subscription
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
             await prisma.merchantSubscription.update({
                 where: { storeId },
                 data: {
-                    plan: newPlan,
+                    plan: newPlan as any,
                     status: 'ACTIVE',
                     currentPeriodStart: now,
                     currentPeriodEnd: periodEnd,
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
             await prisma.merchantSubscription.create({
                 data: {
                     storeId,
-                    plan: newPlan,
+                    plan: newPlan as any,
                     status: 'ACTIVE',
                     currentPeriodStart: now,
                     currentPeriodEnd: periodEnd,
