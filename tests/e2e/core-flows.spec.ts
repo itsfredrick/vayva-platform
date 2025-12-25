@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { createAuthenticatedMerchantContext } from '../helpers/auth';
 
 test.describe('Core E2E Flows', () => {
 
@@ -69,34 +70,33 @@ test.describe('Core E2E Flows', () => {
         });
 
         test('direct onboarding step access', async ({ page }) => {
-            // This requires authenticated session. In E2E we might need to login first
-            // or use a storage state. For now, just check the page renders.
+            // Authenticate first
+            await createAuthenticatedMerchantContext(page);
+
             await page.goto('/onboarding/business');
-            // It might redirect if not logged in, but let's assume session is persisted if tests run together
-            // or just check for heading if it doesn't redirect.
             const heading = page.locator('h1');
-            if (await heading.isVisible()) {
-                await expect(heading).toContainText(/Business/i);
-            }
+            await expect(heading).toBeVisible();
+            await expect(heading).toContainText(/Business/i);
         });
     });
 
     test.describe('Product Management', () => {
         test('create product flow', async ({ page }) => {
-            // Need to be logged in and onboarded.
-            // Simplified: Go to the page and check fields.
+            // Authenticate first
+            await createAuthenticatedMerchantContext(page);
+
             await page.goto('/admin/products/new');
 
-            // If redirected to login, this test will fail as expected for now.
-            // In a full suite, we use globalSetup to login once.
+            // Wait for page load
+            await expect(page.getByRole('heading', { name: 'Add Product' })).toBeVisible();
 
-            const nameInput = page.locator('input[placeholder*="Vintage Denim Jacket"]');
-            if (await nameInput.isVisible()) {
-                await nameInput.fill('E2E Test Product');
-                await page.fill('input[placeholder="0.00"]', '5000');
-                await page.click('button:has-text("Save Product")');
-                await expect(page).toHaveURL(/admin\/products/);
-            }
+            await page.getByPlaceholder('e.g. Vintage Denim Jacket').fill('E2E Test Product');
+            await page.getByPlaceholder('0.00').fill('5000');
+
+            // Wait for save button and click
+            await page.getByRole('button', { name: 'Save Product' }).click();
+
+            await expect(page).toHaveURL(/\/admin\/products/, { timeout: 15000 });
         });
     });
 
