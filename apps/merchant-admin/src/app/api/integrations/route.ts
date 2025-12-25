@@ -36,7 +36,7 @@ export async function GET() {
                     id: 'whatsapp',
                     name: 'WhatsApp Business',
                     status: store.whatsAppChannel ? 'CONNECTED' : 'DISCONNECTED',
-                    account: store.whatsAppChannel?.phoneNumber || null,
+                    account: store.whatsAppChannel?.displayPhoneNumber || null,
                     lastSync: store.whatsAppChannel?.updatedAt || null,
                 },
                 {
