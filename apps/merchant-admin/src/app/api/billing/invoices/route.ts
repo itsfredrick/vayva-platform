@@ -11,7 +11,6 @@ export async function GET() {
         const invoices = await prisma.invoice.findMany({
             where: {
                 storeId,
-                type: 'SUBSCRIPTION', // Assuming you have invoice types
             },
             orderBy: {
                 createdAt: 'desc',
@@ -24,7 +23,7 @@ export async function GET() {
                 id: inv.id,
                 invoiceNumber: inv.invoiceNumber,
                 date: inv.createdAt,
-                amount: inv.totalAmount,
+                amount: inv.amountNgn,
                 currency: 'NGN',
                 status: inv.status,
                 pdfUrl: `/api/billing/invoices/${inv.id}/pdf`,
