@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { DesignerTemplate } from '@/types/designer';
 
-const MOCK_DESIGNER_TEMPLATES: DesignerTemplate[] = [
+const MOCK_DESIGNER_TEMPLATES: any[] = [
     {
         id: 'tpl_urban_v2',
         submissionId: 'sub_123',
