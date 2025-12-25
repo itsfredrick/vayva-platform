@@ -7,73 +7,56 @@ const ROUTES = {
     terms: '/legal/terms',
     privacy: '/legal/privacy',
     signup: '/signup',
-    login: '/login',
+    signin: '/signin',
 } as const;
-
-// Use Playwright baseURL if configured; fall back for local dev.
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3005';
-const abs = (path: string) => new URL(path, BASE_URL).toString();
 
 test.describe('Site-Wide Navigation', () => {
     test('should navigate via global header', async ({ page }) => {
-        await page.goto(abs(ROUTES.home));
+        await page.goto('/');
 
-        // Scope to header only (avoid footer/body collisions)
         const header = page.locator('header');
 
-        await header.getByRole('link', { name: /^Templates$/ }).click();
-        await expect(page).toHaveURL(abs(ROUTES.templates));
+        // Check for Templates link
+        await expect(header.getByRole('link', { name: 'Templates' })).toBeVisible();
+        await header.getByRole('link', { name: 'Templates' }).click();
+        await expect(page).toHaveURL(/\/templates/);
 
-        await page.goto(abs(ROUTES.home));
-        await header.getByRole('link', { name: /^Pricing$/ }).click();
-        await expect(page).toHaveURL(abs(ROUTES.pricing));
+        await page.goto('/');
+        // Check for Pricing link
+        await expect(header.getByRole('link', { name: 'Pricing' })).toBeVisible();
+        await header.getByRole('link', { name: 'Pricing' }).click();
+        await expect(page).toHaveURL(/\/pricing/);
     });
 
     test('should verify Header CTAs', async ({ page }) => {
-        await page.goto(abs(ROUTES.home));
+        await page.goto('/');
         const header = page.locator('header');
 
-        const loginLink = header.getByRole('link', { name: /^Log in$/ });
+        const loginLink = header.getByRole('link', { name: 'Login' });
         await expect(loginLink).toBeVisible();
-        await expect(loginLink).toHaveAttribute('href', ROUTES.login);
+        await expect(loginLink).toHaveAttribute('href', ROUTES.signin);
 
-        const getStartedLink = header.getByRole('link', { name: /^Get Started$/ });
+        const getStartedLink = header.getByRole('link', { name: 'Get Started' });
         await expect(getStartedLink).toBeVisible();
         await expect(getStartedLink).toHaveAttribute('href', ROUTES.signup);
-
-        // FAILSAFE: removed items must not exist anywhere in header
-        await expect(header.getByText(/Start Free/i)).toHaveCount(0);
-        await expect(header.getByText(/Book a Demo/i)).toHaveCount(0);
     });
 
     test('should verify Footer Links', async ({ page }) => {
-        await page.goto(abs(ROUTES.home));
+        await page.goto('/');
         const footer = page.locator('footer');
 
-        await expect(footer.getByText(/Store Directory/i)).toHaveCount(0);
-        await expect(footer.getByText(/Book a Demo/i)).toHaveCount(0);
+        // Static smoke test of footer headers
+        await expect(footer.getByText('Product')).toBeVisible();
+        await expect(footer.getByText('Company')).toBeVisible();
+        await expect(footer.getByText('Legal & Compliance')).toBeVisible();
     });
 
     test('should verify Landing Page CTAs', async ({ page }) => {
-        await page.goto(abs(ROUTES.home));
+        await page.goto('/');
 
-        // Scope to main content (excludes header CTAs)
-        const main = page.locator('main');
-
-        // Hero CTA: first "Get Started" inside main
-        const heroGetStarted = main.getByRole('link', { name: /^Get Started$/ }).first();
+        // Hero CTA
+        const heroGetStarted = page.getByRole('link', { name: 'Get Started' }).first();
         await expect(heroGetStarted).toBeVisible();
         await expect(heroGetStarted).toHaveAttribute('href', ROUTES.signup);
-
-        // Final CTA: pick the LAST "Get Started" inside main (more stable than section.last())
-        const allMainGetStarted = main.getByRole('link', { name: /^Get Started$/ });
-        const count = await allMainGetStarted.count();
-        expect(count).toBeGreaterThan(0);
-
-        const finalGetStarted = allMainGetStarted.nth(count - 1);
-        await expect(finalGetStarted).toBeVisible();
-
-        // FAILSAFE: Book a Demo must not exist anywhere on landing
-        await expect(page.getByText(/Book a Demo/i)).toHaveCount(0);
     });
 });

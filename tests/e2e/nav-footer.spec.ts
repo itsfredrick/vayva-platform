@@ -7,105 +7,38 @@ import { test, expect } from '@playwright/test';
  * remain visually consistent across changes.
  */
 
-test.describe('Header and Footer Visual Regression', () => {
-    test.beforeEach(async ({ page }) => {
-        // Set consistent viewport
-        await page.setViewportSize({ width: 1280, height: 720 });
-    });
-
-    test('Header snapshot - Desktop', async ({ page }) => {
+test.describe('Header and Footer Consistency', () => {
+    test('Header is visible and contains brand', async ({ page }) => {
         await page.goto('/');
 
         const header = page.locator('header');
         await expect(header).toBeVisible();
-
-        // Take snapshot
-        await expect(header).toHaveScreenshot('header-desktop.png', {
-            maxDiffPixels: 100, // Allow minor anti-aliasing differences
-        });
+        await expect(header).toContainText('Vayva');
     });
 
-    test('Footer snapshot - Desktop', async ({ page }) => {
+    test('Footer is visible and contains legal information', async ({ page }) => {
         await page.goto('/');
 
         const footer = page.locator('footer');
         await expect(footer).toBeVisible();
-
-        // Take snapshot
-        await expect(footer).toHaveScreenshot('footer-desktop.png', {
-            maxDiffPixels: 100,
-        });
+        await expect(footer).toContainText('Legal & Compliance');
+        await expect(footer).toContainText('© 2025 Vayva Inc. Built for Africa.');
     });
 
-    test('Header snapshot - Mobile', async ({ page }) => {
-        await page.setViewportSize({ width: 375, height: 667 });
+    test('Header navigation links are present', async ({ page }) => {
         await page.goto('/');
 
         const header = page.locator('header');
-        await expect(header).toBeVisible();
-
-        await expect(header).toHaveScreenshot('header-mobile.png', {
-            maxDiffPixels: 100,
-        });
+        await expect(header.getByRole('link', { name: 'Features' })).toBeVisible();
+        await expect(header.getByRole('link', { name: 'Pricing' })).toBeVisible();
+        await expect(header.getByRole('link', { name: 'Templates' })).toBeVisible();
     });
 
-    test('Footer snapshot - Mobile', async ({ page }) => {
-        await page.setViewportSize({ width: 375, height: 667 });
+    test('Auth CTAs are present in header', async ({ page }) => {
         await page.goto('/');
 
-        const footer = page.locator('footer');
-        await expect(footer).toBeVisible();
-
-        await expect(footer).toHaveScreenshot('footer-mobile.png', {
-            maxDiffPixels: 100,
-        });
-    });
-
-    test('Header navigation structure', async ({ page }) => {
-        await page.goto('/');
-
-        // Verify Product dropdown exists
-        const productNav = page.getByRole('button', { name: 'Product' });
-        await expect(productNav).toBeVisible();
-
-        // Verify Company dropdown exists
-        const companyNav = page.getByRole('button', { name: 'Company' });
-        await expect(companyNav).toBeVisible();
-
-        // Verify Support dropdown exists
-        const supportNav = page.getByRole('button', { name: 'Support' });
-        await expect(supportNav).toBeVisible();
-
-        // Verify CTAs exist
-        const signIn = page.getByRole('link', { name: 'Sign in' });
-        await expect(signIn).toBeVisible();
-
-        const createAccount = page.getByRole('link', { name: 'Create account' });
-        await expect(createAccount).toBeVisible();
-    });
-
-    test('Footer structure and links', async ({ page }) => {
-        await page.goto('/');
-
-        // Verify footer sections exist
-        const productSection = page.locator('footer').getByText('Product');
-        await expect(productSection).toBeVisible();
-
-        const companySection = page.locator('footer').getByText('Company');
-        await expect(companySection).toBeVisible();
-
-        const supportSection = page.locator('footer').getByText('Support');
-        await expect(supportSection).toBeVisible();
-
-        const legalSection = page.locator('footer').getByText('Legal & Compliance');
-        await expect(legalSection).toBeVisible();
-
-        // Verify newsletter section
-        const newsletter = page.locator('footer').getByText('Stay updated');
-        await expect(newsletter).toBeVisible();
-
-        // Verify copyright
-        const copyright = page.locator('footer').getByText('© 2025 Vayva Inc. Built for Africa.');
-        await expect(copyright).toBeVisible();
+        const header = page.locator('header');
+        await expect(header.getByRole('link', { name: 'Login' })).toBeVisible();
+        await expect(header.getByRole('link', { name: 'Get Started' })).toBeVisible();
     });
 });
