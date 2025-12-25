@@ -11,8 +11,10 @@ export default defineConfig({
     retries: process.env.CI ? 2 : 0,
     workers: 1, // One worker to ensure sequential execution of the golden path
     reporter: [['html'], ['list']],
+    globalSetup: './tests/global-setup.ts',
+    globalTeardown: './tests/global-teardown.ts',
     use: {
-        actionTimeout: 0,
+        actionTimeout: 15 * 1000, // Increased for auth operations
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',
@@ -25,14 +27,15 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'pnpm dev --filter=merchant-admin',
+        command: process.env.CI ? 'pnpm --filter merchant-admin start' : 'pnpm --filter merchant-admin dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
+        timeout: 180 * 1000,
         env: {
             DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/vayva_test?schema=public',
             NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'test-secret-min-32-chars-long-for-ci',
             NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+            NODE_ENV: 'test'
         },
     },
 });

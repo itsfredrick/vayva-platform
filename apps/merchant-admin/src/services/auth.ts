@@ -7,9 +7,9 @@ export const AuthService = {
         try {
             return await apiClient.auth.login(credentials);
         } catch (error: any) {
-            // Mock for dev if backend fails or e2e test
-            if (error.message === 'Request failed' || credentials.email.includes('e2e')) {
-                console.warn('Backend not available or E2E, using mock login');
+            // Mock for dev if backend fails, but NOT in E2E
+            if (error.message === 'Request failed' && process.env.NODE_ENV !== 'test') {
+                console.warn('Backend not available, using mock login');
                 await new Promise(resolve => setTimeout(resolve, 500));
                 return {
                     token: 'mock_token_' + Date.now(),
@@ -45,7 +45,7 @@ export const AuthService = {
         try {
             return await apiClient.auth.register(payload);
         } catch (error: any) {
-            if (error.message === 'Request failed' || payload.email.includes('e2e')) {
+            if (error.message === 'Request failed' && process.env.NODE_ENV !== 'test') {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 return { message: 'Registration successful', email: payload.email };
             }
@@ -57,21 +57,7 @@ export const AuthService = {
         try {
             return await apiClient.auth.verifyOtp(payload);
         } catch (error: any) {
-            if (payload.email.includes('e2e') && payload.code === '123456') {
-                return {
-                    token: 'mock_verified_token_' + Date.now(),
-                    user: {
-                        id: 'e2e_user_1',
-                        firstName: 'Demo',
-                        lastName: 'Merchant',
-                        email: payload.email,
-                        role: 'OWNER',
-                        emailVerified: true,
-                        phoneVerified: false,
-                        createdAt: new Date().toISOString()
-                    }
-                };
-            }
+            // No bypass here, we use the API bypass in verify-otp/route.ts
             throw error;
         }
     },

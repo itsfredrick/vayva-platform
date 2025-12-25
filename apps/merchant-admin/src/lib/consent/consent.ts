@@ -1,4 +1,4 @@
-import { prisma, communication_consent, ConsentEventType, ConsentChannel, ConsentSource } from '@vayva/db';
+import { prisma, communication_consent, compliance_event, ConsentEventType, ConsentChannel, ConsentSource } from '@vayva/db';
 
 export enum MessageIntent {
     TRANSACTIONAL = 'TRANSACTIONAL',
@@ -71,19 +71,10 @@ export async function applyConsentUpdate(
 ): Promise<communication_consent> {
     const existing = await getConsent(merchantId, phoneE164);
 
-    let marketingOptInAt = (existing as any).marketingOptInAt;
-    let marketingOptOutAt = (existing as any).marketingOptOutAt;
-
-    if (patch.marketingOptIn === true && !existing.marketingOptIn) {
-        marketingOptInAt = new Date();
-    } else if (patch.marketingOptIn === false && existing.marketingOptIn) {
-        marketingOptOutAt = new Date();
-    }
-
     let eventType: ConsentEventType = ConsentEventType.OPT_IN;
 
     if (patch.fullyBlocked === true) eventType = ConsentEventType.BLOCK_ALL;
-    else if (patch.fullyBlocked === false && existing.fullyBlocked) eventType = ConsentEventType.UNBLOCK;
+    else if (patch.fullyBlocked === false && (existing as any).fullyBlocked) eventType = ConsentEventType.UNBLOCK;
     else if (patch.marketingOptIn === true) eventType = ConsentEventType.OPT_IN;
     else if (patch.marketingOptIn === false) eventType = ConsentEventType.OPT_OUT;
     else if (patch.transactionalAllowed === true) eventType = ConsentEventType.TRANSACTIONAL_ON;
@@ -102,8 +93,6 @@ export async function applyConsentUpdate(
                 data: {
                     marketingOptIn: patch.marketingOptIn,
                     marketingOptInSource: patch.marketingOptInSource,
-                    marketingOptInAt,
-                    marketingOptOutAt,
                     transactionalAllowed: patch.transactionalAllowed,
                     fullyBlocked: patch.fullyBlocked,
                     updatedAt: new Date()
@@ -116,7 +105,6 @@ export async function applyConsentUpdate(
                     phoneE164,
                     marketingOptIn: patch.marketingOptIn ?? false,
                     marketingOptInSource: patch.marketingOptInSource || 'unknown',
-                    marketingOptInAt: patch.marketingOptIn === true ? new Date() : null,
                     transactionalAllowed: patch.transactionalAllowed ?? true,
                     fullyBlocked: patch.fullyBlocked ?? false,
                 }

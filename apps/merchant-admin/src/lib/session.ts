@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
-const COOKIE_NAME = 'vayva_session';
+export const COOKIE_NAME = 'vayva_session';
 
 export interface SessionPayload {
     userId: string;

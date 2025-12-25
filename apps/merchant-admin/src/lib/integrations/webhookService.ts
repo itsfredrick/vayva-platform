@@ -5,7 +5,7 @@ import { FlagService } from '../flags/flagService';
 export class WebhookService {
 
     static signPayload(secret: string, payload: any, eventId: string, timestamp: number): string {
-        const signaturePayload = `${timestamp}.${eventId}.${JSON.stringify(payload)} `;
+        const signaturePayload = `${timestamp}.${eventId}.${JSON.stringify(payload)}`;
         return crypto.createHmac('sha256', secret).update(signaturePayload).digest('hex');
     }
 

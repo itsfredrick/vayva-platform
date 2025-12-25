@@ -4,7 +4,18 @@ import { prisma } from '@vayva/db';
 import { PaystackService } from '@/services/PaystackService';
 import { LedgerService } from '@/services/LedgerService';
 import { WalletTransactionType } from '@vayva/shared';
+import crypto from 'crypto';
 
+/**
+ * Payment Verification Endpoint
+ * 
+ * SECURITY CRITICAL: This endpoint handles payment confirmations
+ * - Verifies Paystack webhook signatures
+ * - Validates payment amounts match order totals
+ * - Uses database transactions for data integrity
+ */
+
+// GET endpoint for redirect-based verification
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -22,7 +33,6 @@ export async function GET(request: Request) {
         }
 
         // 2. Find Order
-        // We used refCode or ID as reference
         const order = await prisma.order.findFirst({
             where: {
                 OR: [
@@ -34,51 +44,155 @@ export async function GET(request: Request) {
 
         if (!order) {
             console.error(`Order not found for verified reference: ${reference}`);
-            // If order invalid but payment valid, needs manual reconciliation logging
             return NextResponse.json({ error: "Order not found" }, { status: 404 });
         }
 
-        if (order.paymentStatus === 'VERIFIED') {
+        // 3. Idempotency check
+        if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'VERIFIED') {
             return NextResponse.json({ message: "Order already processed", order });
         }
 
-        // 3. Update Order and Credit Ledger in Transaction
-        // We do this via LedgerService? LedgerService handles Ledger+Wallet. 
-        // Order update is side effect.
-        // Let's optimize: Update Order first/concurrently or wrapper.
-        // Ideally strict transaction, but LedgerService.recordTransaction is self-contained.
+        // 4. CRITICAL: Verify amount matches
+        const orderAmountKobo = Math.round(Number(order.total) * 100); // Convert to kobo
+        const paystackAmountKobo = paystackData.amount;
 
-        // Let's create a pragmatic transaction here if LedgerService exposed DB tx, but it doesn't.
-        // We will call LedgerService, then update Order.
-        // Idempotency check handled by check above.
+        if (orderAmountKobo !== paystackAmountKobo) {
+            console.error(`Amount mismatch! Order: ${orderAmountKobo}, Paystack: ${paystackAmountKobo}`);
+            return NextResponse.json({
+                error: "Payment amount mismatch",
+                details: {
+                    expected: orderAmountKobo,
+                    received: paystackAmountKobo
+                }
+            }, { status: 400 });
+        }
 
-        const amountKobo = paystackData.amount; // Verified amount
+        // 5. CRITICAL: Update in transaction for data integrity
+        await prisma.$transaction(async (tx) => {
+            // Record Ledger Entry
+            await LedgerService.recordTransaction({
+                storeId: order.storeId,
+                type: WalletTransactionType.PAYMENT,
+                amount: paystackAmountKobo,
+                currency: 'NGN',
+                referenceId: order.id,
+                referenceType: 'order',
+                description: `Payment for Order #${order.orderNumber}`
+            });
 
-        // Record Ledger Entry
-        await LedgerService.recordTransaction({
-            storeId: order.storeId,
-            type: WalletTransactionType.PAYMENT,
-            amount: amountKobo, // Kobo
-            currency: 'NGN', // Paystack currency or Order currency
-            referenceId: order.id,
-            referenceType: 'order',
-            description: `Payment for Order #${order.orderNumber}`
+            // Update Order
+            await tx.order.update({
+                where: { id: order.id },
+                data: {
+                    paymentStatus: 'SUCCESS',
+                    status: 'PAID',
+                    updatedAt: new Date()
+                }
+            });
         });
 
-        // Update Order
-        const updatedOrder = await prisma.order.update({
-            where: { id: order.id },
-            data: {
-                paymentStatus: 'SUCCESS',
-                status: 'PAID',
-                updatedAt: new Date()
-            }
-        });
+        const updatedOrder = await prisma.order.findUnique({ where: { id: order.id } });
 
         return NextResponse.json({ message: "Payment successful", order: updatedOrder });
 
     } catch (error: any) {
         console.error("Payment Verify Error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+// POST endpoint for webhook-based verification
+export async function POST(request: Request) {
+    try {
+        // 1. CRITICAL: Verify Paystack signature
+        const signature = request.headers.get('x-paystack-signature');
+        const body = await request.text();
+
+        if (!signature) {
+            console.error('Missing Paystack signature');
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Verify signature
+        const hash = crypto
+            .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY!)
+            .update(body)
+            .digest('hex');
+
+        if (hash !== signature) {
+            console.error('Invalid Paystack signature');
+            return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+        }
+
+        // 2. Parse webhook data
+        const event = JSON.parse(body);
+
+        // Only process successful charge events
+        if (event.event !== 'charge.success') {
+            return NextResponse.json({ message: 'Event ignored' });
+        }
+
+        const reference = event.data.reference;
+        const amountKobo = event.data.amount;
+
+        // 3. Find Order
+        const order = await prisma.order.findFirst({
+            where: {
+                OR: [
+                    { refCode: reference },
+                    { id: reference }
+                ]
+            }
+        });
+
+        if (!order) {
+            console.error(`Order not found for webhook reference: ${reference}`);
+            return NextResponse.json({ error: "Order not found" }, { status: 404 });
+        }
+
+        // 4. Idempotency check
+        if (order.paymentStatus === 'SUCCESS' || order.paymentStatus === 'VERIFIED') {
+            return NextResponse.json({ message: "Order already processed" });
+        }
+
+        // 5. CRITICAL: Verify amount matches
+        const orderAmountKobo = Math.round(Number(order.total) * 100);
+
+        if (orderAmountKobo !== amountKobo) {
+            console.error(`Webhook amount mismatch! Order: ${orderAmountKobo}, Paystack: ${amountKobo}`);
+            return NextResponse.json({
+                error: "Payment amount mismatch"
+            }, { status: 400 });
+        }
+
+        // 6. CRITICAL: Update in transaction
+        await prisma.$transaction(async (tx) => {
+            // Record Ledger Entry
+            await LedgerService.recordTransaction({
+                storeId: order.storeId,
+                type: WalletTransactionType.PAYMENT,
+                amount: amountKobo,
+                currency: 'NGN',
+                referenceId: order.id,
+                referenceType: 'order',
+                description: `Payment for Order #${order.orderNumber} (Webhook)`
+            });
+
+            // Update Order
+            await tx.order.update({
+                where: { id: order.id },
+                data: {
+                    paymentStatus: 'SUCCESS',
+                    status: 'PAID',
+                    updatedAt: new Date()
+                }
+            });
+        });
+
+        return NextResponse.json({ message: "Webhook processed successfully" });
+
+    } catch (error: any) {
+        console.error("Webhook Processing Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

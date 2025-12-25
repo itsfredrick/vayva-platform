@@ -8,9 +8,7 @@ export async function GET(req: NextRequest) {
 
         const partners = await prisma.partner.findMany({
             include: {
-                _count: {
-                    select: { referralAttributions: true, partnerPayoutLedgers: true }
-                }
+                _count: true
             },
             orderBy: { createdAt: 'desc' }
         });

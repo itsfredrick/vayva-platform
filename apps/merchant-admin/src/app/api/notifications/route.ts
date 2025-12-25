@@ -1,77 +1,57 @@
 
 import { NextResponse } from 'next/server';
-import { Notification, NotificationType } from '@vayva/shared';
-
-// Mock Data
-const MOCK_NOTIFICATIONS: Notification[] = [
-    {
-        id: 'notif_1',
-        merchantId: 'mer_123',
-        type: 'critical',
-        category: 'account',
-        title: 'KYC Verification Failed',
-        message: 'Your identity verification failed. Withdrawals are currently blocked.',
-        actionUrl: '/admin/account/overview',
-        actionLabel: 'Fix Issue',
-        isRead: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
-        channels: ['in_app', 'banner', 'email']
-    },
-    {
-        id: 'notif_2',
-        merchantId: 'mer_123',
-        type: 'action_required',
-        category: 'orders',
-        title: 'Order #1924 needs attention',
-        message: 'Payment for this order has been pending for 24 hours.',
-        actionUrl: '/admin/orders/1924',
-        actionLabel: 'View Order',
-        isRead: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-        channels: ['in_app']
-    },
-    {
-        id: 'notif_3',
-        merchantId: 'mer_123',
-        type: 'success',
-        category: 'payments',
-        title: 'Withdrawal Successful',
-        message: '₦450,000 has been sent to your GTBank account.',
-        actionUrl: '/admin/wallet',
-        actionLabel: 'View Wallet',
-        isRead: true,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-        channels: ['in_app', 'whatsapp']
-    },
-    {
-        id: 'notif_4',
-        merchantId: 'mer_123',
-        type: 'info',
-        category: 'system',
-        title: 'New Feature: Control Center',
-        message: 'You can now manage all your store settings in one place.',
-        actionUrl: '/admin/control-center',
-        actionLabel: 'Explore',
-        isRead: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
-        channels: ['in_app']
-    }
-];
+import { getSessionUser } from '@/lib/session';
+import { prisma } from '@vayva/db';
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const filter = searchParams.get('filter') || 'all'; // all, unread, critical
+    try {
+        // Require authentication
+        const user = await getSessionUser();
+        if (!user) {
+            return NextResponse.json(
+                { error: 'Unauthorized - Please login' },
+                { status: 401 }
+            );
+        }
 
-    let filtered = [...MOCK_NOTIFICATIONS];
+        const { searchParams } = new URL(request.url);
+        const filter = searchParams.get('filter') || 'all'; // all, unread, critical
 
-    if (filter === 'unread') {
-        filtered = filtered.filter(n => !n.isRead);
-    } else if (filter === 'critical') {
-        filtered = filtered.filter(n => n.type === 'critical');
+        // Get real notifications from database
+        const where: any = {
+            storeId: user.storeId,
+        };
+
+        if (filter === 'unread') {
+            where.readAt = null;
+        } else if (filter === 'critical') {
+            where.severity = 'HIGH';
+        }
+
+        const notifications = await prisma.notification.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+        });
+
+        // Transform to expected format
+        const formattedNotifications = notifications.map(notif => ({
+            id: notif.id,
+            merchantId: notif.storeId,
+            type: notif.severity === 'HIGH' ? 'critical' : notif.severity === 'MEDIUM' ? 'action_required' : 'info',
+            category: notif.category || 'system',
+            title: notif.title,
+            message: notif.body,
+            actionUrl: notif.actionUrl || undefined,
+            actionLabel: 'View Details',
+            isRead: notif.readAt !== null,
+            createdAt: notif.createdAt.toISOString(),
+            channels: ['in_app'], // Default channel
+        }));
+
+        return NextResponse.json(formattedNotifications);
+    } catch (error) {
+        console.error("Fetch Notifications Error:", error);
+        return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
     }
-
-    // Sort by Date DESC
-    filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    return NextResponse.json(filtered);
 }

@@ -12,6 +12,7 @@
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
+        "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
             "@vayva/db": [
@@ -28,7 +29,8 @@
     "include": [
         "apps/*/src/**/*",
         "packages/*/src/**/*",
-        "infra/*/src/**/*"
+        "infra/*/src/**/*",
+        "tests/**/*"
     ],
     "exclude": [
         "node_modules",

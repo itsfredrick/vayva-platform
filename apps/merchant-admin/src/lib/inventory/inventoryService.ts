@@ -4,26 +4,6 @@ import { prisma } from '@vayva/db';
 export class InventoryService {
 
     /**
-     * Helper to resolve default location (Store-based)
-     */
-    private static async resolveLocation(storeId: string): Promise<string> {
-        const loc = await prisma.inventoryLocation.findFirst({
-            where: { storeId, isDefault: true }
-        });
-        if (loc) return loc.id;
-
-        // Create default if none
-        const newLoc = await prisma.inventoryLocation.create({
-            data: {
-                storeId,
-                name: 'Default Warehouse',
-                isDefault: true
-            }
-        });
-        return newLoc.id;
-    }
-
-    /**
      * Set absolute stock level.
      */
     static async setStock(
@@ -33,29 +13,22 @@ export class InventoryService {
         newOnHand: number,
         actor: { type: string, id?: string, label: string }
     ) {
-        const locationId = await this.resolveLocation(merchantId);
-
         return prisma.$transaction(async (tx) => {
-            // Find existing or create default
-            let item = await tx.inventoryItem.findFirst({
+            // Find existing or create
+            let item = await tx.inventory_item.findFirst({
                 where: {
-                    locationId,
-                    productId: productId, // Assuming InventoryItem still has productId based on previous repo.ts edits
-                    variantId: variantId || undefined
+                    merchantId,
+                    productId,
+                    variantId: variantId || null
                 }
             });
 
             if (!item) {
-                // To create, we need productId in InventoryItem? 
-                // Schema check: InventoryItem has productId?
-                // repo.ts check: it used productId.
-                // Checking schema again: InventoryItem { id, locationId, variantId, productId ... }
-                // Yes it has productId.
-                item = await tx.inventoryItem.create({
+                item = await tx.inventory_item.create({
                     data: {
-                        locationId,
+                        merchantId,
                         productId,
-                        variantId: variantId!,
+                        variantId: variantId || null,
                         onHand: 0,
                         reserved: 0
                     }
@@ -65,22 +38,28 @@ export class InventoryService {
             const diff = newOnHand - item.onHand;
             if (diff === 0) return item;
 
-            const updated = await tx.inventoryItem.update({
+            const oldOnHand = item.onHand;
+            const updated = await tx.inventory_item.update({
                 where: { id: item.id },
                 data: { onHand: newOnHand }
             });
 
-            // Inventory Movement
-            await tx.inventoryMovement.create({
+            // Stock Movement
+            await tx.stock_movement.create({
                 data: {
-                    storeId: merchantId,
-                    locationId,
-                    variantId: variantId!,
+                    merchantId,
+                    productId,
+                    variantId: variantId || null,
                     type: 'adjust',
                     quantity: diff,
-                    // Dropping extraneous fields not in schema
-                    performedBy: actor.label,
-                    referenceId: 'manual'
+                    beforeOnHand: oldOnHand,
+                    afterOnHand: newOnHand,
+                    beforeReserved: item.reserved,
+                    afterReserved: item.reserved,
+                    referenceId: 'manual',
+                    actorType: actor.type,
+                    actorLabel: actor.label,
+                    correlationId: `adj_${Date.now()}`
                 }
             });
 
@@ -89,45 +68,43 @@ export class InventoryService {
     }
 
     /**
-     * Reserve stock for checkout. (TTL default 15m)
+     * Reserve stock for checkout.
      */
     static async reserveStock(
         merchantId: string,
         orderDraftId: string,
         items: { productId: string, variantId?: string | null, quantity: number }[]
     ) {
-        const locationId = await this.resolveLocation(merchantId);
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
 
         await prisma.$transaction(async (tx) => {
             for (const item of items) {
-                const inventory = await tx.inventoryItem.findFirst({
+                const inventory = await tx.inventory_item.findFirst({
                     where: {
-                        locationId,
+                        merchantId,
                         productId: item.productId,
-                        variantId: item.variantId || undefined
+                        variantId: item.variantId || null
                     }
                 });
 
-                // Check availability
-                const currentOnHand = inventory?.onHand || 0;
-                const currentReserved = inventory?.reserved || 0;
-                const available = currentOnHand - currentReserved;
+                if (!inventory) throw new Error(`Product ${item.productId} not found in inventory`);
 
+                // Check availability
+                const available = inventory.onHand - inventory.reserved;
                 if (available < item.quantity) {
                     throw new Error(`Out of stock for product ${item.productId}`);
                 }
 
-                if (!inventory) throw new Error(`Product ${item.productId} not found in inventory`);
+                const oldReserved = inventory.reserved;
+                const newReserved = inventory.reserved + item.quantity;
 
                 // Increment Reserved
-                await tx.inventoryItem.update({
+                await tx.inventory_item.update({
                     where: { id: inventory.id },
-                    data: { reserved: { increment: item.quantity } }
+                    data: { reserved: newReserved }
                 });
 
                 // Create Reservation Record
-                // Schema: stock_reservation
                 await tx.stock_reservation.create({
                     data: {
                         merchantId,
@@ -135,20 +112,27 @@ export class InventoryService {
                         productId: item.productId,
                         variantId: item.variantId || null,
                         quantity: item.quantity,
-                        expiresAt
+                        expiresAt,
+                        status: 'active'
                     }
                 });
 
                 // Log Movement
-                await tx.inventoryMovement.create({
+                await tx.stock_movement.create({
                     data: {
-                        storeId: merchantId,
-                        locationId,
-                        variantId: item.variantId || 'unknown',
+                        merchantId,
+                        productId: item.productId,
+                        variantId: item.variantId || null,
                         type: 'reserve',
                         quantity: item.quantity,
-                        performedBy: 'Checkout Reservation',
-                        referenceId: orderDraftId
+                        beforeOnHand: inventory.onHand,
+                        afterOnHand: inventory.onHand,
+                        beforeReserved: oldReserved,
+                        afterReserved: newReserved,
+                        referenceId: orderDraftId,
+                        actorType: 'system',
+                        actorLabel: 'Checkout Reservation',
+                        correlationId: `res_${orderDraftId}_${item.productId}`
                     }
                 });
             }
@@ -165,24 +149,29 @@ export class InventoryService {
 
         if (reservations.length === 0) return;
 
-        const locationId = await this.resolveLocation(merchantId);
-
         await prisma.$transaction(async (tx) => {
             for (const res of reservations) {
-                const inventory = await tx.inventoryItem.findFirstOrThrow({
+                const inventory = await tx.inventory_item.findFirst({
                     where: {
-                        locationId,
+                        merchantId,
                         productId: res.productId,
-                        variantId: res.variantId || undefined
+                        variantId: res.variantId || null
                     }
                 });
 
+                if (!inventory) continue;
+
+                const oldOnHand = inventory.onHand;
+                const oldReserved = inventory.reserved;
+                const newOnHand = inventory.onHand - res.quantity;
+                const newReserved = inventory.reserved - res.quantity;
+
                 // Decrement OnHand AND Reserved
-                await tx.inventoryItem.update({
+                await tx.inventory_item.update({
                     where: { id: inventory.id },
                     data: {
-                        onHand: { decrement: res.quantity },
-                        reserved: { decrement: res.quantity }
+                        onHand: newOnHand,
+                        reserved: newReserved
                     }
                 });
 
@@ -193,15 +182,21 @@ export class InventoryService {
                 });
 
                 // Log Movement (Sale)
-                await tx.inventoryMovement.create({
+                await tx.stock_movement.create({
                     data: {
-                        storeId: merchantId,
-                        locationId,
-                        variantId: res.variantId || 'unknown',
+                        merchantId,
+                        productId: res.productId,
+                        variantId: res.variantId || null,
                         type: 'sale',
                         quantity: res.quantity * -1,
-                        performedBy: 'Order Confirmation',
-                        referenceId: orderId
+                        beforeOnHand: oldOnHand,
+                        afterOnHand: newOnHand,
+                        beforeReserved: oldReserved,
+                        afterReserved: newReserved,
+                        referenceId: orderId,
+                        actorType: 'system',
+                        actorLabel: 'Order Confirmation',
+                        correlationId: `sale_${orderId}_${res.id}`
                     }
                 });
             }
@@ -209,30 +204,31 @@ export class InventoryService {
     }
 
     /**
-     * Release reservation (e.g. timeout or cancel)
+     * Release reservation
      */
     static async releaseReservation(merchantId: string, orderDraftId: string) {
         const reservations = await prisma.stock_reservation.findMany({
             where: { orderDraftId, status: 'active' }
         });
 
-        const locationId = await this.resolveLocation(merchantId);
-
         await prisma.$transaction(async (tx) => {
             for (const res of reservations) {
-                const inventory = await tx.inventoryItem.findFirst({
+                const inventory = await tx.inventory_item.findFirst({
                     where: {
-                        locationId,
+                        merchantId,
                         productId: res.productId,
-                        variantId: res.variantId || undefined
+                        variantId: res.variantId || null
                     }
                 });
                 if (!inventory) continue;
 
-                // Decrement Reserved Only (Back to Available)
-                await tx.inventoryItem.update({
+                const oldReserved = inventory.reserved;
+                const newReserved = inventory.reserved - res.quantity;
+
+                // Decrement Reserved Only
+                await tx.inventory_item.update({
                     where: { id: inventory.id },
-                    data: { reserved: { decrement: res.quantity } }
+                    data: { reserved: newReserved }
                 });
 
                 await tx.stock_reservation.update({
@@ -240,15 +236,21 @@ export class InventoryService {
                     data: { status: 'released' }
                 });
 
-                await tx.inventoryMovement.create({
+                await tx.stock_movement.create({
                     data: {
-                        storeId: merchantId,
-                        locationId,
-                        variantId: res.variantId || 'unknown',
+                        merchantId,
+                        productId: res.productId,
+                        variantId: res.variantId || null,
                         type: 'release',
                         quantity: 0,
-                        performedBy: 'Reservation Release',
+                        beforeOnHand: inventory.onHand,
+                        afterOnHand: inventory.onHand,
+                        beforeReserved: oldReserved,
+                        afterReserved: newReserved,
                         referenceId: orderDraftId,
+                        actorType: 'system',
+                        actorLabel: 'Reservation Release',
+                        correlationId: `rel_${orderDraftId}_${res.id}`
                     }
                 });
             }

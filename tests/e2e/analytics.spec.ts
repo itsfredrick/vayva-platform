@@ -15,7 +15,7 @@ test.describe('Analytics System', () => {
             path: '/home'
         });
 
-        const evt = await prisma.analyticsEvent.findFirst({
+        const evt = await prisma.analytics_event.findFirst({
             where: { merchantId, eventName: 'page_view' },
             orderBy: { createdAt: 'desc' }
         });
@@ -28,6 +28,7 @@ test.describe('Analytics System', () => {
 
     test('merchant dashboard shows analytics', async ({ page }) => {
         await page.goto('/dashboard/analytics');
+        await page.screenshot({ path: 'analytics-dashboard.png' });
         await expect(page.getByText('Analytics 📊')).toBeVisible();
         await expect(page.getByText('Total Visitors')).toBeVisible();
     });

@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
                     marketingOptInSource: 'checkout'
                 },
                 {
-                    channel: 'SYSTEM' as any,
+                    channel: ConsentChannel.EMAIL,
                     source: ConsentSource.CUSTOMER_ACTION, // It is customer action at checkout
                     reason: 'Checkout opt-in'
                 }

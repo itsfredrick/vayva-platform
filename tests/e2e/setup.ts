@@ -60,9 +60,7 @@ test.beforeAll(async () => {
             create: {
                 userId: TEST_USER_ID,
                 storeId: TEST_MERCHANT_ID,
-                role: 'OWNER',
-                invitedBy: TEST_USER_ID,
-                acceptedAt: new Date(),
+                role: 'owner',
             },
         });
 
@@ -79,6 +77,10 @@ test.afterAll(async () => {
 
     try {
         // Clean up in reverse order of creation (respecting foreign keys)
+        await prisma.communication_consent.deleteMany({
+            where: { merchantId: TEST_MERCHANT_ID },
+        });
+
         await prisma.membership.deleteMany({
             where: { storeId: TEST_MERCHANT_ID },
         });

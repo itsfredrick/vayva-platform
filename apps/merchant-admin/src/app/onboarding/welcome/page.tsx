@@ -48,6 +48,7 @@ export default function WelcomePage() {
                 {segments.map((seg) => (
                     <button
                         key={seg.id}
+                        data-testid={`segment-${seg.id}`}
                         onClick={() => setSelected(seg.id)}
                         className={cn(
                             "flex flex-col items-center justify-center p-6 rounded-2xl border transition-all duration-200",
@@ -81,6 +82,7 @@ export default function WelcomePage() {
             {/* Actions */}
             <div className="flex flex-col items-center">
                 <Button
+                    data-testid="onboarding-welcome-continue"
                     onClick={handleContinue}
                     disabled={!selected}
                     className="w-full md:w-2/3 !bg-black text-white h-12 rounded-xl text-base shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"

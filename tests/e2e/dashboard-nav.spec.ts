@@ -1,40 +1,59 @@
 import { test, expect } from '@playwright/test';
 import { DASHBOARD_ROUTES } from '../routes';
+import { createAuthenticatedMerchantContext, cleanupTestUsers } from '../helpers';
 
 test.describe('Dashboard Navigation Guard', () => {
 
-    // We assume test is NOT authenticated initially for this specific check
-    // to verify redirects.
+    test.afterAll(async () => {
+        await cleanupTestUsers();
+    });
 
-    for (const route of DASHBOARD_ROUTES) {
-        test(`unauth access to ${route} redirects to login`, async ({ page }) => {
-            const res = await page.goto(route);
-            // Expect redirect to login
-            // Either URL contains /login or title is Login
-            await expect(page).toHaveURL(/.*login.*/);
-        });
-    }
-
-    test('auth access and nav links', async ({ page }) => {
-        // Mock auth or perform login step
-        // For V1 without seed DB, we can't easily login.
-        // We'll define the test structure.
-        /*
-        await page.goto('/login');
-        // ... login logic ...
-        await page.goto('/dashboard');
-        
-        // "Every Link Works"
-        const navLinks = page.locator('nav a');
-        const count = await navLinks.count();
-        expect(count).toBeGreaterThan(5);
-        
-        for (let i = 0; i < count; ++i) {
-            const link = navLinks.nth(i);
-            await expect(link).toBeVisible();
-            await expect(link).toHaveAttribute('href');
+    test.describe('Unauthenticated Access', () => {
+        for (const route of DASHBOARD_ROUTES) {
+            test(`unauth access to ${route} redirects to login`, async ({ page }) => {
+                await page.goto(route);
+                // Expect redirect to login
+                await expect(page).toHaveURL(/\/(signin|login)/);
+            });
         }
-        */
+    });
+
+    test.describe('Authenticated Access', () => {
+        test('authenticated user can access dashboard and navigate', async ({ page }) => {
+            // Create authenticated merchant
+            await createAuthenticatedMerchantContext(page);
+
+            // Navigate to dashboard
+            await page.goto('/dashboard');
+            await page.waitForLoadState('networkidle');
+
+            // Verify we're on dashboard (not redirected to login)
+            await expect(page).toHaveURL(/\/dashboard/);
+
+            // Check that navigation links exist
+            const navLinks = page.locator('nav a, [role="navigation"] a');
+            const count = await navLinks.count();
+            expect(count).toBeGreaterThan(0);
+
+            // Verify at least some key navigation elements are visible
+            const visibleLinks = await navLinks.filter({ hasText: /.+/ }).count();
+            expect(visibleLinks).toBeGreaterThan(0);
+        });
+
+        test('can navigate between dashboard sections', async ({ page }) => {
+            await createAuthenticatedMerchantContext(page);
+
+            // Test navigation to different sections
+            const sections = ['/dashboard', '/dashboard/orders', '/dashboard/products'];
+
+            for (const section of sections) {
+                await page.goto(section);
+                await page.waitForLoadState('networkidle');
+
+                // Verify we're on the correct page (not redirected)
+                await expect(page).toHaveURL(new RegExp(section));
+            }
+        });
     });
 
 });
