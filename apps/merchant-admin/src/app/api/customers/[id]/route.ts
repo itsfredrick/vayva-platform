@@ -12,7 +12,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         merchantId: 'mer_123',
         name: 'Chioma Okeke',
         phone: '+234 801 234 5678',
-        email: 'chioma.o@example.com',
         firstSeenAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString(),
         lastSeenAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
         totalOrders: 12,
