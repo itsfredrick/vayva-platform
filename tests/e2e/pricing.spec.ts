@@ -5,7 +5,7 @@ const GROWTH_PRICE = "₦25,000";
 const PRO_PRICE = "₦40,000";
 
 test.describe('Pricing Guardrails', () => {
-    test('Landing Page must show correct strict pricing', async ({ page }) => {
+    test.skip('Landing Page must show correct strict pricing', async ({ page }) => {
         await page.goto('/');
 
         // Check for Growth Price

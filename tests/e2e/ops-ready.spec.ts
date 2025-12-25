@@ -49,7 +49,7 @@ test.describe('Ops Readiness Gate', () => {
     // UI Check
     test('setup checklist renders', async ({ page }) => {
         // Must login first mock
-        // await page.goto('/dashboard/setup-checklist');
+        // await page.goto('/admin/setup-checklist');
         // expect(page.locator('h1')).toHaveText('Store Setup Checklist');
     });
 

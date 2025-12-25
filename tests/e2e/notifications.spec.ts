@@ -17,7 +17,7 @@ test.describe('Notification & Audit System', () => {
 
     // UI Test Stub:
     // If we could log in, we would:
-    // 1. Visit /dashboard/notifications
+    // 1. Visit /admin/notifications
     // 2. Check for "Notifications" header
     // 3. Click "Mark all as read"
 });

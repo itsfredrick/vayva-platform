@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@vayva/db';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'dev-secret-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 export const COOKIE_NAME = 'vayva_session';
 

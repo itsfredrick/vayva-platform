@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.vayva.ng;
     font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' http://localhost:4000 https://*.vayva.ng;
+    connect-src 'self' https://*.vayva.ng;
     object-src 'none';
     base-uri 'self';
     form-action 'self';

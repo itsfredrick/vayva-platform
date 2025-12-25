@@ -1,5 +1,6 @@
 
 import { test, expect } from '@playwright/test';
+import { createAuthenticatedMerchantContext } from '../helpers/auth';
 import { TeamService } from '../../apps/merchant-admin/src/lib/team/teamService';
 import { can, ROLES, PERMISSIONS } from '../../apps/merchant-admin/src/lib/team/permissions';
 import { prisma } from '@vayva/db';
@@ -78,7 +79,8 @@ test.describe('Team RBAC v2', () => {
     // but code path is covered in Service.
 
     test('UI Renders', async ({ page }) => {
-        await page.goto('/dashboard/settings/team');
+        await createAuthenticatedMerchantContext(page);
+        await page.goto('/admin/settings/team');
         await expect(page.getByText('Team Management')).toBeVisible();
         await expect(page.getByText('Active Members')).toBeVisible();
     });

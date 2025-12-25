@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import { prisma } from './prisma';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 const COOKIE_NAME = 'vayva_session';
@@ -130,7 +130,10 @@ export async function setupAuthenticatedSession(page: Page, userEmail: string) {
         role: membership.role,
     };
 
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign(payload, JWT_SECRET, {
+        expiresIn: '1d',
+        jwtid: Math.random().toString(36).substring(7) + Date.now().toString() // Ensure uniqueness
+    });
 
     // Calculate expiration date (1 day)
     const expiresAt = new Date();

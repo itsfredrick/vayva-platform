@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { createAuthenticatedMerchantContext } from '../helpers/auth';
 
-test.describe('Inbox Ops Layer', () => {
+test.describe('Inbox Operations', () => {
+    test.beforeEach(async ({ page }) => {
+        await createAuthenticatedMerchantContext(page);
+    });
 
     test('navigate to inbox and view conversation', async ({ page }) => {
         // Assume logged in
-        await page.goto('/dashboard/inbox');
+        await page.goto('/admin/inbox');
 
         await expect(page.getByText('Inbox')).toBeVisible();
         await expect(page.getByPlaceholder('Search...')).toBeVisible();
@@ -15,7 +19,7 @@ test.describe('Inbox Ops Layer', () => {
     });
 
     test('quick reply interaction', async ({ page }) => {
-        await page.goto('/dashboard/inbox');
+        await page.goto('/admin/inbox');
 
         // Select a conversation (if any)
         // This relies on seeded data which we can't guarantee with current DB state.

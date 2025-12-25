@@ -24,7 +24,7 @@ test.describe('Template Gallery', () => {
             await route.fulfill({ json: { synced: 1 } });
         });
 
-        await page.goto('/dashboard/templates');
+        await page.goto('/admin/templates');
 
         // Check Sync Button works (triggers reload)
         await page.getByText('Refresh Registry').click();
@@ -54,7 +54,7 @@ test.describe('Template Gallery', () => {
             await route.fulfill({ json: { success: true } });
         });
 
-        await page.goto('/dashboard/templates');
+        await page.goto('/admin/templates');
 
         // Open Preview
         await page.getByText('Preview & Apply').click();

@@ -1,7 +1,10 @@
-
 import { test, expect } from '@playwright/test';
+import { createAuthenticatedMerchantContext } from '../helpers/auth';
 
-test.describe('Partners Admin', () => {
+test.describe('Partners Directory', () => {
+    test.beforeEach(async ({ page }) => {
+        await createAuthenticatedMerchantContext(page);
+    });
 
     test('admin can list partners', async ({ page }) => {
         // Mock List
