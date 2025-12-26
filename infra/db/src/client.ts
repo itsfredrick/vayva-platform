@@ -1,24 +1,93 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 
-export { PrismaClient, Prisma };
-
-// Export frequently used enums explicitly to satisfy Turbopack/Next.js 16
-// while ensuring workspace services (like audit-service, whatsapp-service) have access to them.
+// Values: Re-export the Prisma namespace and common enums explicitly to satisfy Turbopack (Next.js 16)
+// Turbopack cannot statically analyze 'export *' from the CommonJS @prisma/client module.
 export {
+    PrismaClient,
+    Prisma,
+
+    // Core Enums from schema.prisma
+    AiActionStatus,
+    ApiKeyStatus,
+    AppRole,
+    ApprovalStatus,
+    BillingProvider,
+    CampaignChannel,
+    CampaignSendStatus,
+    CampaignStatus,
+    CampaignType,
+    Channel,
+    ChecklistCategory,
+    ChecklistStatus,
+    ConsentChannel,
+    ConsentEventType,
+    ConsentSource,
+    ConsentStatus,
+    ConsentType,
+    CouponStatus,
+    DLQStatus,
+    DataRequestStatus,
+    DataRequestType,
+    DeliveryTaskStatus,
+    DeviceStatus,
+    DeviceType,
     Direction,
+    DiscountAppliesTo,
+    DiscountType,
+    DisputeEvidenceType,
+    DisputeProvider,
+    DisputeStatus,
+    EnforcementActionType,
+    EnforcementScope,
+    EvidenceFileType,
+    EvidenceScope,
+    FlagSeverity,
+    FulfillmentStatus,
+    IdempotencyStatus,
+    InvoiceStatus,
+    JobRunStatus,
+    KycStatus,
+    LegalKey,
+    ListingStatus,
+    MediaType,
+    MessageIntent,
     MessageStatus,
     MessageType,
-    AppRole,
+    MetricPeriod,
+    MigrationStatus,
     OnboardingStatus,
     OrderStatus,
+    OutboxEventStatus,
     PaymentStatus,
-    FulfillmentStatus,
+    PolicyStatus,
+    PolicyType,
+    ReportEntityType,
+    ReportReason,
+    ReportStatus,
+    RestockAction,
+    ReturnCondition,
+    ReturnMethod,
+    ReturnReason,
+    ReturnResolution,
+    ReturnStatus,
+    ReviewStatus,
+    RiskScope,
+    RiskSeverity,
+    RiskStatus,
+    SubscriptionPlan,
     SubscriptionStatus,
-    ApiKeyStatus,
-    Channel
+    SupportCaseCategory,
+    SupportCaseStatus,
+    ThemeCategory,
+    ThemeLicenseType,
+    ThemeStatus,
+    VirtualAccountStatus,
+    WebhookDeliveryStatus,
+    WebhookEndpointStatus
 } from '@prisma/client';
 
-// Re-export all types (types are safe for Turbopack as they are erased)
+// Types: Wildcard export for all generated types (models, inputs, etc.)
+// Types are erased at build time and do not trigger Turbopack's CJS export errors.
 export type * from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
