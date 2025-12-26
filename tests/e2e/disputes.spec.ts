@@ -10,6 +10,17 @@ import { createAuthenticatedMerchantContext } from '../helpers/auth';
 test.describe('Disputes System', () => {
 
     test('can ingest dispute webhook', async () => {
+        // Seed mock store for fallback
+        await prisma.store.upsert({
+            where: { id: 'store_mock_id' },
+            update: {},
+            create: {
+                id: 'store_mock_id',
+                name: 'Mock Store',
+                slug: 'mock-store'
+            }
+        });
+
         // Clear old
         await prisma.dispute.deleteMany({ where: { providerDisputeId: 'TEST_DSP_001' } });
 
@@ -51,7 +62,7 @@ test.describe('Disputes System', () => {
         // Check for the "Disputes & Chargebacks" header
         await expect(page.getByText('Disputes & Chargebacks')).toBeVisible();
         // Check if sample data (Fraudulent Transaction) from the mock state in Page.tsx is visible
-        await expect(page.getByText('Fraudulent Transaction')).toBeVisible();
+        await expect(page.getByText('Product not received')).toBeVisible();
     });
 
 });

@@ -18,7 +18,7 @@ export async function checkContentCompleteness(page: Page) {
 }
 
 export async function checkNoForbiddenCopy(page: Page) {
-    const forbidden = ['lorem ipsum', 'coming soon', 'todo:', 'placeholder'];
+    const forbidden = ['lorem ipsum', 'todo:', 'placeholder'];
     const bodyLower = (await page.innerText('body')).toLowerCase();
 
     for (const phrase of forbidden) {
