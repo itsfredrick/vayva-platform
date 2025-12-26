@@ -1,7 +1,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
     const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
 
     // Minimal CSP for V1. In prod, lock this down further.
