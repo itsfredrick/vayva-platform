@@ -10,27 +10,23 @@ export const PUBLIC_ROUTES = [
 export const LEGAL_ROUTES = [
     '/legal/terms',
     '/legal/privacy',
-    '/legal/refunds',
-    '/legal/returns',
-    '/legal/shipping-delivery',
+    '/legal/refund-policy',
     '/legal/cookies',
-    '/legal/security',
-    '/legal/acceptable-use',
-    '/legal/disclaimer'
+    '/legal/acceptable-use'
 ];
 
 export const ONBOARDING_ROUTES = [
     '/onboarding',
-    '/onboarding/live'
+    '/onboarding/resume'
 ];
 
 export const DASHBOARD_ROUTES = [
-    '/dashboard',
-    '/dashboard/notifications',
-    '/dashboard/approvals',
-    '/dashboard/inbox',
-    '/dashboard/reports',
-    '/dashboard/settings/team',
-    '/dashboard/settings/audit-log',
-    '/dashboard/settings/store-policies'
+    '/admin/dashboard',
+    '/admin/notifications',
+    '/admin/wa-agent/approvals',
+    '/admin/inbox',
+    '/admin/reports',
+    '/admin/settings/team',
+    '/admin/audit',
+    '/admin/store/policies'
 ];

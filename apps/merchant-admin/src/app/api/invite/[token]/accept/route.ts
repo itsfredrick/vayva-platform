@@ -1,50 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@vayva/db';
+import { getSessionUser } from '@/lib/session';
+import { TeamService } from '@/lib/team/teamService';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-    const { token } = await params;
+    try {
+        const { token } = await params;
+        const user = await getSessionUser();
 
-    // Validate Accept Request (user must be logged in to accept, or we create account? 
-    // Usually, accept invite means linking CURRENT user to store.
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-    // We need session here.
-    // However, this is a public route, maybe handled by middleware for auth?
-    // Let's assume user visits /invite/[token], logs in/signs up, then POSTs here.
+        await TeamService.acceptInvite(token, user.id);
 
-    // Wait, the prompt says "POST /api/invite/[token]/accept -> joins team"
-
-    // We'll read the request body for userId (maybe from session wrapper if server component/client)
-    // Or we use getServerSession.
-
-    // Ideally, this is called by the authenticated user accepting the invite.
-
-    // FIXME: Need to import authOptions/getServerSession to get current user.
-    // For now, assume it's protected or returns 401.
-
-    // ... skipping implementation details as I need `getServerSession`.
-
-    // Okay, implementing properly.
-    /*
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    
-    const invite = await prisma.staffInvite.findUnique({ where: { token } });
-    if (!invite || invite.expiresAt < new Date()) {
-       return new NextResponse('Invalid or expired token', { status: 400 });
+        return NextResponse.json({ ok: true, message: 'Invite accepted successfully' });
+    } catch (error: any) {
+        console.error('Accept invite error:', error);
+        return NextResponse.json(
+            { error: error.message || 'Failed to accept invite' },
+            { status: 400 }
+        );
     }
-    
-    // Seat Limit Re-check (race condition prevention)
-    const { allowed } = await canInviteMember(invite.storeId);
-    if (!allowed) {
-         return NextResponse.json({ ok: false, code: 'SEAT_LIMIT' }, { status: 403 });
-    }
-    
-    // Create Membership
-    await prisma.membership.create({ ... });
-    await prisma.staffInvite.update({ where: { id: invite.id }, data: { acceptedAt: new Date() } });
-    
-    return NextResponse.json({ ok: true });
-    */
-
-    return NextResponse.json({ ok: true }); // Placeholder
 }

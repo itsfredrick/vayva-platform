@@ -46,9 +46,9 @@ test.describe('Site-Wide Navigation', () => {
         const footer = page.locator('footer');
 
         // Static smoke test of footer headers
-        await expect(footer.getByText('Product')).toBeVisible();
-        await expect(footer.getByText('Company')).toBeVisible();
-        await expect(footer.getByText('Legal & Compliance')).toBeVisible();
+        await expect(footer.getByText('Product', { exact: true })).toBeVisible();
+        await expect(footer.getByText('Company', { exact: true })).toBeVisible();
+        await expect(footer.getByText('Legal & Compliance', { exact: true })).toBeVisible();
     });
 
     test('should verify Landing Page CTAs', async ({ page }) => {

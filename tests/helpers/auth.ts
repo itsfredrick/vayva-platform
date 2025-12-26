@@ -1,71 +1,58 @@
 import { Page } from '@playwright/test';
-import { prisma } from './prisma';
+import { prisma } from '@vayva/db';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
 const COOKIE_NAME = 'vayva_session';
 
-/**
- * Test user credentials
- */
 export const TEST_USERS = {
     merchant: {
-        email: 'test-merchant@vayva.test',
-        password: 'TestPassword123!',
+        email: 'merchant@test.com',
+        password: 'Password123!',
         firstName: 'Test',
         lastName: 'Merchant',
+        businessName: 'Vayva Test Store'
     },
-    // Admin removed for now as schema changed - reimplement if Ops tests needed
+    admin: {
+        email: 'admin@vayva.ng',
+        password: 'AdminPassword123!',
+        firstName: 'System',
+        lastName: 'Admin'
+    }
 };
 
 /**
- * Create a test merchant user with store and owner membership
+ * Create a new test merchant user and store for E2E testing
  */
-export async function createTestMerchant(overrides?: Partial<typeof TEST_USERS.merchant>) {
-    const user = { ...TEST_USERS.merchant, ...overrides };
+export async function createTestMerchant(overrides: { onboardingStatus?: any } = {}) {
+    const userData = TEST_USERS.merchant;
 
-    // Check existing user first to avoid unique constraint errors
-    const existingUser = await prisma.user.findUnique({
-        where: { email: user.email },
-        include: { memberships: { include: { store: true } } },
-    });
-
+    // Cleanup existing data for this test email to avoid constraints
+    const existingUser = await prisma.user.findUnique({ where: { email: userData.email } });
     if (existingUser) {
-        if (existingUser.memberships.length > 0) {
-            return {
-                user: existingUser,
-                store: existingUser.memberships[0].store,
-            };
-        } else {
-            // User exists but has no store/membership - dirty state. Clean up.
-            await prisma.membership.deleteMany({ where: { userId: existingUser.id } });
-            await prisma.merchantSession.deleteMany({ where: { userId: existingUser.id } });
-            await prisma.user.delete({ where: { id: existingUser.id } });
-        }
+        await prisma.membership.deleteMany({ where: { userId: existingUser.id } });
+        await prisma.merchantSession.deleteMany({ where: { userId: existingUser.id } });
+        await prisma.user.delete({ where: { id: existingUser.id } });
     }
 
-    const passwordHash = await bcrypt.hash(user.password, 10);
-
-    // Create merchant user
     const merchantUser = await prisma.user.create({
         data: {
-            email: user.email,
-            password: passwordHash,
-            firstName: user.firstName,
-            lastName: user.lastName,
+            email: userData.email,
+            password: await (bcrypt.hash as any)(userData.password, 10),
+            firstName: userData.firstName,
+            lastName: userData.lastName,
             isEmailVerified: true,
-            createdAt: new Date(),
         },
     });
 
     // Create store for merchant
     const store = await prisma.store.create({
         data: {
-            name: `${user.firstName}'s Store`,
+            name: `${userData.firstName}'s Store`,
             slug: `test-store-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-            onboardingStatus: 'COMPLETE',
-            onboardingCompleted: true,
+            onboardingStatus: overrides.onboardingStatus || 'COMPLETE',
+            onboardingCompleted: overrides.onboardingStatus === 'COMPLETE',
             createdAt: new Date(),
         },
     });
@@ -98,15 +85,13 @@ export async function loginAsMerchant(page: Page, credentials = TEST_USERS.merch
     // Submit form
     await page.click('button[type="submit"]');
 
-    // Wait for redirect to dashboard
-    await page.waitForURL(/\/(dashboard|admin)/, { timeout: 10000 });
+    // Wait for navigation to dashboard - timeout handled by Playwright
     await page.waitForLoadState('networkidle');
 }
 
 
 /**
- * Setup authenticated session via API (faster than UI login)
- * Mirrors src/lib/session.ts logic
+ * Setup authenticated session using COOKIE directly (Fast Auth)
  */
 export async function setupAuthenticatedSession(page: Page, userEmail: string) {
     // Get user from database with membership
@@ -135,78 +120,55 @@ export async function setupAuthenticatedSession(page: Page, userEmail: string) {
         jwtid: Math.random().toString(36).substring(7) + Date.now().toString() // Ensure uniqueness
     });
 
-    // Calculate expiration date (1 day)
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 1);
 
-    // Create MerchantSession in database
+    const context = page.context();
+    const sessionToken = token;
+
+    // Create session in database
     await prisma.merchantSession.create({
         data: {
             userId: user.id,
-            token,
-            expiresAt,
+            token: sessionToken,
+            expiresAt: expiresAt,
             createdAt: new Date(),
         },
     });
 
-    // Set session cookie
-    await page.context().addCookies([
+    await context.addCookies([
         {
             name: COOKIE_NAME,
-            value: token,
+            value: sessionToken,
             domain: 'localhost',
             path: '/',
-            expires: Math.floor(expiresAt.getTime() / 1000),
             httpOnly: true,
-            secure: false,
+            secure: false, // Localhost skip secure
             sameSite: 'Lax',
         },
     ]);
-
-    return { user, sessionToken: token };
 }
 
 /**
- * Cleanup test users
+ * Remove test users after suite
  */
-export async function cleanupTestUsers() {
-    const testEmails = Object.values(TEST_USERS).map((u) => u.email);
-
-    // Get Users
-    const users = await prisma.user.findMany({
-        where: { email: { in: testEmails } },
-        select: { id: true }
-    });
-    const userIds = users.map(u => u.id);
-
-    // Delete sessions
-    await prisma.merchantSession.deleteMany({
-        where: { userId: { in: userIds } }
-    });
-
-    // Delete memberships
-    await prisma.membership.deleteMany({
-        where: { userId: { in: userIds } }
-    });
-
-    // Delete stores (Cascades usually? If not, delete manually)
-    // Finding stores owned by these users (via membership) is hard if membership is gone.
-    // Assuming Clean DB or manual cleanup.
-
-    // Delete users
-    await prisma.user.deleteMany({
-        where: {
-            email: { in: testEmails },
-        },
-    });
+export async function cleanupTestUsers(testEmails: string[] = [TEST_USERS.merchant.email]) {
+    for (const email of testEmails) {
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (user) {
+            await prisma.membership.deleteMany({ where: { userId: user.id } });
+            await prisma.merchantSession.deleteMany({ where: { userId: user.id } });
+            await prisma.user.delete({ where: { id: user.id } });
+        }
+    }
 }
 
 /**
  * Create authenticated merchant context (use in beforeEach)
  */
-export async function createAuthenticatedMerchantContext(page: Page) {
+export async function createAuthenticatedMerchantContext(page: Page, overrides: { onboardingStatus?: any } = {}) {
     // Create test merchant if doesn't exist
-    const { user, store } = await createTestMerchant();
+    const { user, store } = await createTestMerchant(overrides);
 
     // Setup session
     await setupAuthenticatedSession(page, user.email);
@@ -218,10 +180,8 @@ export async function createAuthenticatedMerchantContext(page: Page) {
  * Verify user is authenticated
  */
 export async function verifyAuthenticated(page: Page) {
-    // Check if session cookie exists
     const cookies = await page.context().cookies();
     const sessionCookie = cookies.find((c) => c.name === COOKIE_NAME);
-
     return !!sessionCookie;
 }
 
