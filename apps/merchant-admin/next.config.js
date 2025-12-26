@@ -1,11 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     transpilePackages: ["@vayva/ui", "@vayva/theme", "@vayva/schemas", "@vayva/shared", "@vayva/api-client", "@vayva/content"],
-    experimental: {
-        turbo: {
-            root: "../../"
-        }
-    }
+    serverExternalPackages: ["@prisma/client", "bcryptjs"]
 };
 
 module.exports = nextConfig;
