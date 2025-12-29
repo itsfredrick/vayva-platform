@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@vayva/ui", "@vayva/theme", "@vayva/schemas", "@vayva/api-client", "@vayva/content"],
+  experimental: {
+    optimizePackageImports: ["lucide-react", "@vayva/ui", "@vayva/shared", "@vayva/api-client"]
+  },
   images: {
     remotePatterns: [
       {
