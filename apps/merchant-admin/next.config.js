@@ -3,7 +3,10 @@ const { withSentryConfig } = require("@sentry/nextjs");
 
 const nextConfig = {
     transpilePackages: ["@vayva/ui", "@vayva/theme", "@vayva/schemas", "@vayva/shared", "@vayva/api-client", "@vayva/content"],
-    serverExternalPackages: ["@prisma/client", "bcryptjs", "@vayva/db"]
+    serverExternalPackages: ["@prisma/client", "bcryptjs", "@vayva/db"],
+    experimental: {
+        optimizePackageImports: ["lucide-react", "@vayva/ui", "@vayva/shared", "@vayva/api-client"]
+    }
 };
 
 const withPWA = require("@ducanh2912/next-pwa").default({
