@@ -21,7 +21,12 @@ describe('MerchantBrainService', () => {
     });
 
     it('should correctly execute the getInventory tool', async () => {
-        vi.mocked(MerchantBrainService.getInventoryStatus).mockResolvedValue({ status: 'IN_STOCK', available: 10, name: 'Prod A' });
+        vi.mocked(MerchantBrainService.getInventoryStatus).mockResolvedValue({
+            productId: 'prod-123',
+            status: 'IN_STOCK',
+            available: 10,
+            name: 'Prod A'
+        });
         const result = await MerchantBrainService.getInventoryStatus(TEST_STORE_A, 'prod-123');
         expect(result.status).toBe('IN_STOCK');
         expect(result.available).toBeGreaterThan(0);
@@ -34,7 +39,12 @@ describe('MerchantBrainService', () => {
     });
 
     it('should handle tool failure gracefully', async () => {
-        vi.mocked(MerchantBrainService.getInventoryStatus).mockResolvedValue({ status: 'OUT_OF_STOCK', available: 0, name: 'Unknown Product' });
+        vi.mocked(MerchantBrainService.getInventoryStatus).mockResolvedValue({
+            productId: 'non-existent',
+            status: 'OUT_OF_STOCK',
+            available: 0,
+            name: 'Unknown Product'
+        });
         const result = await MerchantBrainService.getInventoryStatus(TEST_STORE_A, 'non-existent');
         expect(result.name).toBe('Unknown Product');
     });
