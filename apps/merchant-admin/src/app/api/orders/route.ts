@@ -48,7 +48,7 @@ export const GET = withRBAC(
         skip: offset,
       });
 
-      const transformedOrders = orders.map((order) => ({
+      const transformedOrders = orders.map((order: any) => ({
         id: order.id,
         merchantId: order.storeId,
         orderNumber: order.orderNumber,

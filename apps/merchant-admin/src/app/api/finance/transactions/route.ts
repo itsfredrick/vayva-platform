@@ -40,12 +40,12 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const formatted = transactions.map((tx) => ({
+    const formatted = transactions.map((tx: any) => ({
       id: tx.id,
       order: tx.orderNumber,
       customer: tx.Customer
         ? `${tx.Customer.firstName || ""} ${tx.Customer.lastName || ""}`.trim() ||
-          tx.Customer.email
+        tx.Customer.email
         : "Guest Customer",
       amount: `${tx.currency} ${Number(tx.total).toLocaleString()}`,
       status: tx.paymentStatus === "SUCCESS" ? "paid" : "failed",

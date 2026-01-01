@@ -19,7 +19,7 @@ export async function GET(req: Request) {
       },
     });
 
-    const formattedLedger = ledgerEntries.map((entry) => ({
+    const formattedLedger = ledgerEntries.map((entry: any) => ({
       id: entry.id,
       storeName: entry.store.name,
       date: entry.occurredAt,

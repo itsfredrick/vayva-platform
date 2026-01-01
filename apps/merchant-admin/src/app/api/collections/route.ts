@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: "desc" },
     });
 
-    const formatted = collections.map((col) => ({
+    const formatted = collections.map((col: any) => ({
       id: col.id,
       name: col.title,
       count: col._count.CollectionProduct,

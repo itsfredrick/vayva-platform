@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         current: limitInfo.usage,
         allowed: limitInfo.allowed,
         reason: limitInfo.reason,
-        history: history.map((h) => ({
+        history: history.map((h: any) => ({
           date: h.date,
           tokens: h.totalTokens,
           requests: h.totalRequests,

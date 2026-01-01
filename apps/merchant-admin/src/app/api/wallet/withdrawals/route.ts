@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     ]);
 
     // Convert BigInt to Number for JSON response
-    const serialized = withdrawals.map((w) => ({
+    const serialized = withdrawals.map((w: any) => ({
       ...w,
       amountKobo: Number(w.amountKobo),
       feeKobo: Number(w.feeKobo),
