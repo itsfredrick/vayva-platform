@@ -43,15 +43,14 @@ export async function GET(request: Request) {
       prisma.customer.count({ where }),
     ]);
 
-    const formattedCustomers = customers.map((c) => {
+    const formattedCustomers = customers.map((c: any) => {
       const totalOrders = c.orders.length;
       const totalSpend = c.orders.reduce(
-        (sum, order) => sum + Number(order.total || 0),
+        (sum: any, order: any) => sum + Number(order.total || 0),
         0,
       );
-      const lastOrder = c.orders.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      const lastOrder = c.orders.sort((a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )[0];
 
       // Determine status based on activity
