@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { prisma } from "@vayva/db";
+import { prisma, Prisma } from "@vayva/db";
 import { TEMPLATES } from "@/lib/templates-registry";
 import { COMPETITORS } from "@/lib/seo/comparisons";
 import { FEATURES } from "@/lib/seo/features-data";
@@ -39,12 +39,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // Only include live and completed stores
-    const stores = await prisma.store.findMany({
+    type StoreSlugRow = Prisma.StoreGetPayload<{ select: { slug: true } }>;
+
+    const stores: StoreSlugRow[] = await prisma.store.findMany({
       where: { isLive: true, onboardingCompleted: true },
       select: { slug: true },
       take: 500,
     });
-    stores.forEach((s) => enumeratedPaths.push(`/store/${s.slug}`));
+
+    stores.forEach((s: StoreSlugRow) => {
+      enumeratedPaths.push(`/store/${s.slug}`);
+    });
 
     // Active market categories
     const categories = await prisma.marketplaceListing.groupBy({
