@@ -110,7 +110,7 @@ export default function AuditLogPage() {
                   </td>
                 </tr>
               ) : (
-                filteredLogs.map((log) => (
+                filteredLogs.map((log: any) => (
                   <tr
                     key={log.id}
                     className="hover:bg-gray-50/50 transition-colors"

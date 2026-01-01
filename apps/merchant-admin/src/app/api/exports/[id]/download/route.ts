@@ -218,7 +218,7 @@ export async function GET(
       });
 
       const header = ["Date", "Action", "Actor Role", "Reference", "Summary"];
-      const rows = events.map((e) => {
+      const rows = events.map((e: any) => {
         const metadata = (e.afterState as any) || {};
         return [
           new Date(e.createdAt).toISOString(),

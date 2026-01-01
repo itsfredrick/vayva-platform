@@ -24,7 +24,7 @@ export async function GET() {
       where: { storeId },
     });
 
-    const activeSessions = loginLogs.map((log) => ({
+    const activeSessions = loginLogs.map((log: any) => ({
       id: log.id,
       device: log.userAgent || "Unknown Device",
       location: log.ipAddress || "Unknown Location",
@@ -38,14 +38,14 @@ export async function GET() {
         activeSessions.length > 0
           ? activeSessions
           : [
-              {
-                id: "current",
-                device: "Current Browser",
-                location: "Local",
-                lastActive: new Date(),
-                isCurrent: true,
-              },
-            ],
+            {
+              id: "current",
+              device: "Current Browser",
+              location: "Local",
+              lastActive: new Date(),
+              isCurrent: true,
+            },
+          ],
     });
   } catch (error: any) {
     console.error("Security fetch error:", error);
