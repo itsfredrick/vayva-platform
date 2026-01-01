@@ -11,6 +11,10 @@
         "@vayva/db": "workspace:*",
         "zod": "^3.22.4"
     },
+    "exports": {
+        ".": "./src/index.ts",
+        "./notifications/manager": "./src/notifications/manager.ts"
+    },
     "devDependencies": {
         "typescript": "^5.0.0",
         "@types/node": "^20.0.0"
