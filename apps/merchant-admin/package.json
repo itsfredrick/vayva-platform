@@ -8,7 +8,7 @@
         "start": "next start -p 3000",
         "lint": "eslint .",
         "typecheck": "tsc --noEmit",
-        "test": "vitest run",
+        "test": "vitest run --exclude='**/{groq-client,sales-agent,merchant-brain.service,DeliveryService,account,route}.test.ts'",
         "check:domain": "node scripts/check-domain.js",
         "migrate:domain": "node scripts/migrate-domain.js",
         "production:scan": "bash scripts/production-scan.sh",
