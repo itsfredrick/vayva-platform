@@ -90,9 +90,9 @@ export async function GET(
 
       csvContent = [
         header.join(","),
-        ...rows.map((row) =>
+        ...rows.map((row: any) =>
           row
-            .map((field) => `"${String(field).replace(/"/g, '""')}"`)
+            .map((field: any) => `"${String(field).replace(/"/g, '""')}"`)
             .join(","),
         ),
       ].join("\n");
@@ -129,9 +129,9 @@ export async function GET(
       ]);
       csvContent = [
         header.join(","),
-        ...rows.map((row) =>
+        ...rows.map((row: any) =>
           row
-            .map((field) => `"${String(field).replace(/"/g, '""')}"`)
+            .map((field: any) => `"${String(field).replace(/"/g, '""')}"`)
             .join(","),
         ),
       ].join("\n");
@@ -175,9 +175,9 @@ export async function GET(
 
       csvContent = [
         header.join(","),
-        ...rows.map((row) =>
+        ...rows.map((row: any) =>
           row
-            .map((field) => `"${String(field).replace(/"/g, '""')}"`)
+            .map((field: any) => `"${String(field).replace(/"/g, '""')}"`)
             .join(","),
         ),
       ].join("\n");
@@ -231,9 +231,9 @@ export async function GET(
 
       csvContent = [
         header.join(","),
-        ...rows.map((row) =>
+        ...rows.map((row: any) =>
           row
-            .map((field) => `"${String(field).replace(/"/g, '""')}"`)
+            .map((field: any) => `"${String(field).replace(/"/g, '""')}"`)
             .join(","),
         ),
       ].join("\n");
