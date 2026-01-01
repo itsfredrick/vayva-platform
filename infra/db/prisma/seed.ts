@@ -1,10 +1,55 @@
 const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // 1. Create a demo store (Fashion)
+  // 0. Create Auth Users (Owner & Admin)
+  const password = "Smackdown21!";
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  // Create or Update Ops Admin/Owner
+  const ownerUser = await prisma.user.upsert({
+    where: { email: "fred@vayva.ng" },
+    update: {
+      password: hashedPassword // update password just in case
+    },
+    create: {
+      id: "user_fred_admin",
+      email: "fred@vayva.ng",
+      firstName: "Fredrick",
+      lastName: "Admin",
+      isEmailVerified: true,
+      // role: "OWNER", // Role removed based on schema check
+      password: hashedPassword
+    },
+  });
+
+  // 0.1. Create Ops User (For Ops Console Login!)
+  // Ops Console uses a separate table 'OpsUser', NOT 'User'.
+  const opsUser = await prisma.opsUser.upsert({
+    where: { email: "fred@vayva.ng" },
+    update: {
+      password: hashedPassword,
+      isActive: true,
+      role: "OPS_OWNER"
+    },
+    create: {
+      id: "ops_owner_1",
+      email: "fred@vayva.ng",
+      password: hashedPassword,
+      name: "Fredrick Ops",
+      role: "OPS_OWNER",
+      isActive: true
+    }
+  });
+
+  // Create Ops Admin User
+  // NOTE: Schema might be different for Ops. Checking schema is safer but for now I'll try to insert into User or Admin table if exists.
+  // Assuming 'User' table handles all. 
+
+  // 1. Create a demo store (Fashion) linked to owner
   const storeFashion = await prisma.store.upsert({
     where: { slug: "aa-fashion-demo" },
     update: {},

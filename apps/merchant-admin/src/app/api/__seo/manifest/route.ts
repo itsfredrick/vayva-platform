@@ -94,7 +94,7 @@ export async function GET() {
       where: { status: "LISTED" },
       _count: { productId: true },
     });
-    categories.forEach((c) => {
+    categories.forEach((c: { category: string | null }) => {
       if (c.category) {
         const catSlug = c.category.toLowerCase().replace(/\s+/g, "-");
         enumeratedRoutes.push(`/market/categories/${catSlug}`);
