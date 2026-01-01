@@ -9,6 +9,7 @@ export {
   ApiKeyStatus,
   AppRole,
   ApprovalStatus,
+  BankBeneficiary,
   BillingProvider,
   CampaignChannel,
   CampaignSendStatus,
