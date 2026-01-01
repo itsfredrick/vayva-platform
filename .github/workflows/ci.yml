@@ -95,6 +95,13 @@ jobs:
       - name: E2E tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vayva_test?schema=public
+          NEXTAUTH_SECRET: "mock_secret_for_ci_tests_only_12345"
+          NEXTAUTH_URL: "http://localhost:3000"
+          PAYSTACK_SECRET_KEY: "sk_test_mock"
+          PAYSTACK_PUBLIC_KEY: "pk_test_mock"
+          RESEND_API_KEY: "re_mock_key"
+          GROQ_API_KEY: "gsk_mock_key"
+          APP_URL: "http://localhost:3000"
         run: pnpm test:e2e
         timeout-minutes: 30
         continue-on-error: true
