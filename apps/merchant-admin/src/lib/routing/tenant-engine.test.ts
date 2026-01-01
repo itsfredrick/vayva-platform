@@ -34,8 +34,8 @@ describe("AntiGravity Tenant Resolver", () => {
       path: "/dashboard",
     });
     expect(result.tenantType).toBe("admin");
-    expect(result.action).toBe("rewrite");
-    expect(result.destination).toBe("/admin/dashboard");
+    expect(result.action).toBe("redirect");
+    expect(result.destination).toBe("https://vayva.ng/dashboard");
   });
 
   it("should resolve valid tenant storefronts", () => {
