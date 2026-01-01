@@ -16,7 +16,7 @@ export async function GET(req: Request) {
       take: 100,
     });
 
-    const formattedDisputes = disputes.map((d) => ({
+    const formattedDisputes = disputes.map((d: any) => ({
       id: d.id,
       merchant: d.store.name,
       amount: d.amount,

@@ -22,7 +22,7 @@ export async function GET(req: Request) {
       take: 100, // Limit for performance
     });
 
-    const formattedRecords = kycRecords.map((record) => ({
+    const formattedRecords = kycRecords.map((record: any) => ({
       id: record.id,
       storeId: record.storeId,
       businessName: record.store.name,

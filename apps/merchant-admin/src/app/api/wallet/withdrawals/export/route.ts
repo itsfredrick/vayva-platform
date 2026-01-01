@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       "Fee (NGN)",
       "Net (NGN)",
     ];
-    const rows = withdrawals.map((w) => [
+    const rows = withdrawals.map((w: any) => [
       new Date(w.createdAt).toISOString(),
       w.referenceCode,
       w.status,

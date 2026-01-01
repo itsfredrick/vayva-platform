@@ -21,7 +21,7 @@ export async function GET() {
     });
 
     // Transform to expected format
-    const formattedSettlements = settlements.map((settlement) => ({
+    const formattedSettlements = settlements.map((settlement: any) => ({
       id: settlement.id,
       amount: Number(settlement.amount), // Already in naira (Decimal)
       currency: settlement.currency,

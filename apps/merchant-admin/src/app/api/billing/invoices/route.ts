@@ -19,7 +19,7 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      invoices: invoices.map((inv) => ({
+      invoices: invoices.map((inv: any) => ({
         id: inv.id,
         invoiceNumber: inv.invoiceNumber,
         date: inv.createdAt,

@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     });
 
     // Transform to match expected format
-    const formattedTransactions = transactions.map((txn) => {
+    const formattedTransactions = transactions.map((txn: any) => {
       const amount = Number(txn.amount);
       const isDebit = txn.direction === "DEBIT";
 

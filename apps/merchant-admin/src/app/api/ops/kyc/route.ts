@@ -25,7 +25,7 @@ export async function GET(request: Request) {
       take: 100,
     });
 
-    const formatted = records.map((r) => {
+    const formatted = records.map((r: any) => {
       const auditData = (r.audit as any[]) || [];
       const latestAttempt =
         auditData.length > 0 ? auditData[auditData.length - 1] : {};

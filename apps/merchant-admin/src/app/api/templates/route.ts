@@ -10,7 +10,7 @@ export const GET = withRBAC(PERMISSIONS.COMMERCE_VIEW, async (session: any) => {
       orderBy: { stars: "desc" },
     });
 
-    const formatted = templates.map((t) => ({
+    const formatted = templates.map((t: any) => ({
       id: t.id,
       key: t.slug,
       name: t.name,

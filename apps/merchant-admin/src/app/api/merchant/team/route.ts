@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json({
-    members: members.map((m) => ({
+    members: members.map((m: any) => ({
       id: m.id,
       userId: m.userId,
       name:
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       status: m.status,
       joinedAt: m.createdAt,
     })),
-    invites: invites.map((i) => ({
+    invites: invites.map((i: any) => ({
       id: i.id,
       email: i.email,
       role: i.role,

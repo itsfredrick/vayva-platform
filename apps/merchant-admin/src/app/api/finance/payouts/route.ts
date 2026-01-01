@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Safe Map
-    const formatted = payouts.map((po) => ({
+    const formatted = payouts.map((po: any) => ({
       id: po.id,
       amount: `${po.currency} ${Number(po.amount).toLocaleString()}`,
       status: po.status, // e.g., 'Paid', 'Processing'

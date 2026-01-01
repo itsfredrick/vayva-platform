@@ -25,7 +25,7 @@ export async function GET(req: Request) {
       take: 50,
     });
 
-    const flaggedMerchants = highRiskProfiles.map((profile) => ({
+    const flaggedMerchants = highRiskProfiles.map((profile: any) => ({
       merchantId: profile.merchantId,
       storeName: profile.store.name,
       riskScore: profile.merchantRiskScore,

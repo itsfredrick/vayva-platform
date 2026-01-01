@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json({
-    items: notifications.map((n) => ({
+    items: notifications.map((n: any) => ({
       ...n,
       type: n.severity, // Map DB severity to UI type
       message: n.body, // Map DB body to UI message
