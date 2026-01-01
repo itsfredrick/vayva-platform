@@ -96,7 +96,7 @@ export const POST = withRBAC(
       const body = await request.json();
       const isTestMode = body.mode === "test";
 
-      const result = await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx: any) => {
         // 1. Atomic Upsert & Return Sequence (Postgres)
         const [counter]: any = await tx.$queryRaw`
                 INSERT INTO "StoreCounter" ("storeId", "orderSeq")

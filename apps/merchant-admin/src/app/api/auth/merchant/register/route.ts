@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     otpExpiresAt.setMinutes(otpExpiresAt.getMinutes() + 10); // 10 minutes expiry
 
     // Create user and store in a transaction
-    const user = await prisma.$transaction(async (tx) => {
+    const user = await prisma.$transaction(async (tx: any) => {
       // Create user
       const newUser = await tx.user.create({
         data: {

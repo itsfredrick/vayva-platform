@@ -37,7 +37,7 @@ export async function POST(
   }
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // 1. Verify Order ownership and state
       const order = await tx.order.findUnique({
         where: { id, storeId },

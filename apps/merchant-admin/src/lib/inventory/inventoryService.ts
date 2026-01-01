@@ -11,7 +11,7 @@ export class InventoryService {
     newOnHand: number,
     actor: { type: string; id?: string; label: string },
   ) {
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: any) => {
       // Find existing or create
       let item = await tx.inventory_item.findFirst({
         where: {
@@ -75,7 +75,7 @@ export class InventoryService {
   ) {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       for (const item of items) {
         const inventory = await tx.inventory_item.findFirst({
           where: {
@@ -152,7 +152,7 @@ export class InventoryService {
 
     if (reservations.length === 0) return;
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       for (const res of reservations) {
         const inventory = await tx.inventory_item.findFirst({
           where: {
@@ -214,7 +214,7 @@ export class InventoryService {
       where: { orderDraftId, status: "active" },
     });
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       for (const res of reservations) {
         const inventory = await tx.inventory_item.findFirst({
           where: {

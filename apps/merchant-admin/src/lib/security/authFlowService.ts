@@ -114,7 +114,7 @@ export class AuthFlowService {
     if (record.usedAt) throw new Error("Token already used");
     if (record.expiresAt < new Date()) throw new Error("Token expired");
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 1. Mark Token Used
       await tx.password_reset_token.update({
         where: { id: record.id },

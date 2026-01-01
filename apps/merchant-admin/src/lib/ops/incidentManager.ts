@@ -20,7 +20,7 @@ export class IncidentManager {
     }
 
     // 2. Create Incident via Transaction (since no relations defined in schema)
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       const incident = await tx.statusIncident.create({
         data: {
           title: `Service disruption: ${checkName}`,

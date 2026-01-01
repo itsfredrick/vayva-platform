@@ -17,7 +17,7 @@ export class FulfillmentService {
    * Create a Shipment for an Order
    */
   static async createShipment(input: CreateShipmentInput) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       // 1. Validate Order
       const order = await tx.order.findUnique({
         where: { id: input.orderId },
@@ -67,7 +67,7 @@ export class FulfillmentService {
    * Update Shipment Status
    */
   static async updateShipmentStatus(shipmentId: string, status: string) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const shipment = await tx.shipment.update({
         where: { id: shipmentId },
         data: { status },

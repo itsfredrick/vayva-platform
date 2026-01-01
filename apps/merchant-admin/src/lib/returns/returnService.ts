@@ -70,7 +70,7 @@ export class ReturnService {
     },
   ) {
     // Logic for specific status transitions
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.returnRequest.update({
         where: { id: requestId },
         data: {

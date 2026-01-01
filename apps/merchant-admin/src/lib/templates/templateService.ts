@@ -18,7 +18,7 @@ export class TemplateService {
     });
 
     // 3. Transactional Update
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.storeTemplateSelection.upsert({
         where: { storeId },
         update: {
@@ -68,7 +68,7 @@ export class TemplateService {
     }
 
     // Apply Previous
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.storeTemplateSelection.update({
         where: { storeId },
         data: {

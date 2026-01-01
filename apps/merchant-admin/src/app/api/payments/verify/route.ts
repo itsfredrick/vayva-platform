@@ -78,7 +78,7 @@ export async function GET(request: Request) {
     }
 
     // 5. CRITICAL: Update in transaction for data integrity
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Record Ledger Entry
       await LedgerService.recordTransaction({
         storeId: order.storeId,
@@ -185,7 +185,7 @@ export async function POST(request: Request) {
     }
 
     // 6. CRITICAL: Update in transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Record Ledger Entry
       await LedgerService.recordTransaction({
         storeId: order.storeId,
