@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         // - Update Withdrawal Status
         // - Create Ledger Entry
 
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             // Re-fetch wallet with lock in production, simpler here
             const w = await tx.wallet.findUniqueOrThrow({ where: { storeId: user.storeId } });
 

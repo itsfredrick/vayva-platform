@@ -96,7 +96,7 @@ export async function applyConsentUpdate(
     eventType = ConsentEventType.TRANSACTIONAL_OFF;
 
   // Use transaction with safe explicit logic since upsert via compound ID is tricky without known input type
-  const [updated] = await prisma.$transaction(async (tx) => {
+  const [updated] = await prisma.$transaction(async (tx: any) => {
     const found = await tx.communication_consent.findFirst({
       where: { merchantId, phoneE164 },
     });

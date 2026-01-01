@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const { newPlan } = verification;
 
     // 5. Update Store & Subscription in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       const store = await tx.store.findUnique({
         where: { id: storeId },
         select: { plan: true },

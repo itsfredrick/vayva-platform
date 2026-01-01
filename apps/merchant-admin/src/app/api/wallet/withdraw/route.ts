@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Bank account is required" }, { status: 400 });
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // 1. Get and Lock Wallet for update
       const wallet = await tx.wallet.findUnique({
         where: { storeId },

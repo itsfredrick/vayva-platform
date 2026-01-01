@@ -88,7 +88,7 @@ export class TeamService {
     if (invite.expiresAt < new Date()) throw new Error("Expired Invite");
     if (invite.acceptedAt) throw new Error("Already Accepted");
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Mark Accepted
       await tx.staffInvite.update({
         where: { id: invite.id },

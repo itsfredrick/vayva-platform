@@ -19,7 +19,7 @@ export class LedgerService {
    * Guaranteed atomic update of LedgerEntries and Wallet Balance.
    */
   static async recordTransaction(req: TransactionRequest) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       // 1. Determine accounts and direction based on transaction type
       const entries = this.determineEntries(req);
 

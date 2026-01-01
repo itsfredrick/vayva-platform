@@ -68,7 +68,7 @@ export class DsrService {
       : null;
 
     // Transactional update
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 1. Anonymize Customer Profile
       await tx.customer.update({
         where: { id: customer.id },

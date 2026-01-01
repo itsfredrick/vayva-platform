@@ -18,7 +18,7 @@ export async function syncOnboardingData(
   console.log(`[Sync] Starting onboarding sync for store ${storeId}`);
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 1. Update Core Store Details
       await tx.store.update({
         where: { id: storeId },

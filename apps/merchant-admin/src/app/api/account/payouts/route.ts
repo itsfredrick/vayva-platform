@@ -53,7 +53,7 @@ export async function PUT(request: Request) {
     // Implementation would mirror POST in bank route but with update
     // For simplicity, we create a new one and set as default if it's a "Change Account" action
 
-    const beneficiary = await prisma.$transaction(async (tx) => {
+    const beneficiary = await prisma.$transaction(async (tx: any) => {
       await tx.bankBeneficiary.updateMany({
         where: { storeId, isDefault: true },
         data: { isDefault: false },

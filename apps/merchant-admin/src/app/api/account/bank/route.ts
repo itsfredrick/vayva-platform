@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     }
 
     // Create or update beneficiary
-    const beneficiary = await prisma.$transaction(async (tx) => {
+    const beneficiary = await prisma.$transaction(async (tx: any) => {
       // If setting as default, unset others first
       if (isDefault) {
         await tx.bankBeneficiary.updateMany({
