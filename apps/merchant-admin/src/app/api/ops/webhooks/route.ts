@@ -25,7 +25,7 @@ export async function GET(request: Request) {
       take: 50,
     });
 
-    const formatted = events.map((e) => ({
+    const formatted = events.map((e: any) => ({
       id: e.id,
       provider: e.provider,
       storeId: e.merchantId,
