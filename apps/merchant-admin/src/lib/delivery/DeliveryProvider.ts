@@ -1,5 +1,4 @@
-// @ts-ignore
-import { StoreDeliverySettings, Shipment } from "@prisma/client";
+import { StoreDeliverySettings, Shipment } from "@vayva/db";
 import { FEATURES } from "../env-validation";
 
 export type DeliveryStatus =
