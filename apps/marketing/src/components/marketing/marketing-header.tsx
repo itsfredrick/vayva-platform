@@ -25,7 +25,7 @@ export function MarketingHeader() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 relative z-10">
           <Image
-            src="/logos/vayva-logo.png"
+            src="/vayva-logo.png"
             alt="Vayva"
             width={64}
             height={64}

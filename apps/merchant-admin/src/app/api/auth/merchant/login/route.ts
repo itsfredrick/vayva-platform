@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   let body: any;
   try {
     body = await request.json();
-    const { email, password } = body;
+    const { email, password, rememberMe } = body;
 
     // Rate Limit: 10 per hour per IP
     const ip = request.headers.get("x-forwarded-for") || email || "unknown";
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       role: membership.role,
     };
 
-    await createSession(sessionUser);
+    await createSession(sessionUser, undefined, ip as string, rememberMe);
 
     // Return user and merchant data
     return NextResponse.json({

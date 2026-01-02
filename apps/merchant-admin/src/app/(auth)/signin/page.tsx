@@ -13,6 +13,7 @@ export default function SigninPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
@@ -23,7 +24,7 @@ export default function SigninPage() {
     setError(null);
 
     try {
-      const data = await AuthService.login({ email, password });
+      const data = await AuthService.login({ email, password, rememberMe });
       login(data.token, data.user);
       // AuthContext handles redirect
     } catch (err: any) {
@@ -136,7 +137,18 @@ export default function SigninPage() {
               )}
             </button>
           </div>
-          <div className="flex items-center justify-end mt-2">
+          <div className="flex items-center justify-between mt-3">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-[#22C55E] focus:ring-[#22C55E] transition-all cursor-pointer"
+              />
+              <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
+                Remember me
+              </span>
+            </label>
             <Link
               href="/forgot-password"
               className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
