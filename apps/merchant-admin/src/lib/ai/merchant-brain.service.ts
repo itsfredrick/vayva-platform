@@ -36,7 +36,7 @@ export class MerchantBrainService {
         score: 1.0, // Test score for keyword match
         metadata: e.metadata,
       }));
-    } catch (error) {
+    } catch (error: any) {
       logger.error("[MerchantBrain] Retrieval failed", {
         storeId,
         query,
@@ -76,7 +76,7 @@ export class MerchantBrainService {
         status: quantity > 0 || !product.trackInventory ? "IN_STOCK" : "OUT_OF_STOCK",
         available: product.trackInventory ? quantity : 999,
       };
-    } catch (e) {
+    } catch (e: any) {
       logger.error("[MerchantBrain] Inventory check failed", { storeId, productId, error: e });
       return null; // Return null to indicate failure to retrieve (agent should handle this)
     }
@@ -93,10 +93,10 @@ export class MerchantBrainService {
         where: { storeId },
       });
 
-      const matchedZone = zones.find(z =>
+      const matchedZone = zones.find((z: any) =>
         z.name.toLowerCase().includes(location.toLowerCase()) ||
-        z.states.some(s => location.toLowerCase().includes(s.toLowerCase())) ||
-        z.cities.some(c => location.toLowerCase().includes(c.toLowerCase()))
+        z.states.some((s: any) => location.toLowerCase().includes(s.toLowerCase())) ||
+        z.cities.some((c: any) => location.toLowerCase().includes(c.toLowerCase()))
       );
 
       if (matchedZone) {
@@ -116,7 +116,7 @@ export class MerchantBrainService {
         estimatedDays: isLagos ? "1-2 days" : "3-5 days",
         carrier: "Vayva standard",
       };
-    } catch (e) {
+    } catch (e: any) {
       logger.error("[MerchantBrain] Delivery quote failed", { storeId, location, error: e });
       return null;
     }
@@ -141,14 +141,14 @@ export class MerchantBrainService {
         take: 5
       });
 
-      return promos.map(p => ({
+      return promos.map((p: any) => ({
         id: p.id,
         name: p.name,
         type: p.type,
         value: p.valueAmount ? `₦${p.valueAmount}` : `${p.valuePercent}%`,
         description: p.requiresCoupon ? "Requires coupon code" : "Automatic discount",
       }));
-    } catch (e) {
+    } catch (e: any) {
       logger.error("[MerchantBrain] Promo fetch failed", { storeId, error: e });
       return [];
     }
