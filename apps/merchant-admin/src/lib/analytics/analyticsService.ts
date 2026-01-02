@@ -91,7 +91,7 @@ export class AnalyticsService {
     });
 
     const map: any = {};
-    stats.forEach((s) => (map[s.eventName] = s._count._all));
+    stats.forEach((s: any) => (map[s.eventName] = s._count._all));
 
     return {
       started: map["signup_started"] || 0,
