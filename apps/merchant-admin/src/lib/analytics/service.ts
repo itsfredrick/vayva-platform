@@ -23,7 +23,7 @@ export class AnalyticsService {
         _all: true,
       },
     });
-    return events.map((e) => ({
+    return events.map((e: any) => ({
       category: e.category,
       action: e.action,
       count: e._count._all,
@@ -87,7 +87,7 @@ export class AnalyticsService {
       },
     });
 
-    const actions = new Set(events.map((e) => e.action));
+    const actions = new Set(events.map((e: any) => e.action));
 
     return {
       categorySelected: actions.has(ACTIVATION_EVENTS.SELECT_CATEGORY),

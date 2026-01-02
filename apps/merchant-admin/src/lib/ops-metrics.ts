@@ -100,7 +100,7 @@ export async function detectStuckWithdrawals(
     take: 50,
   });
 
-  return stuck.map((w) => ({
+  return stuck.map((w: any) => ({
     id: w.id,
     referenceCode: w.referenceCode,
     status: w.status,
@@ -129,7 +129,7 @@ export async function detectAgingPending(
     take: 50,
   });
 
-  return aging.map((w) => ({
+  return aging.map((w: any) => ({
     id: w.id,
     referenceCode: w.referenceCode,
     status: w.status,
@@ -158,7 +158,7 @@ export async function detectStuckExports(
     take: 50,
   });
 
-  return stuck.map((e) => ({
+  return stuck.map((e: any) => ({
     id: e.id,
     type: e.type,
     status: e.status,
@@ -308,7 +308,7 @@ export async function getOpsMetrics(storeId?: string): Promise<OpsMetrics> {
     apiHealth = {
       errors1h,
       errors24h,
-      topFailingRoutes: topFailingRoutesData.map((r) => ({
+      topFailingRoutes: topFailingRoutesData.map((r: any) => ({
         routeKey: r.routeKey,
         count: r._count.id,
       })),
