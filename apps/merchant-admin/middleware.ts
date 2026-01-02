@@ -84,8 +84,11 @@ export async function middleware(request: NextRequest) {
     "/dashboard",
     "/settings",
     "/control-center",
+    "/", // Protect root to force auth check/redirect
   ];
-  const isProtected = protectedPaths.some((p) => path.startsWith(p));
+  // Strict check for root path to avoid matching everything
+  const isProtected =
+    path === "/" || protectedPaths.some((p) => path.startsWith(p) && p !== "/");
 
   if (isProtected) {
     // Check for both legacy NextAuth and our new Custom Session

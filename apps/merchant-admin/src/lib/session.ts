@@ -56,6 +56,7 @@ export async function createSession(
   user: SessionUser,
   device?: string,
   ipAddress?: string,
+  rememberMe: boolean = false,
 ): Promise<string> {
   const payload: SessionPayload = {
     userId: user.id,
@@ -67,9 +68,11 @@ export async function createSession(
 
   const token = generateToken(payload);
 
-  // Calculate expiration date (7 days from now)
+  // Calculate expiration date
+  // 30 days if rememberMe, 1 day if not (Standard security practice)
+  const expirationDays = rememberMe ? 30 : 1;
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7);
+  expiresAt.setDate(expiresAt.getDate() + expirationDays);
 
   // Create session record in database
   await prisma.merchantSession.create({
@@ -88,7 +91,7 @@ export async function createSession(
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+    maxAge: expirationDays * 24 * 60 * 60,
     path: "/",
   });
 

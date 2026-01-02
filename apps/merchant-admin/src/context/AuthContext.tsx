@@ -11,6 +11,8 @@ import {
   BusinessType,
 } from "@vayva/shared";
 
+import { InactivityListener } from "@/components/auth/InactivityListener";
+
 interface AuthContextType {
   user: User | null;
   merchant: MerchantContext | null;
@@ -178,7 +180,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     refreshProfile: fetchProfile,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+
+  return (
+    <AuthContext.Provider value={value}>
+      <InactivityListener />
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
