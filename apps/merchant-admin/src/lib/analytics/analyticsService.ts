@@ -54,7 +54,7 @@ export class AnalyticsService {
     });
 
     const counts: Record<string, number> = {};
-    events.forEach((e) => (counts[e.eventName] = e._count._all));
+    events.forEach((e: any) => (counts[e.eventName] = e._count._all));
 
     // Visitors (Approximate distinct)
     // Prisma doesn't do distinct count easily in groupBy without raw query or separate query
