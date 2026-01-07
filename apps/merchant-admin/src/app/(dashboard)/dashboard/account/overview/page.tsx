@@ -14,7 +14,7 @@ export default function AccountOverviewPage() {
     const [profile, setProfile] = useState({
         firstName: user?.firstName || "Fredrick",
         lastName: user?.lastName || "D",
-        email: user?.email || "admin@vayva.com",
+        email: user?.email || "",
         phone: "+234 801 234 5678",
         language: "English",
         timezone: "(GMT+01:00) Lagos"

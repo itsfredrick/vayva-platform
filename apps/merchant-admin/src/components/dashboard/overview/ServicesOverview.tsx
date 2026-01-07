@@ -7,7 +7,7 @@ import { toast } from "sonner";
 export const ServicesOverview = () => {
   const handleShare = async () => {
     // TODO: Get actual store slug from context
-    const link = "https://vayva.com/book/my-store";
+    const link = "/dashboard/services/book";
 
     if (navigator.share) {
       try {

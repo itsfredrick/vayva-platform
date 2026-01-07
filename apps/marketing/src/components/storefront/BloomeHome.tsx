@@ -126,7 +126,7 @@ export function BloomeHome({
             alt="Hero"
             fill
             priority
-            className="object-cover opacity-90 hover:scale-105 transition-transform duration-[2s]"
+            className="object-cover opacity-90 hover:scale-105 transition-transform duration-[2000ms]"
           />
         </div>
       </header>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   // Only allow in development
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
     }
 
     if (deleteAll) {
-      console.log('🗑️  Deleting ALL users...');
+      logger.info('🗑️ Deleting ALL users...');
 
       // Get all users
       const users = await prisma.user.findMany({
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
         },
       });
 
-      console.log(`Found ${users.length} user(s) to delete`);
+      logger.info(`Found ${users.length} user(s) to delete`);
 
       // Delete each user's data
       for (const user of users) {
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
         await prisma.user.delete({ where: { id: user.id } });
       }
 
-      console.log('✅ All users deleted successfully!');
+      logger.info('✅ All users deleted successfully!');
 
       return NextResponse.json({
         success: true,
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
       });
     }
 
-    console.log(`🗑️  Clearing data for ${email}...`);
+    logger.info(`🗑️ Clearing data for ${email}...`);
 
     // Find user
     const user = await prisma.user.findUnique({
@@ -114,14 +115,14 @@ export async function POST(req: Request) {
     await prisma.otpCode.deleteMany({ where: { identifier: user.email.toLowerCase() } });
     await prisma.user.delete({ where: { id: user.id } });
 
-    console.log("✅ User data cleared successfully!");
+    logger.info("✅ User data cleared successfully!");
 
     return NextResponse.json({
       success: true,
       message: "Database cleared successfully. You can now register with new details.",
     });
   } catch (error: any) {
-    console.error("❌ Error clearing database:", error);
+    logger.error("❌ Error clearing database:", error);
     return NextResponse.json(
       { error: "Failed to clear database", details: error.message },
       { status: 500 },

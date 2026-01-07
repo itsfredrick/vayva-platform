@@ -209,7 +209,7 @@ export class KwikProvider implements DeliveryProvider {
     try {
       const payload = {
         merchant_id: this.merchantId,
-        domain_name: "vayva.com", // Required by Kwik sometimes?
+        domain_name: process.env.NEXT_PUBLIC_APP_DOMAIN || "app.vayva.io", // Required by Kwik sometimes?
         pickup: {
           name: origin.name,
           phone: origin.phone,

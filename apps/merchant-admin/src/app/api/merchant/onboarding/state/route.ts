@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOnboardingUser } from "@/lib/session";
 import { prisma } from "@vayva/db";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
     try {
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
             }
         };
 
-        console.log(`[ONBOARDING] Retrieved state for store ${store.id}`, {
+        logger.info(`[ONBOARDING] Retrieved state for store ${store.id}`, {
             storeName: store.name,
             category: store.category,
             hasLogo: !!store.logoUrl,
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest) {
         });
 
     } catch (error) {
-        console.error("[ONBOARDING_STATE_GET]", error);
+        logger.error("[ONBOARDING_STATE_GET] Error:", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }
@@ -188,7 +189,7 @@ export async function POST(req: NextRequest) {
                 }
             });
 
-            console.log(`[ONBOARDING] Saved step ${currentStep} for store ${storeId}`, {
+            logger.info(`[ONBOARDING] Saved step ${currentStep} for store ${storeId}`, {
                 storeName: storeUpdateData.name,
                 category: storeUpdateData.category,
                 hasLogo: !!storeUpdateData.logoUrl
@@ -198,7 +199,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, storeId });
 
     } catch (error: any) {
-        console.error("[ONBOARDING_STATE_POST] Critical error:", {
+        logger.error("[ONBOARDING_STATE_POST] Critical error:", {
             message: error.message,
             stack: error.stack,
             currentStep: currentStepForLog

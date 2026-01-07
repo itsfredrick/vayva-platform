@@ -357,11 +357,11 @@ export default function SettingsOverview() {
                             <div className="pt-4 grid grid-cols-2 gap-8">
                                 <div className="space-y-2">
                                     <p className="text-xs font-bold text-gray-900">Terms of Service</p>
-                                    <p className="text-xs text-indigo-600 font-bold underline cursor-pointer">vayva.com/legal/tos</p>
+                                    <p className="text-xs text-indigo-600 font-bold underline cursor-pointer">Legal: Terms of Service</p>
                                 </div>
                                 <div className="space-y-2">
                                     <p className="text-xs font-bold text-gray-900">Privacy Policy</p>
-                                    <p className="text-xs text-indigo-600 font-bold underline cursor-pointer">vayva.com/legal/privacy</p>
+                                    <p className="text-xs text-indigo-600 font-bold underline cursor-pointer">Legal: Privacy Policy</p>
                                 </div>
                             </div>
                         </div>

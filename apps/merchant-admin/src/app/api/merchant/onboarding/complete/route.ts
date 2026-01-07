@@ -1,24 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOnboardingUser } from "@/lib/session";
 import { prisma } from "@vayva/db";
+import { logger } from "@/lib/logger";
 
 export async function PUT(req: NextRequest) {
     try {
         const user = await getOnboardingUser();
 
-        console.log('[ONBOARDING_COMPLETE] User:', {
+        logger.info('[ONBOARDING_COMPLETE] User check', {
             userId: user?.id,
             storeId: user?.storeId,
             hasUser: !!user
         });
 
         if (!user) {
-            console.error('[ONBOARDING_COMPLETE] No user found in session');
+            logger.error('[ONBOARDING_COMPLETE] No user found in session');
             return new NextResponse("Unauthorized - No user", { status: 401 });
         }
 
         if (!user.storeId) {
-            console.error('[ONBOARDING_COMPLETE] User has no storeId:', user);
+            logger.error('[ONBOARDING_COMPLETE] User has no storeId');
             return new NextResponse("Unauthorized - No store", { status: 401 });
         }
 
@@ -31,12 +32,12 @@ export async function PUT(req: NextRequest) {
             }
         });
 
-        console.log('[ONBOARDING_COMPLETE] Successfully completed for store:', updatedStore.id);
+        logger.info(`[ONBOARDING_COMPLETE] Successfully completed for store: ${updatedStore.id}`);
 
         return NextResponse.json({ success: true, storeId: updatedStore.id });
 
     } catch (error) {
-        console.error("[ONBOARDING_COMPLETE_PUT] Error:", error);
+        logger.error("[ONBOARDING_COMPLETE_PUT] Error:", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

@@ -52,7 +52,7 @@ export const RetailOverview = () => {
   const [loading, setLoading] = useState(true);
 
   const handleShareStore = async () => {
-    const link = "https://vayva.com/store/my-shop";
+    const link = "/dashboard/store/view";
     if (navigator.share) {
       try {
         await navigator.share({

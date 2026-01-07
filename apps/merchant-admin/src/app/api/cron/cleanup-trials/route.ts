@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
+import { logger } from "@/lib/logger";
 
 // This route should be called by Vercel Cron or an external scheduler
 // Schedule: Daily
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
         const storeIdsToDelete = toDeleteSubscriptions.map((s: { storeId: string }) => s.storeId);
 
         if (storeIdsToDelete.length > 0) {
-            console.log(`[CRON] Deleting ${storeIdsToDelete.length} expired trial stores:`, storeIdsToDelete);
+            logger.info(`[CRON] Deleting ${storeIdsToDelete.length} expired trial stores`, { storeIds: storeIdsToDelete });
 
             // Execute Deletion of STORES
             await prisma.store.deleteMany({
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
             ok: true
         });
     } catch (error: any) {
-        console.error("[CRON] Job failed:", error);
+        logger.error("[CRON] Job failed:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

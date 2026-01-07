@@ -3,6 +3,7 @@ import { prisma } from "@vayva/db";
 import { env } from "@/lib/config/env";
 import { WhatsAppClient } from "@/lib/whatsapp/client";
 import { AIService, AIMessage } from "@/lib/ai/aiService";
+import { logger } from "@/lib/logger";
 import {
   applyConsentUpdate,
   normalizePhoneToE164
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
 
   if (mode && token) {
     if (mode === "subscribe" && token === env.WHATSAPP_VERIFY_TOKEN) {
-      console.log("[WEBHOOK] Verified signature.");
+      logger.info("[WEBHOOK] Verified signature.");
       return new NextResponse(challenge);
     } else {
       return new NextResponse("Forbidden", { status: 403 });
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     return new NextResponse("Not Found", { status: 404 });
   } catch (e) {
-    console.error("[WEBHOOK_ERROR]", e);
+    logger.error("[WEBHOOK_ERROR]", e);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -62,7 +63,7 @@ async function handleMessage(message: any, contactInfo: any) {
 
   if (type !== 'text') return; // Only process text for V1
 
-  console.log(`[MSG] From: ${from} | Text: ${textBody}`);
+  logger.info(`[MSG] From: ${from} | Text: ${textBody}`);
 
   // 1. Consent / Opt-Out Logic
   const cleanText = textBody.trim().toUpperCase();
@@ -75,7 +76,7 @@ async function handleMessage(message: any, contactInfo: any) {
       // We'll skip store-specific opt-out if we can't identify store, 
       // OR find ANY store with this customer.
       // Simplified: just log it for now as we transition to Multi-tenant webhook.
-      console.log("Opt-out received for", phoneE164);
+      logger.info(`Opt-out received for ${phoneE164}`);
     }
     return;
   }
@@ -89,7 +90,7 @@ async function handleMessage(message: any, contactInfo: any) {
   });
 
   if (!agentSettings) {
-    console.log("No AI Agent enabled.");
+    logger.info("No AI Agent enabled.");
     return;
   }
 
@@ -211,6 +212,6 @@ async function handleMessage(message: any, contactInfo: any) {
   if (aiResponse.intent === 'order_placement' && agentSettings.catalogMode === 'CatalogPlusFAQ') {
     // Create logic for draft order...
     // For now, just logging.
-    console.log(`[AI] Auto-draft logic triggered for ${from}`);
+    logger.info(`[AI] Auto-draft logic triggered for ${from}`);
   }
 }
