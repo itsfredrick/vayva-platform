@@ -112,7 +112,7 @@ export const BulkTradeLayout = ({ store, products }: BulkTradeLayoutProps) => {
 
                   <div className="p-5 flex-1 flex flex-col">
                     <div className="flex-1">
-                      <div className="text-xs text-blue-600 font-bold uppercase mb-1">
+                      <div className="text-xs text-brand font-bold uppercase mb-1">
                         {product.category}
                       </div>
                       <h3 className="font-bold text-gray-900 mb-2 leading-tight">

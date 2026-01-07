@@ -1,4 +1,4 @@
-import Groq from "groq-sdk";
+import { GroqClient } from "../ai/groq-client";
 import { prisma } from "@vayva/db";
 import { SupportContextService } from "./support-context.service";
 import { EscalationService } from "./escalation.service";
@@ -7,9 +7,7 @@ import { logger } from "@/lib/logger";
 import fs from "fs";
 import path from "path";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_ADMIN_KEY || "",
-});
+const groqClient = new GroqClient("SUPPORT");
 
 export class MerchantSupportBot {
   /**
@@ -46,18 +44,21 @@ Support Guidelines:
 4. If they seem frustrated, skip the AI talk and offer a human handoff.`;
 
       // 4. LLM Call
-      const response = await groq.chat.completions.create({
-        messages: [
+      const response = await groqClient.chatCompletion(
+        [
           { role: "system", content: systemPrompt },
           ...history,
           { role: "user", content: query },
-        ],
-        model: "llama-3.1-70b-versatile",
-        temperature: 0.2,
-      });
+        ] as any,
+        {
+          model: "llama-3.1-70b-versatile",
+          temperature: 0.2,
+          storeId,
+        },
+      );
 
       const reply =
-        response.choices[0].message.content ||
+        response?.choices[0].message.content ||
         "I'm here to help. How can I assist you with your store today?";
 
       // 5. Auto-Escalation Check (Using Policy)

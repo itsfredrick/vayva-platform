@@ -23,61 +23,51 @@ export const SalesChannels = ({ channels }: SalesChannelsProps) => {
         {channels.map((channel) => (
           <div
             key={channel.id}
-            className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center justify-between hover:border-gray-300 transition-colors"
+            className="group bg-white rounded-[32px] border border-gray-100 p-6 flex items-center justify-between hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all duration-500"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <div
                 className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                  "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform duration-500",
                   channel.type === "whatsapp"
                     ? "bg-[#25D366]/10 text-[#25D366]"
-                    : "bg-indigo-50 text-indigo-600",
+                    : "bg-blue-50 text-blue-600",
                 )}
               >
                 <Icon
                   name={channel.type === "whatsapp" ? "MessageCircle" : "Globe"}
-                  size={24}
+                  size={28}
                 />
               </div>
               <div>
-                <h4 className="font-bold text-gray-900">{channel.name}</h4>
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-bold text-gray-900 tracking-tight">{channel.name}</h4>
+                  {channel.status === "enabled" && (
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                  )}
+                </div>
                 <a
                   href={channel.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-gray-500 hover:text-blue-600 hover:underline flex items-center gap-1 mt-0.5"
+                  className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-black flex items-center gap-1.5 transition-colors"
                 >
-                  Visit Channel <Icon name="ExternalLink" size={10} />
+                  {channel.url ? channel.url.replace(/^https?:\/\//, '') : ''} <Icon name="ExternalLink" size={10} />
                 </a>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Test Toggle - In real app would handle change */}
-              <span
-                className={cn(
-                  "text-xs font-bold uppercase tracking-wider",
-                  channel.status === "enabled"
-                    ? "text-green-600"
-                    : "text-gray-400",
-                )}
-              >
-                {channel.status}
-              </span>
-              {/* Using Switch component if available or custom toggle */}
-              <div
-                className={cn(
-                  "w-11 h-6 rounded-full relative transition-colors cursor-pointer",
-                  channel.status === "enabled" ? "bg-green-500" : "bg-gray-200",
-                )}
-              >
-                <div
-                  className={cn(
-                    "w-5 h-5 bg-white rounded-full shadow absolute top-0.5 transition-transform",
-                    channel.status === "enabled"
-                      ? "left-[calc(100%-1.375rem)]"
-                      : "left-0.5",
-                  )}
+            <div className="flex items-center gap-4 pl-4 border-l border-gray-50">
+              <div className="flex flex-col items-end gap-1.5">
+                <span className={cn(
+                  "text-[10px] font-black uppercase tracking-widest",
+                  channel.status === "enabled" ? "text-green-600" : "text-gray-300"
+                )}>
+                  {channel.status}
+                </span>
+                <Switch
+                  checked={channel.status === "enabled"}
+                  onCheckedChange={() => { }} // Implementation would go here
                 />
               </div>
             </div>

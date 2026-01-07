@@ -1,0 +1,6 @@
+apps/merchant-admin/src/app/app/page.tsx:46:        <Image
+apps/merchant-admin/src/components/products/ProductDrawer.tsx:272:              <ImageUploader
+apps/merchant-admin/src/components/auth/AuthLeftPanel.tsx:20:        <Image
+apps/merchant-admin/src/components/auth/AuthLeftPanel.tsx:37:              <Image
+apps/merchant-admin/src/components/pwa/BootSplash.tsx:39:                            <Image
+apps/merchant-admin/src/components/Logo.tsx:44:      <Image

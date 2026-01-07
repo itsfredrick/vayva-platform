@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 // @ts-ignore
 import { parse } from "csv-parse/sync"; // Need to add package or use simple split
 import { validateRow } from "@/lib/imports/csv";
+import { requireAuth } from "@/lib/session";
 
 // Test fetching file content from URL
 const fetchFileContent = async (url: string) => {
@@ -21,14 +22,13 @@ Sneakers,25000,2,Shoes`;
 };
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const { jobId } = await req.json();
 
   const job = await prisma.importJob.findUnique({ where: { id: jobId } });
-  if (!job || job.merchantId !== (session!.user as any).storeId)
+  if (!job || job.merchantId !== user.storeId)
     return new NextResponse("Forbidden", { status: 403 });
 
   try {

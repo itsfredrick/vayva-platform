@@ -105,7 +105,7 @@ export const FEATURES = {
    * Control Center (Store Builder)
    * Disabled until Prisma StoreConfig migration complete
    */
-  CONTROL_CENTER_ENABLED: false,
+  CONTROL_CENTER_ENABLED: true,
 
   /**
    * Error Monitoring

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveRequest } from "@/lib/routing/tenant-engine";
+// import { createAuthServer } from "@neondatabase/auth/next/server";
 
 // TODO: In production, move this to a Redis fetch or Edge Config.
 const getTenantMap = async () => ({
@@ -8,23 +9,38 @@ const getTenantMap = async () => ({
   standard: "vayva-standard-id",
 });
 
-export async function middleware(request: NextRequest) {
-  const hostname = request.headers.get("host") || "";
-  const path = request.nextUrl.pathname;
-  const query = Object.fromEntries(request.nextUrl.searchParams);
+const isProtectedRoute = (pathname: string) => {
+  const protectedPaths = [
+    "/dashboard",
+    "/onboarding",
+    "/settings",
+    "/control-center",
+  ];
+  return protectedPaths.some(p => pathname.startsWith(p));
+};
 
-  // 0. Tenant Resolution (AntiGravity Engine)
+export default async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const hostname = request.headers.get("host") || "";
+  const query = Object.fromEntries(request.nextUrl.searchParams);
+  // DEBUG COOKIES
+  // console.log("Middleware Request:", {
+  //   path: pathname,
+  //   cookies: request.cookies.getAll().map(c => c.name)
+  // });
+
+  // 1. Tenant Resolution (AntiGravity Engine)
   const isPublicAsset =
-    path.startsWith("/_next") ||
-    path.startsWith("/favicon.ico") ||
-    path.startsWith("/images") ||
-    path.startsWith("/healthz");
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/images") ||
+    pathname.startsWith("/healthz");
 
   if (!isPublicAsset) {
     const tenantMap = await getTenantMap();
     const resolution = resolveRequest({
       hostname,
-      path,
+      path: pathname,
       query,
       tenantMap,
       env: process.env.NODE_ENV || "development",
@@ -45,9 +61,33 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.next();
+  // 2. Auth Guard & Root Redirect
+  // Simple cookie check for performance in Edge Middleware
+  // Check for both insecure and secure cookie names to be safe
+  const hasSession =
+    request.cookies.has("better-auth.session_token") ||
+    request.cookies.has("__Secure-better-auth.session_token");
 
-  // 1. Security Headers
+  // Force root to signin or dashboard
+  if (pathname === "/") {
+    if (hasSession) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/signin", request.url));
+    }
+  }
+
+  if (isProtectedRoute(pathname)) {
+    if (!hasSession) {
+      const signInUrl = new URL("/signin", request.url);
+      signInUrl.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+  }
+
+  // 3. Security Headers
+  const response = NextResponse.next();
+  // ... (security headers unchanged)
   response.headers.set("X-DNS-Prefetch-Control", "on");
   response.headers.set(
     "Strict-Transport-Security",
@@ -63,10 +103,11 @@ export async function middleware(request: NextRequest) {
 
   const cspHeader = `
         default-src 'self';
-        script-src 'self' 'unsafe-eval' 'unsafe-inline';
-        style-src 'self' 'unsafe-inline';
+        script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.neon.tech https://*.neonauth.us-east-1.aws.neon.tech;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         img-src 'self' blob: data: https://images.unsplash.com https://placehold.co;
-        font-src 'self';
+        connect-src 'self' https://*.neon.tech https://*.neonauth.us-east-1.aws.neon.tech;
+        font-src 'self' https://fonts.gstatic.com;
         object-src 'none';
         base-uri 'self';
         form-action 'self';
@@ -77,34 +118,6 @@ export async function middleware(request: NextRequest) {
     .trim();
 
   response.headers.set("Content-Security-Policy", cspHeader);
-
-  // 2. Auth Guard (Merchant Admin)
-  const protectedPaths = [
-    "/onboarding",
-    "/dashboard",
-    "/settings",
-    "/control-center",
-    "/", // Protect root to force auth check/redirect
-  ];
-  // Strict check for root path to avoid matching everything
-  const isProtected =
-    path === "/" || protectedPaths.some((p) => path.startsWith(p) && p !== "/");
-
-  if (isProtected) {
-    // Check for both legacy NextAuth and our new Custom Session
-    const token =
-      request.cookies.get("vayva_session") ||
-      request.cookies.get("next-auth.session-token") ||
-      request.cookies.get("__Secure-next-auth.session-token");
-
-    if (!token) {
-      const url = request.nextUrl.clone();
-      // Redirect to signin if not marketing landing or public routes
-      url.pathname = "/signin";
-      url.searchParams.set("callbackUrl", path);
-      return NextResponse.redirect(url);
-    }
-  }
 
   return response;
 }

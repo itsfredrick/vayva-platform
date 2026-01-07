@@ -22,7 +22,7 @@ export const ProductGridDigital = ({
   onSelect,
 }: ProductGridDigitalProps) => {
   return (
-    <section className="bg-[#111827] py-20 px-6">
+    <section className="bg-brand py-20 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-10 text-white">
           <h2 className="text-2xl font-bold">Latest Drops</h2>

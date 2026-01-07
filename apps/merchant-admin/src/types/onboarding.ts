@@ -1,7 +1,6 @@
 export type PlanType = "free" | "growth" | "pro";
 
 export type OnboardingStepId =
-  | "welcome"
   | "setup-path"
   | "identity"
   | "business"
@@ -9,7 +8,6 @@ export type OnboardingStepId =
   | "templates"
   | "products"
   | "store-details"
-  | "brand"
   | "order-flow"
   | "payments"
   | "delivery"
@@ -17,7 +15,6 @@ export type OnboardingStepId =
   | "kyc"
   | "review"
   | "resume"
-  | "store"
   | "storefront"
   | "complete";
 
@@ -40,7 +37,17 @@ export interface OnboardingState {
 
   // Step 1: Welcome & Intent
   intent?: {
-    segment: "retail" | "food" | "services" | "mixed";
+    segment:
+    | "retail"
+    | "food"
+    | "services"
+    | "digital"
+    | "events"
+    | "education"
+    | "b2b"
+    | "marketplace"
+    | "nonprofit"
+    | "real-estate";
   };
 
   // Step 2: Setup Path
@@ -77,6 +84,7 @@ export interface OnboardingState {
   products?: {
     hasAddedProducts: boolean;
     count: number;
+    items?: any[]; // Store items temporarily for onboarding persistence
   };
 
   // Step 6: Order Flow
@@ -98,6 +106,7 @@ export interface OnboardingState {
       bankName: string;
       accountNumber: string;
       accountName: string;
+      bankCode?: string;
     };
     payoutScheduleAcknowledged?: boolean;
   };
@@ -119,9 +128,10 @@ export interface OnboardingState {
     skipped?: boolean;
   };
 
-  // Step 10: KYC (See kycStatus flag)
+  // Step 11: KYC
   kyc?: {
-    method?: "bvn" | "nin" | "govt_id";
+    method?: string;
+    status?: "not_started" | "pending" | "verified" | "failed";
     data?: Record<string, any>;
   };
 

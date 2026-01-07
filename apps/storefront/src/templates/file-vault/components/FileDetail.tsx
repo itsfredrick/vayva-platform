@@ -17,7 +17,7 @@ export const FileDetail = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-[#1F2937] w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col md:flex-row max-h-[90vh]">
         {/* Image Section */}
-        <div className="bg-[#111827] flex-1 relative flex items-center justify-center p-8">
+        <div className="bg-brand flex-1 relative flex items-center justify-center p-8">
           <img
             src={product.images?.[0]}
             alt={product.name}
@@ -73,7 +73,7 @@ export const FileDetail = ({
             updates and support.
           </p>
 
-          <div className="bg-[#111827] rounded-xl p-4 mb-8">
+          <div className="bg-brand rounded-xl p-4 mb-8">
             <h4 className="text-sm font-bold text-gray-300 mb-3 uppercase tracking-wider">
               File Specs
             </h4>
@@ -108,7 +108,7 @@ export const FileDetail = ({
             </div>
             <button
               onClick={onPurchase}
-              className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-500 transition-all shadow-lg hover:shadow-indigo-500/25 flex items-center justify-center gap-2"
+              className="w-full bg-brand text-white font-bold py-4 rounded-xl hover:bg-indigo-500 transition-all shadow-lg hover:shadow-indigo-500/25 flex items-center justify-center gap-2"
             >
               <Lock size={18} /> Buy & Download
             </button>

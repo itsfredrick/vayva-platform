@@ -1,46 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
-import { gateLimit } from "@/lib/billing/entitlements";
-import { cookies } from "next/headers";
+import { PLANS } from "@/lib/billing/plans";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.id)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const cookieStore = await cookies();
-  const storeId = cookieStore.get("x-active-store-id")?.value;
-  if (!storeId)
-    return new NextResponse("No active store session", { status: 400 });
-
   try {
-    // 1. Get Entitlement
-    // In real app, we might cache this or fetch from MerchantSubscription
-    // For V1 MVP, we fetch existing subscription or default to growth/trial
-    const subscription = await prisma.merchantSubscription.findUnique({
-      where: { storeId },
-    });
-    const entitlement = {
-      planSlug: (subscription?.planSlug || "growth") as "growth" | "pro",
-      status: (subscription?.status || "trial") as any,
-    };
+    const user = await requireAuth();
 
-    // 2. Used Seats
-    const seatsUsed = await prisma.membership.count({ where: { storeId } });
-
-    // 3. Check Gate
-    const gate = gateLimit(entitlement, "teamSeats", seatsUsed);
-    if (!gate.ok) {
-      return NextResponse.json(gate.error, { status: 403 }); // Standard Gate Error
+    if (!user || !user.storeId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 4. Create Invite (Pending)
-    // await prisma.staffInvite.create(...)
+    const body = await req.json(); // Assuming body has email, etc. if needed later
 
-    return NextResponse.json({ success: true, message: "Invite sent" });
+    // 1. Fetch Store to get Plan
+    const store = await prisma.store.findUnique({
+      where: { id: user.storeId },
+      select: { plan: true }
+    });
+
+    if (!store) {
+      return NextResponse.json({ error: "Store not found" }, { status: 404 });
+    }
+
+    const planSlug = (store.plan || "free").toLowerCase();
+    const plan = PLANS[planSlug] || PLANS["free"];
+    const maxSeats = plan.limits.teamSeats;
+
+    // 2. Used Seats
+    const seatsUsed = await prisma.membership.count({ where: { storeId: user.storeId } });
+
+    // 3. Check Gate
+    // Note: seatsUsed includes the owner, so we check if (used < max) 
+    // OR if we want to allow inviting UP TO max, then (used + 1 <= max)
+    // usually seat count includes pending invites too, but for now we just gate active+owner memberships
+    if (seatsUsed >= maxSeats) {
+      return NextResponse.json({
+        error: `Plan limit reached. Upgrade to add more team members.`,
+        code: "PLAN_LIMIT_REACHED",
+        limit: maxSeats,
+        current: seatsUsed
+      }, { status: 403 });
+    }
+
+    // 4. Create Invite (Placeholder for actual invite logic)
+    // await prisma.staffInvite.create({ ... })
+
+    return NextResponse.json({ success: true, message: "Invite sent (simulated)" });
+
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 500 });
+    console.error("Invite error:", e);
+    return new NextResponse(e.message || "Internal Server Error", { status: 500 });
   }
 }

@@ -1,23 +1,19 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Icon } from "@vayva/ui";
 import { formatMoneyNGN } from "@/lib/billing/formatters";
 import { PLANS } from "@/lib/billing/plans";
+import { useBillingStatus, type BillingStatus, type Invoice } from "@/hooks/useBilling";
+import { BILLING_CONSTANTS } from "@/lib/billing/constants";
+
+import { formatCurrency } from "@/lib/formatters";
+
+
 
 export default function BillingPage() {
-  const [status, setStatus] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: status, isLoading: loading } = useBillingStatus();
   const [processing, setProcessing] = useState<string | null>(null); // plan slug
-
-  useEffect(() => {
-    fetch("/api/merchant/billing/status")
-      .then((res) => res.json())
-      .then((data) => {
-        setStatus(data);
-        setLoading(false);
-      });
-  }, []);
 
   const handleSubscribe = async (slug: string) => {
     setProcessing(slug);
@@ -32,6 +28,24 @@ export default function BillingPage() {
       }
     } catch (e) {
       alert("Error");
+      setProcessing(null);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!confirm("Are you sure you want to cancel? Your plan will be downgraded at the end of the billing period.")) return;
+    try {
+      setProcessing(currentPlan);
+      const res = await fetch("/api/merchant/billing/cancel", { method: "POST" });
+      if (res.ok) {
+        alert("Subscription cancelled. You will have access until the end of the period.");
+        window.location.reload();
+      } else {
+        throw new Error("Failed");
+      }
+    } catch (e) {
+      alert("Failed to cancel subscription");
+    } finally {
       setProcessing(null);
     }
   };
@@ -64,7 +78,7 @@ export default function BillingPage() {
         <div>
           <h4 className="font-bold text-gray-900">Transaction Disclosure</h4>
           <p className="text-sm text-gray-500">
-            A 5% transaction fee is applied to every withdrawal from your Vayva
+            A {BILLING_CONSTANTS.TRANSACTION_FEE_DISPLAY} transaction fee is applied to every withdrawal from your Vayva
             wallet to your bank account, regardless of your plan tier.
           </p>
         </div>
@@ -76,11 +90,10 @@ export default function BillingPage() {
           return (
             <div
               key={plan.slug}
-              className={`border rounded-2xl p-8 relative ${
-                isCurrent
-                  ? "border-black ring-1 ring-black bg-gray-50"
-                  : "border-gray-200 bg-white"
-              }`}
+              className={`border rounded-2xl p-8 relative ${isCurrent
+                ? "border-black ring-1 ring-black bg-gray-50"
+                : "border-gray-200 bg-white"
+                }`}
             >
               {isCurrent && (
                 <div className="absolute top-4 right-4 bg-black text-white text-xs px-2 py-1 rounded font-bold uppercase">
@@ -114,11 +127,10 @@ export default function BillingPage() {
               <button
                 onClick={() => handleSubscribe(plan.slug)}
                 disabled={isCurrent || !!processing}
-                className={`w-full py-3 rounded-lg font-bold ${
-                  isCurrent
-                    ? "bg-gray-200 text-gray-500 cursor-default"
-                    : "bg-black text-white hover:bg-gray-800"
-                }`}
+                className={`w-full py-3 rounded-lg font-bold ${isCurrent
+                  ? "bg-gray-200 text-gray-500 cursor-default"
+                  : "bg-black text-white hover:bg-gray-800"
+                  }`}
               >
                 {isCurrent
                   ? "Active"
@@ -126,6 +138,19 @@ export default function BillingPage() {
                     ? "Processing..."
                     : `Switch to ${plan.name}`}
               </button>
+              {isCurrent && plan.priceNgn > 0 && !status?.cancelAtPeriodEnd && (
+                <button
+                  onClick={handleCancel}
+                  className="w-full mt-3 text-red-500 text-xs font-semibold hover:underline"
+                >
+                  Cancel Subscription
+                </button>
+              )}
+              {isCurrent && status?.cancelAtPeriodEnd && (
+                <p className="text-center text-xs text-amber-600 font-medium mt-3">
+                  Cancels at period end
+                </p>
+              )}
             </div>
           );
         })}
@@ -143,13 +168,13 @@ export default function BillingPage() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {status?.invoices?.length > 0 ? (
-              status.invoices.map((inv: any) => (
+            {status?.invoices && status.invoices.length > 0 ? (
+              status.invoices.map((inv: Invoice) => (
                 <tr key={inv.id}>
                   <td className="px-6 py-4">
                     {new Date(inv.issuedAt).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4">{formatMoneyNGN(inv.amountNgn)}</td>
+                  <td className="px-6 py-4">{formatCurrency(inv.amountNgn)}</td>
                   <td className="px-6 py-4 capitalize">{inv.status}</td>
                   <td className="px-6 py-4 text-right">Download</td>
                 </tr>

@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.storeId) {
+  const user = await requireAuth();
+  if (!(user as any)?.storeId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const storeId = (session!.user as any).storeId;
+  const storeId = user.storeId;
   const body = await req.json();
 
   const { type, category, title, message, actionUrl, channels } = body;
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
   const notification = await prisma.notification.create({
     data: {
       store: { connect: { id: storeId } }, // Connect to store relation
-      userId: (session!.user as any).id,
+      userId: user.id,
       type: "manual_alert", // DB 'type' column
       severity: severity, // DB 'severity' column -> Maps to NotificationType
       category: category || "system",

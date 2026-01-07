@@ -10,7 +10,7 @@ export async function GET(
     await OpsAuthService.requireSession();
     const { id } = await params;
 
-    const history = await (prisma as any).notificationLog.findMany({
+    const history = await prisma.notificationLog.findMany({
       where: { storeId: id },
       orderBy: { createdAt: "desc" },
       take: 50,

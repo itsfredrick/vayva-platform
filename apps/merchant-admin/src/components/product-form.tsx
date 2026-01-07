@@ -16,6 +16,36 @@ export const ProductForm = ({
 }: ProductFormProps) => {
   const router = useRouter();
   const [hasVariants, setHasVariants] = useState(false);
+  const [price, setPrice] = useState(initialData?.price || 0);
+  const [costPrice, setCostPrice] = useState(initialData?.costPrice || 0);
+  const [images, setImages] = useState<string[]>(initialData?.images || []);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Profit Calculation
+  const profit = Number(price) - Number(costPrice);
+  const margin = price > 0 ? (profit / price) * 100 : 0;
+
+  // Magic Cut Pro
+  const handleMagicCut = async (index: number) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    try {
+      const response = await fetch("/api/products/magic-cut", {
+        method: "POST",
+        body: JSON.stringify({ imageUrl: images[index] }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        const newImages = [...images];
+        newImages[index] = data.url;
+        setImages(newImages);
+      }
+    } catch (error) {
+      console.error("Magic Cut failed:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Test save
   const handleSave = () => {
@@ -52,18 +82,52 @@ export const ProductForm = ({
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* Media */}
           <GlassPanel className="p-6">
-            <h3 className="font-bold text-white mb-4">Media</h3>
-            <div className="border border-dashed border-white/20 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer">
-              <Icon
-                name="ImagePlus"
-                size={32}
-                className="text-text-secondary mb-2"
-              />
-              <p className="text-sm font-bold text-white">Add images</p>
-              <p className="text-xs text-text-secondary">
-                Drag and drop or click to upload
-              </p>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-white">Media</h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary uppercase border border-primary/20">
+                Vayva Cut Pro Enabled
+              </span>
             </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+              {images.map((url, idx) => (
+                <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
+                  <img src={url} alt="Product" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => handleMagicCut(idx)}
+                      disabled={isProcessing}
+                      className="p-2 bg-primary text-black rounded-lg hover:scale-105 transition-transform disabled:opacity-50"
+                      title="Magic Background Remover"
+                    >
+                      <Icon name="Scissors" size={16} />
+                    </button>
+                    <button className="p-2 bg-white/10 text-white rounded-lg hover:bg-white/20">
+                      <Icon name="Trash2" size={16} />
+                    </button>
+                  </div>
+                  {isProcessing && (
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent animate-spin rounded-full mb-1" />
+                      <span className="text-[8px] text-primary font-bold uppercase">Cutting...</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <div className="border border-dashed border-white/20 rounded-xl aspect-square flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer">
+                <Icon
+                  name="ImagePlus"
+                  size={24}
+                  className="text-text-secondary mb-1"
+                />
+                <p className="text-[10px] font-bold text-white">Add</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-text-secondary">
+              Pro Tip: Use <b>Magic Remover</b> to get professional white backgrounds instantly.
+            </p>
           </GlassPanel>
 
           {/* Basic Info */}
@@ -178,7 +242,8 @@ export const ProductForm = ({
                   Price (₦)
                 </label>
                 <Input
-                  defaultValue={initialData?.price}
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
                   placeholder="0.00"
                   className="font-mono text-lg"
                 />
@@ -186,16 +251,23 @@ export const ProductForm = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-2 block">
-                    Cost
+                    Cost (COGS)
                   </label>
-                  <Input placeholder="0.00" />
+                  <Input
+                    value={costPrice}
+                    onChange={(e) => setCostPrice(Number(e.target.value))}
+                    placeholder="0.00"
+                  />
                 </div>
                 <div>
                   <label className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-2 block">
                     Profit
                   </label>
-                  <div className="h-12 flex items-center px-4 text-text-secondary text-sm border border-transparent">
-                    --
+                  <div className={`h-12 flex items-center px-1 font-bold text-sm ${profit >= 0 ? "text-primary" : "text-state-error"}`}>
+                    {profit >= 0 ? "+" : ""} ₦{profit.toLocaleString()}
+                    <span className="ml-1 text-[10px] opacity-60">
+                      ({margin.toFixed(1)}%)
+                    </span>
                   </div>
                 </div>
               </div>

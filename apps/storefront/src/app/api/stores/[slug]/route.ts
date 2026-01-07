@@ -16,14 +16,18 @@ export async function GET(
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
 
-    // Transform to PublicStore format if necessary
+    // Transform to PublicStore format
     const publicStore = {
       id: store.id,
       name: store.name,
       slug: store.slug,
-      logo: store.logoUrl, // Check schema for actual field name
+      logo: store.logoUrl,
+      description: (store.settings as any)?.description || "",
+      brandColor: (store.settings as any)?.brandColor || "#000000",
+      whatsapp: (store.settings as any)?.whatsapp || "",
+      socials: (store.settings as any)?.socials || {},
       theme: (store.settings as any)?.theme || {},
-      plan: "FREE", // tested/derived
+      plan: "FREE",
     };
 
     return NextResponse.json(publicStore);

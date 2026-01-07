@@ -17,7 +17,7 @@ export default function WhatsAppPage() {
       whatsappConnected: false,
       whatsapp: { number: undefined },
     });
-    await goToStep("templates");
+    await goToStep("products");
   };
 
   const handleConnectStart = () => setMode("connect");
@@ -37,210 +37,227 @@ export default function WhatsAppPage() {
       whatsappConnected: true,
       whatsapp: { number: phoneNumber },
     });
-    await goToStep("templates");
+    await goToStep("products");
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full gap-8 max-w-6xl mx-auto items-center lg:items-start">
+    <div className="flex flex-col xl:flex-row h-full gap-12 max-w-7xl mx-auto items-start animate-in fade-in slide-in-from-bottom-8 duration-1000">
       {/* Left Column: Interaction */}
-      <div className="flex-1 w-full max-w-lg lg:pt-10">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Connect WhatsApp
+      <div className="flex-1 w-full max-w-2xl lg:pt-4">
+        <div className="mb-10">
+          <h1 className="text-4xl font-black text-gray-900 mb-3 tracking-tight">
+            WhatsApp <span className="text-transparent bg-clip-text bg-gradient-to-br from-green-600 via-green-500 to-emerald-400">Integration</span>
           </h1>
-          <p className="text-gray-500">
-            Vayva works best when connected, but you can set it up in a few
-            minutes now or later.
+          <p className="text-lg text-gray-400 font-medium max-w-lg">
+            Connect your business account to automate sales and engage customers with AI-powered replies.
           </p>
         </div>
 
-        {mode === "decision" && (
-          <div className="space-y-4 animate-fade-in">
-            <button
-              onClick={handleConnectStart}
-              className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-green-500 hover:bg-green-50 group transition-all flex items-center gap-4"
-            >
-              <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center group-hover:bg-green-500 group-hover:text-white transition-colors">
-                <Icon name="MessageCircle" size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-gray-900">
-                  Connect now (Recommended)
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Sync chats, automate orders, and build history.
-                </p>
-              </div>
-              <Icon
-                name="ArrowRight"
-                className="text-gray-300 group-hover:text-green-600"
-              />
-            </button>
-
-            <button
-              onClick={handleLater}
-              className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 group transition-all flex items-center gap-4"
-            >
-              <div className="w-12 h-12 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                <Icon name="Clock" size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-gray-900">I’ll do this later</h3>
-                <p className="text-sm text-gray-500">
-                  Your setup will still work without it.
-                </p>
-              </div>
-            </button>
-          </div>
-        )}
-
-        {mode === "connect" && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                WhatsApp Business Number
-              </label>
-              <div className="flex gap-2">
-                <div className="bg-gray-100 border border-gray-200 rounded-lg px-3 flex items-center text-gray-500 text-sm font-medium">
-                  +234
+        <div className="bg-white/70 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] border border-white shadow-2xl shadow-black/5 space-y-12 transition-all duration-700">
+          {mode === "decision" && (
+            <div className="space-y-6 animate-in slide-in-from-top-4 fade-in duration-700">
+              <button
+                onClick={handleConnectStart}
+                className="group w-full text-left p-8 rounded-[2rem] border-2 border-transparent bg-black text-white hover:scale-[1.02] active:scale-95 transition-all duration-500 flex items-center gap-8 relative overflow-hidden shadow-2xl shadow-black/20"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="w-16 h-16 rounded-[1.25rem] bg-green-500 text-black flex items-center justify-center shrink-0 z-10 transition-transform duration-700 group-hover:rotate-12">
+                  <Icon name="MessageCircle" size={32} />
                 </div>
-                <Input
-                  placeholder="80 1234 5678"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  autoFocus
-                />
+                <div className="flex-1 z-10">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-black text-lg uppercase tracking-tight">
+                      Express Setup
+                    </h3>
+                    <div className="px-2 py-0.5 bg-[#46EC13] text-black text-[8px] font-black rounded-md uppercase animate-pulse">
+                      Recommended
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 font-medium">
+                    Auto-sync catalogs, automate orders, and secure data history in 60 seconds.
+                  </p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center z-10 group-hover:bg-[#46EC13] group-hover:text-black transition-all">
+                  <Icon name="ArrowRight" size={20} />
+                </div>
+              </button>
+
+              <button
+                onClick={handleLater}
+                className="group w-full text-left p-8 rounded-[2rem] border-2 border-gray-100 bg-white/50 hover:bg-white hover:border-black transition-all duration-500 flex items-center gap-8"
+              >
+                <div className="w-16 h-16 rounded-[1.25rem] bg-gray-50 text-gray-400 flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white transition-all duration-500">
+                  <Icon name="Clock" size={32} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-black text-lg text-gray-900 uppercase tracking-tight">Skip for now</h3>
+                  <p className="text-xs text-gray-400 font-medium">
+                    You can always return to this in the Control Center later.
+                  </p>
+                </div>
+              </button>
+            </div>
+          )}
+
+          {mode === "connect" && (
+            <div className="space-y-8 animate-in slide-in-from-right-8 fade-in duration-700">
+              <div className="space-y-4">
+                <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">
+                  Business Intelligence Identifier
+                </label>
+                <div className="flex gap-4">
+                  <div className="bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 flex items-center text-gray-900 text-base font-black">
+                    +234
+                  </div>
+                  <Input
+                    placeholder="80 1234 5678"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="h-16 bg-gray-50/50 border-gray-100 focus:border-black rounded-2xl font-black text-lg tracking-widest transition-all"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-4">
+                <Button
+                  onClick={handleSendOtp}
+                  className="w-full h-16 !bg-black text-white rounded-2xl text-lg font-black shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  Generate Verification Code
+                </Button>
+                <button
+                  onClick={() => setMode("decision")}
+                  className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] hover:text-black transition-colors py-2"
+                >
+                  ← Go Back
+                </button>
               </div>
             </div>
-            <Button
-              onClick={handleSendOtp}
-              className="w-full !bg-green-600 hover:!bg-green-700 text-white"
-            >
-              Send Code
-            </Button>
-            <button
-              onClick={() => setMode("decision")}
-              className="w-full text-sm text-gray-400 hover:text-gray-600 mt-2"
-            >
-              Back
-            </button>
-          </div>
-        )}
+          )}
 
-        {mode === "verify" && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Verification Code
-              </label>
-              <Input
-                placeholder="123456"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                maxLength={6}
-                className="text-center tracking-widest text-lg"
-                autoFocus
-              />
-              <p className="text-xs text-gray-400">Sent to {phoneNumber}</p>
+          {mode === "verify" && (
+            <div className="space-y-8 animate-in zoom-in-95 duration-700">
+              <div className="space-y-6 text-center">
+                <label className="text-xs font-black uppercase tracking-widest text-gray-400">
+                  Enter 6-Digit Code
+                </label>
+                <div className="flex justify-center gap-3">
+                  {/* Simplified input for now, keeping it one block but adding tracking */}
+                  <Input
+                    placeholder="1 2 3 4 5 6"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    maxLength={6}
+                    className="h-20 text-center tracking-[1em] text-3xl font-black border-transparent bg-gray-50/50 focus:bg-white focus:border-black/10 rounded-2xl transition-all max-w-[320px]"
+                    autoFocus
+                  />
+                </div>
+                <p className="text-xs text-gray-400 font-medium">A secure authentication code was sent to <span className="text-gray-900 font-black">+234 {phoneNumber}</span></p>
+              </div>
+              <div className="flex flex-col gap-4">
+                <Button
+                  onClick={handleVerifyOtp}
+                  className="w-full h-16 !bg-green-600 hover:!bg-green-700 text-white rounded-2xl text-lg font-black shadow-xl shadow-green-500/20"
+                >
+                  Confirm & Synchronize
+                </Button>
+                <button
+                  onClick={() => setMode("connect")}
+                  className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] hover:text-black transition-colors py-2"
+                >
+                  Modify Number
+                </button>
+              </div>
             </div>
-            <Button
-              onClick={handleVerifyOtp}
-              className="w-full !bg-green-600 hover:!bg-green-700 text-white"
-            >
-              Verify & Connect
-            </Button>
-            <button
-              onClick={() => setMode("connect")}
-              className="w-full text-sm text-gray-400 hover:text-gray-600 mt-2"
-            >
-              Change Number
-            </button>
-          </div>
-        )}
+          )}
 
-        {mode === "success" && (
-          <div className="text-center py-8 animate-fade-in space-y-4">
-            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Icon name="Check" size={32} />
+          {mode === "success" && (
+            <div className="text-center py-10 animate-in zoom-in-95 duration-1000 space-y-8">
+              <div className="relative inline-block">
+                <div className="w-24 h-24 bg-[#46EC13] text-black rounded-[2rem] flex items-center justify-center mx-auto shadow-3xl shadow-[#46EC13]/40 animate-bounce">
+                  <Icon name="Check" size={48} />
+                </div>
+                {/* Orbital dots */}
+                <div className="absolute -top-4 -right-4 w-4 h-4 bg-black rounded-full animate-ping" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">
+                  Connected
+                </h3>
+                <p className="text-gray-400 font-medium">
+                  Synchronization complete. Your assistant is now active.
+                </p>
+              </div>
+              <Button
+                onClick={handleSuccessContinue}
+                className="w-full h-16 !bg-black text-white rounded-2xl text-lg font-black shadow-2xl hover:scale-105 active:scale-95 transition-all"
+              >
+                Continue to Inventory
+              </Button>
             </div>
-            <h3 className="text-xl font-bold text-green-900">
-              Connected Successfully!
-            </h3>
-            <p className="text-gray-600">
-              Your WhatsApp Business account is now linked.
-            </p>
-            <Button
-              onClick={handleSuccessContinue}
-              className="w-full !bg-black text-white mt-4"
-            >
-              Continue Setup
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Right Column: Live Benefit Panel */}
-      <div className="hidden lg:block flex-1 w-full sticky top-24">
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden relative min-h-[500px]">
-          <div className="bg-gray-50 p-6 border-b border-gray-100">
-            <h3 className="font-bold text-gray-900">
-              What you get after connecting
-            </h3>
-          </div>
-
-          <div className="p-0">
-            {/* Simulation of chat interaction */}
-            <div className="space-y-4 p-6">
-              <div className="flex gap-4 items-start opacity-50">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex-shrink-0" />
-                <div className="space-y-2 flex-1">
-                  <div className="h-4 w-24 bg-gray-100 rounded" />
-                  <div className="h-16 w-full bg-gray-50 rounded-xl rounded-tl-none border border-gray-100" />
-                </div>
+      {/* Right Column: Premium Benefit Panel */}
+      <div className="hidden xl:block flex-1 w-full sticky top-24 max-w-sm">
+        <div className="bg-white/40 backdrop-blur-xl rounded-[3.5rem] p-4 border border-white shadow-3xl shadow-black/[0.02] relative overflow-hidden h-[700px] flex flex-col">
+          {/* Phone Header Decoration */}
+          <div className="bg-gray-50/50 rounded-[2.5rem] flex-1 overflow-hidden flex flex-col relative border border-white/50">
+            <div className="p-8 pb-4 border-b border-white/50 flex bg-white/50 items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#46EC13]/10 text-[#2db500] flex items-center justify-center shrink-0">
+                <Icon name="Zap" size={24} />
               </div>
+              <div>
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">VAYVA AI ENGINE</h4>
+                <p className="text-xs font-black text-gray-900 tracking-tight leading-none">Intelligence Active</p>
+              </div>
+            </div>
 
-              <div className="flex gap-4 items-start">
-                <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 border-2 border-white shadow-sm z-10">
-                  <Icon name="Bot" size={20} />
-                </div>
-                <div className="space-y-2 flex-1 animate-pulse">
-                  <div className="bg-green-50 p-4 rounded-xl rounded-tl-none border border-green-100 shadow-sm">
-                    <div className="flex items-center gap-2 mb-2 text-green-800 font-bold text-sm">
-                      <Icon name="Zap" size={14} /> New Order Created
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      Identifying products and creating order #1024...
-                    </p>
+            <div className="flex-1 p-8 space-y-8 overflow-y-auto">
+              {/* Chat Bubbles */}
+              <div className="space-y-6">
+                <div className="flex flex-col items-start gap-2 max-w-[80%]">
+                  <div className="bg-white p-4 rounded-3xl rounded-tl-sm shadow-sm border border-gray-100 text-[11px] font-medium text-gray-500 leading-relaxed italic animate-in slide-in-from-left-4">
+                    "Hi, I'd like to order the classic leather boots in size 42."
                   </div>
+                  <span className="text-[8px] font-black text-gray-300 uppercase ml-1">Customer • 10:30 AM</span>
+                </div>
+
+                <div className="flex flex-col items-end gap-2 max-w-[85%] ml-auto">
+                  <div className="bg-black p-5 rounded-3xl rounded-tr-sm shadow-xl text-[11px] font-black text-white leading-relaxed animate-in slide-in-from-right-4 duration-1000">
+                    <div className="flex items-center gap-2 mb-2 text-[#46EC13] text-[9px] uppercase tracking-tighter">
+                      <Icon name="Bot" size={14} /> AI ASSISTANT
+                    </div>
+                    "Excellent choice! I've found those in stock. I've created order <span className="text-[#46EC13]">#VY-9021</span>. Click below to confirm."
+                  </div>
+                  <span className="text-[8px] font-black text-gray-300 uppercase mr-1">Vayva Engine • Just Now</span>
                 </div>
               </div>
 
-              <div className="mt-8 space-y-3">
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <Icon
-                    name="CircleCheck"
-                    className="text-green-500"
-                    size={18}
-                  />
-                  <span>Orders from WhatsApp appear automatically</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <Icon
-                    name="CircleCheck"
-                    className="text-green-500"
-                    size={18}
-                  />
-                  <span>Customer history builds instantly</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <Icon
-                    name="CircleCheck"
-                    className="text-green-500"
-                    size={18}
-                  />
-                  <span>Payment records link to chats</span>
-                </div>
+              {/* Benefits Grid */}
+              <div className="mt-12 space-y-4 pt-10 border-t border-gray-100">
+                {[
+                  { icon: "Zap", label: "Zero-Latency Orders", desc: "Convert chats to cart instantly." },
+                  { icon: "ShieldCheck", label: "End-to-End Secure", desc: "Bank-grade data protection." },
+                  { icon: "BarChart3", label: "Automated Insights", desc: "Know what customers want." },
+                ].map((b, i) => (
+                  <div key={i} className="flex items-center gap-4 group cursor-default">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-300 group-hover:bg-black group-hover:text-[#46EC13] transition-all duration-500">
+                      <Icon name={b.icon as any} size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-900 uppercase tracking-tight">{b.label}</p>
+                      <p className="text-[9px] text-gray-400 font-medium leading-none">{b.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
+            </div>
+
+            {/* Bottom Decor */}
+            <div className="p-8 mt-auto flex justify-center">
+              <div className="w-24 h-1.5 bg-gray-200 rounded-full" />
             </div>
           </div>
         </div>

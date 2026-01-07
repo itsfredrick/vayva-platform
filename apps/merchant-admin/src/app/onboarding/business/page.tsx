@@ -105,10 +105,12 @@ export default function BusinessBasicsPage() {
       },
     });
 
-    await goToStep("templates");
+    await goToStep("identity");
   };
 
-  const isFormValid = !!formData.name;
+  const isFormValid =
+    formData.name.trim().length >= 2 &&
+    /^[a-zA-Z0-9\s'&.-]+$/.test(formData.name);
 
   return (
     <div className="flex flex-col lg:flex-row h-full gap-8 max-w-6xl mx-auto items-start">
@@ -235,16 +237,26 @@ export default function BusinessBasicsPage() {
               htmlFor="category"
               className="block text-sm font-medium text-gray-700"
             >
-              Category
+              Business Category
             </label>
-            <Input
+            <select
               id="category"
               value={formData.category}
-              readOnly
-              className="bg-gray-50 text-gray-500 cursor-not-allowed"
-            />
+              onChange={(e) => handleChange("category", e.target.value)}
+              className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+            >
+              <option value="">Select Category</option>
+              <option value="fashion">Fashion & Apparel</option>
+              <option value="food">Food & Beverage</option>
+              <option value="beauty">Beauty & Cosmetics</option>
+              <option value="electronics">Electronics</option>
+              <option value="home">Home & Living</option>
+              <option value="health">Health & Wellness</option>
+              <option value="services">Professional Services</option>
+              <option value="other">Other</option>
+            </select>
             <p className="text-xs text-gray-400">
-              Pre-selected based on your choice.
+              Select your business category to tailor your onboarding experience.
             </p>
           </div>
 

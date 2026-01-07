@@ -3,11 +3,7 @@ import React from "react";
 export const FoodHero = () => {
   return (
     <section className="relative h-64 bg-yellow-500 overflow-hidden">
-      <img
-        src="https://placehold.co/800x400/F59E0B/fff?text=Hot+Meals"
-        alt="Food Hero"
-        className="w-full h-full object-cover opacity-90"
-      />
+      <div className="w-full h-full bg-gradient-to-r from-yellow-500 to-orange-600 opacity-90" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
         <div>
           <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">

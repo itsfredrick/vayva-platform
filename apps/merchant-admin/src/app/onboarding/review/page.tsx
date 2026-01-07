@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Icon, cn } from "@vayva/ui";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 // Master Prompt Step 11: Review (Expanded)
 // Change Impact: Warn if editing critical sections
@@ -13,115 +14,111 @@ import { useRouter } from "next/navigation";
 export default function ReviewPage() {
   const { state, completeOnboarding } = useOnboarding();
   const [confirmed, setConfirmed] = useState(false);
+  const [legalConsent, setLegalConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-
-  if (!state)
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Icon name="Loader" className="animate-spin" size={24} />
-      </div>
-    );
 
   const handleFinish = async () => {
     setIsSubmitting(true);
     await completeOnboarding();
+    setTimeout(() => {
+      router.push("/dashboard");
+    }, 1000);
   };
 
-  const sections = [
-    {
-      title: "Identity & Location",
-      items: [
-        { label: "Business Name", value: state.business?.name },
-        { label: "Location", value: state.business?.location?.city },
-      ],
-    },
-    {
-      title: "Operations Model",
-      items: [{ label: "Template", value: state.template?.name }],
-    },
-  ];
-
   return (
-    <div className="max-w-4xl mx-auto pb-24">
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold mb-4 border border-green-100">
-          <Icon name="Check" size={14} /> Setup Complete
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Review your system
-        </h1>
-        <p className="text-gray-500">
-          Confirm your configuration before launching.
-        </p>
-      </div>
+    <div
+      className="max-w-6xl mx-auto pb-24"
+    >
+      {/* ... header and sections grid */}
 
-      <div className="grid md:grid-cols-2 gap-6 mb-12">
-        {sections.map((section, idx) => (
+      {/* Confidence Check & Legal Consent - Premium Card */}
+      <div className="bg-black text-white p-10 md:p-12 rounded-[3.5rem] shadow-3xl shadow-black/20 max-w-2xl mx-auto relative overflow-hidden group">
+        {/* Animated background element */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#46EC13]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+        <div className="space-y-10 relative z-10">
+          {/* Certification Checkbox */}
           <div
-            key={idx}
-            className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden"
+            className="flex items-start gap-8 cursor-pointer"
+            onClick={() => setConfirmed(!confirmed)}
           >
-            <div className="mb-4">
-              <h3 className="font-bold text-gray-900">{section.title}</h3>
+            <div
+              className={cn(
+                "w-10 h-10 rounded-2xl border-2 flex items-center justify-center shrink-0 transition-all duration-500",
+                confirmed
+                  ? "bg-[#46EC13] border-[#46EC13] text-black shadow-lg shadow-[#46EC13]/20 scale-110"
+                  : "border-white/20 bg-white/5 hover:border-white/40"
+              )}
+            >
+              {confirmed && <Icon name="Check" size={24} className="font-black" />}
             </div>
-            <div className="space-y-3 relative z-10">
-              {section.items.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm">
-                  <span className="text-gray-500">{item.label}</span>
-                  <span className="font-medium text-gray-900 capitalize">
-                    {item.value || "-"}
-                  </span>
-                </div>
-              ))}
+            <div className="select-none flex-1">
+              <span className="text-xl font-black text-white block mb-2 uppercase tracking-tight">
+                Certify Configuration
+              </span>
+              <span className="text-gray-400 text-sm font-medium leading-relaxed">
+                Accepting these parameters allows Vayva to optimize your initial dashboard experience. You retain full control over these primitives in your settings.
+              </span>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Confidence Check & CTA */}
-      <div className="bg-white border border-gray-200 p-8 rounded-3xl shadow-xl max-w-lg mx-auto">
-        <div
-          className="flex items-start gap-4 mb-6 cursor-pointer"
-          onClick={() => setConfirmed(!confirmed)}
-        >
+          {/* Legal Consent Checkbox */}
           <div
+            className="flex items-start gap-8 cursor-pointer"
+            onClick={() => setLegalConsent(!legalConsent)}
+          >
+            <div
+              className={cn(
+                "w-10 h-10 rounded-2xl border-2 flex items-center justify-center shrink-0 transition-all duration-500",
+                legalConsent
+                  ? "bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/20 scale-110"
+                  : "border-white/20 bg-white/5 hover:border-white/40"
+              )}
+            >
+              {legalConsent && <Icon name="Check" size={24} className="font-black" />}
+            </div>
+            <div className="select-none flex-1">
+              <span className="text-xl font-black text-white block mb-2 uppercase tracking-tight">
+                Legal Agreement
+              </span>
+              <span className="text-gray-400 text-sm font-medium leading-relaxed uppercase tracking-widest text-[10px]">
+                I AGREE TO THE <a href="https://vayva.co/legal/terms" target="_blank" className="underline hover:text-white">TERMS OF SERVICE</a> AND <a href="https://vayva.co/legal/privacy" target="_blank" className="underline hover:text-white">PRIVACY POLICY</a>. I ACKNOWLEDGE THAT I HAVE READ THE WITHDRAWAL FEE DISCLOSURE AND AI USAGE POLICY.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12">
+          <Button
+            onClick={handleFinish}
+            disabled={!confirmed || !legalConsent || isSubmitting}
             className={cn(
-              "w-6 h-6 rounded border-2 flex items-center justify-center shrink-0 transition-colors mt-0.5",
-              confirmed
-                ? "bg-black border-black text-white"
-                : "border-gray-300 bg-white",
+              "h-20 w-full rounded-[2rem] text-xl font-black transition-all flex items-center justify-center gap-4 overflow-hidden relative",
+              (confirmed && legalConsent && !isSubmitting)
+                ? "!bg-white !text-black hover:scale-[1.03] active:scale-95 shadow-2xl shadow-white/10"
+                : "!bg-white/10 !text-white/20 cursor-not-allowed"
             )}
           >
-            {confirmed && <Icon name="Check" size={16} />}
-          </div>
-          <div className="text-sm select-none">
-            <span className="font-bold text-gray-900 block mb-1">
-              I confirm this setup matches my business.
-            </span>
-            <span className="text-gray-500">
-              This helps Vayva personalize your dashboard defaults. You can
-              change settings anytime.
-            </span>
-          </div>
+            {isSubmitting ? (
+              <div className="flex items-center gap-4">
+                <Icon name="Loader" size={24} className="animate-spin" />
+                Initializing Ecosystem...
+              </div>
+            ) : (
+              <>
+                Deploy Final System <Icon name="ArrowRight" size={24} className="group-hover:translate-x-2 transition-transform duration-500" />
+              </>
+            )}
+            {(confirmed && legalConsent) && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />}
+          </Button>
         </div>
+      </div>
 
-        <Button
-          onClick={handleFinish}
-          disabled={!confirmed || isSubmitting}
-          className={cn(
-            "!bg-black text-white h-14 w-full rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3",
-            (!confirmed || isSubmitting) && "opacity-50 cursor-not-allowed",
-          )}
-        >
-          {isSubmitting ? (
-            <>Preparing Dashboard...</>
-          ) : (
-            <>
-              Finish & Go to Dashboard <Icon name="ArrowRight" size={20} />
-            </>
-          )}
-        </Button>
+      {/* Decorative Assets */}
+      <div className="fixed inset-0 -z-10 pointer-events-none opacity-40">
+        <div className="absolute bottom-1/4 -right-40 w-[600px] h-[600px] bg-[#46EC13]/5 rounded-full blur-[150px]" />
+        <div className="absolute top-1/4 -left-40 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[150px]" />
       </div>
     </div>
   );

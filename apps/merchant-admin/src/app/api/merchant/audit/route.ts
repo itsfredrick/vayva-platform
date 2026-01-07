@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.storeId) {
+  const user = await requireAuth();
+  if (!(user as any)?.storeId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
   const actorId = searchParams.get("actor_id");
 
   const where: any = {
-    storeId: (session!.user as any).storeId,
+    storeId: user.storeId,
   };
 
   if (entityType) where.entityType = entityType;

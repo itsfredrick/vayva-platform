@@ -1,9 +1,7 @@
-import Groq from "groq-sdk";
+import { GroqClient } from "./groq-client";
 import { AIMessage } from "./aiService";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_MARKETING_KEY || "",
-});
+const groqClient = new GroqClient("SUPPORT");
 
 export class MarketingAIService {
   private static SYSTEM_PROMPT = `You are Vayva AI, a friendly and polished assistant for Vayva. 
@@ -24,20 +22,22 @@ If they seem ready, kindly invite them to click "Start selling for free." If you
 
   static async getResponse(messages: AIMessage[]) {
     try {
-      const completion = await groq.chat.completions.create({
-        messages: [
+      const completion = await groqClient.chatCompletion(
+        [
           { role: "system", content: this.SYSTEM_PROMPT },
           ...messages,
-        ],
-        model: process.env.AI_MODEL || "llama-3.1-70b-versatile",
-        temperature: 0.7,
-        max_tokens: 1024,
-      });
+        ] as any,
+        {
+          model: process.env.AI_MODEL || "llama-3.1-70b-versatile",
+          temperature: 0.7,
+          maxTokens: 1024,
+        }
+      );
 
       return {
         success: true,
         message:
-          completion.choices[0]?.message?.content ||
+          completion?.choices[0]?.message?.content ||
           "I'm sorry, I couldn't process that right now. Please try again or contact our support team.",
       };
     } catch (error: any) {

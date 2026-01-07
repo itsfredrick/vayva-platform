@@ -292,6 +292,7 @@ export function LivePreviewClient({
               storeName={demo.storeName}
               slug={demo.slug}
               plan={demo.plan}
+              config={params.get("config") ? JSON.parse(params.get("config")!) : undefined}
             >
               {children}
             </LayoutComponent>

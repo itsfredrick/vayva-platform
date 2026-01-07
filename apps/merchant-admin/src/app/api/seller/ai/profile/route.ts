@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { z } from "zod";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     if (!storeId)
       return NextResponse.json({ error: "No store found" }, { status: 400 });
@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
     const body = await request.json();
 
     if (!storeId)

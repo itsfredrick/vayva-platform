@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { wrapEmail, renderButton, BRAND_COLOR } from "./layout";
+import { BRAND } from "@vayva/shared";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -63,7 +64,7 @@ export async function sendTeamInvite({
 
   try {
     const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "Vayva <noreply@vayva.ng>",
+      from: process.env.RESEND_FROM_EMAIL || `Vayva <${BRAND.emails.noReply}>`,
       to: [email],
       subject: `You've been invited to join ${storeName} on Vayva`,
       html: wrapEmail(contentHtml, "Team Invitation"),

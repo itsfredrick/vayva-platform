@@ -38,19 +38,19 @@ export const QuoteSuccess = ({ onClose }: QuoteSuccessProps) => {
           </h3>
           <ul className="space-y-3 text-sm text-gray-700">
             <li className="flex gap-3">
-              <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+              <div className="w-5 h-5 rounded-full bg-blue-100 text-brand flex items-center justify-center text-xs font-bold">
                 1
               </div>
               Seller reviews your volume and requirements.
             </li>
             <li className="flex gap-3">
-              <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+              <div className="w-5 h-5 rounded-full bg-blue-100 text-brand flex items-center justify-center text-xs font-bold">
                 2
               </div>
               You receive a formal Quote with shipping fees.
             </li>
             <li className="flex gap-3">
-              <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+              <div className="w-5 h-5 rounded-full bg-blue-100 text-brand flex items-center justify-center text-xs font-bold">
                 3
               </div>
               Approve quote to generate Invoice for payment.

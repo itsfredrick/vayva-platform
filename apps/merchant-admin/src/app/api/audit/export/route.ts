@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
+import { requireAuth } from "@/lib/session";
 
 /**
  * Real Audit Export Implementation
  * Creates a DataExportRequest record for background processing.
  */
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.storeId) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+  const user = await requireAuth();
 
   try {
     const body = await req.json();
     const { type, filters, format } = body;
-    const storeId = session.user.storeId;
-    const userId = session.user.id;
+    const storeId = user.storeId;
+    const userId = user.id;
 
     if (!type) {
       return NextResponse.json({ error: "Export type is required" }, { status: 400 });

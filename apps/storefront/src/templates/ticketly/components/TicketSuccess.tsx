@@ -18,7 +18,7 @@ export const TicketSuccess = ({
       <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 bg-black/10 p-2 rounded-full hover:bg-black/20 text-white"
+          className="absolute top-4 right-4 z-10 bg-black/10 p-2 rounded-full hover:opacity-90/20 text-white"
         >
           <X size={20} />
         </button>

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 import { EventBus } from "@/lib/events/eventBus";
+import { requireAuth } from "@/lib/session";
 
 // Test WhatsApp Provider
 const WhatsAppProvider = {
@@ -15,9 +16,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const { id } = await params;
   const body = await req.json();
@@ -31,7 +31,7 @@ export async function POST(
   });
 
   if (!conversation) return new NextResponse("Not Found", { status: 404 });
-  if (conversation.storeId !== (session!.user as any).storeId)
+  if (conversation.storeId !== user.storeId)
     return new NextResponse("Forbidden", { status: 403 });
 
   // CONSENT CHECK
@@ -89,10 +89,10 @@ export async function POST(
       type: "inbox.message_sent",
       payload: { messageId: message.id, type },
       ctx: {
-        actorId: (session!.user as any).id,
+        actorId: user.id,
         actorType: "user" as any,
         correlationId: `req-${Date.now()}`,
-        actorLabel: `${(session!.user as any).firstName || "System"} ${(session!.user as any).lastName || ""}`,
+        actorLabel: `${user.firstName || "System"} ${user.lastName || ""}`,
       },
     });
 

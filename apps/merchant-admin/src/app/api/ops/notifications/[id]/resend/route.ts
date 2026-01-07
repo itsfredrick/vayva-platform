@@ -13,7 +13,7 @@ export async function POST(
     const body = await req.json();
     const { storeId } = body;
 
-    const log = await (prisma as any).notificationLog.findUnique({
+    const log = await prisma.notificationLog.findUnique({
       where: { id: logId },
     });
 
@@ -28,7 +28,7 @@ export async function POST(
     await NotificationManager.trigger(
       storeId,
       log.type as any,
-      log.metadata?.variables || {},
+      (log.metadata as any)?.variables || {},
     );
 
     // Log audit event

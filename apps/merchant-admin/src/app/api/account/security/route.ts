@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
-    const userId = session.user.id;
+    const user = await requireAuth();
+    const storeId = user.storeId;
+    const userId = user.id;
 
     // Fetch recent login logs for this user/store
     const loginLogs = await prisma.auditLog.findMany({
@@ -29,7 +29,7 @@ export async function GET() {
       device: log.userAgent || "Unknown Device",
       location: log.ipAddress || "Unknown Location",
       lastActive: log.createdAt,
-      isCurrent: false, // In a real system, we'd compare session IDs
+      isCurrent: false, // In a real system, we'd compare user IDs
     }));
 
     return NextResponse.json({

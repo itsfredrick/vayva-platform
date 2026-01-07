@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
-  const storeId = (session!.user as any).storeId;
+  const storeId = user.storeId;
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") || "OPEN";
   const limit = parseInt(searchParams.get("limit") || "20");

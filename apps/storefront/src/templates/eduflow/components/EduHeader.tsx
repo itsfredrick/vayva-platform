@@ -15,7 +15,7 @@ export const EduHeader = ({ storeName }: EduHeaderProps) => {
           href="/"
           className="flex items-center gap-2 font-bold text-xl text-gray-900"
         >
-          <div className="bg-blue-600 text-white p-1.5 rounded-lg">
+          <div className="bg-brand text-white p-1.5 rounded-lg">
             <GraduationCap size={20} />
           </div>
           {storeName || "EduFlow"}
@@ -23,13 +23,13 @@ export const EduHeader = ({ storeName }: EduHeaderProps) => {
 
         {/* Nav */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-500">
-          <Link href="#" className="hover:text-blue-600 transition-colors">
+          <Link href="#" className="hover:text-brand transition-colors">
             All Courses
           </Link>
-          <Link href="#" className="hover:text-blue-600 transition-colors">
+          <Link href="#" className="hover:text-brand transition-colors">
             Instructors
           </Link>
-          <Link href="#" className="hover:text-blue-600 transition-colors">
+          <Link href="#" className="hover:text-brand transition-colors">
             Success Stories
           </Link>
         </nav>
@@ -42,7 +42,7 @@ export const EduHeader = ({ storeName }: EduHeaderProps) => {
           >
             My Learning
           </Link>
-          <button className="flex items-center gap-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
+          <button className="flex items-center gap-2 text-sm font-bold text-white bg-brand hover:opacity-90 px-4 py-2 rounded-lg transition-colors">
             <User size={16} /> Dashboard
           </button>
         </div>

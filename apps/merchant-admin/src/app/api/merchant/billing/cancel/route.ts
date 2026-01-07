@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.storeId)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   try {
     await prisma.merchantSubscription.update({
-      where: { storeId: (session!.user as any).storeId },
+      where: { storeId: user.storeId },
       data: { cancelAtPeriodEnd: true },
     });
 

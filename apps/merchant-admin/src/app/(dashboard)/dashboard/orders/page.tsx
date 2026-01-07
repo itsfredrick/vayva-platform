@@ -1,9 +1,11 @@
 "use client";
 
-import { EmptyState, Button } from "@vayva/ui";
+import { EmptyState, Button, Badge } from "@vayva/ui";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Skeleton } from "@/components/LoadingSkeletons";
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
@@ -19,8 +21,9 @@ export default function OrdersPage() {
             const res = await fetch("/api/orders");
             const data = await res.json();
             if (data.success) {
-                setOrders(data.data || []);
+                setOrders(data.data);
             }
+            // NO MOCK FALLBACK
         } catch (error) {
             toast.error("Failed to load orders");
         } finally {
@@ -32,39 +35,28 @@ export default function OrdersPage() {
         const shareData = {
             title: 'My Vayva Store',
             text: 'Check out my store on Vayva!',
-            url: window.location.origin, // Ideally this should be the actual store URL
+            url: window.location.origin,
         };
-
         if (navigator.share) {
-            try {
-                await navigator.share(shareData);
-            } catch (err) {
-                // Share cancelled or failed
-            }
+            navigator.share(shareData).catch(() => { });
         } else {
-            // Fallback
-            try {
-                await navigator.clipboard.writeText(shareData.url);
-                toast.success("Store URL copied to clipboard");
-            } catch (e) {
-                toast.error("Could not share store");
-            }
+            navigator.clipboard.writeText(shareData.url).then(() => toast.success("Copied!"));
         }
     };
 
     if (loading) {
         return (
-            <div className="p-6 space-y-6">
-                <div className="h-8 w-48 bg-gray-100 rounded animate-pulse" />
-                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                    <div className="h-12 bg-gray-50 border-b border-gray-100" />
-                    {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="h-16 border-b border-gray-100 flex items-center px-6 gap-4">
-                            <div className="h-4 w-24 bg-gray-50 rounded animate-pulse" />
-                            <div className="h-4 w-32 bg-gray-50 rounded animate-pulse" />
-                            <div className="h-4 w-16 bg-gray-50 rounded animate-pulse ml-auto" />
-                            <div className="h-6 w-20 bg-gray-50 rounded-full animate-pulse" />
-                        </div>
+            <div className="p-8 max-w-7xl mx-auto space-y-8">
+                <div className="flex justify-between items-center">
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-48" />
+                        <Skeleton className="h-4 w-64" />
+                    </div>
+                </div>
+                <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-6">
+                    <Skeleton className="h-10 w-full" />
+                    {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
                     ))}
                 </div>
             </div>
@@ -78,7 +70,7 @@ export default function OrdersPage() {
                 <EmptyState
                     title="No orders yet"
                     icon="ShoppingBag"
-                    description="When you receive your first order, it will appear here. Share your store link to get started!"
+                    description="When you receive your first order, it will appear here."
                     action={<Button className="px-8" onClick={handleShareStore}>Share Store Link</Button>}
                 />
             </div>
@@ -86,36 +78,112 @@ export default function OrdersPage() {
     }
 
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6 text-gray-900">Orders</h1>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-4">Order ID</th>
-                            <th className="px-6 py-4">Customer</th>
-                            <th className="px-6 py-4">Total</th>
-                            <th className="px-6 py-4">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {orders.map((order: any) => (
-                            <tr key={order.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => router.push(`/dashboard/orders/${order.id}`)}>
-                                <td className="px-6 py-4 font-bold text-gray-900">#{order.orderNumber || order.id.slice(0, 8)}</td>
-                                <td className="px-6 py-4 text-gray-600">{order.customer?.firstName || "Guest"}</td>
-                                <td className="px-6 py-4 font-medium text-gray-900">{order.currency} {order.total}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${order.status === 'PAID' ? 'bg-green-100 text-green-700' :
-                                        order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'
-                                        }`}>
-                                        {order.status}
-                                    </span>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 md:p-8 max-w-7xl mx-auto space-y-8"
+        >
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 font-heading">Orders 📦</h1>
+                    <p className="text-gray-500 mt-1 font-medium">Manage and track your customer orders.</p>
+                </div>
             </div>
-        </div>
+
+            <div className="glass-card rounded-3xl shadow-sm border-none overflow-hidden transition-all duration-300">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-gray-50/50 text-gray-400 font-bold uppercase tracking-widest text-[10px] border-b border-gray-100">
+                            <tr>
+                                <th className="px-6 py-5">Order ID</th>
+                                <th className="px-6 py-5">Customer</th>
+                                <th className="px-6 py-5">Total</th>
+                                <th className="px-6 py-5">Payment Status</th>
+                                <th className="px-6 py-5 text-right">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50 bg-white/30 backdrop-blur-sm">
+                            {orders.map((order: any) => {
+                                const paid = order.paidAmount || 0;
+                                const total = order.total || 0;
+                                const percent = total > 0 ? (paid / total) * 100 : (paid > 0 ? 100 : 0);
+                                const balance = total - paid;
+
+                                let statusColor = 'text-gray-500';
+                                let barColor = 'bg-gray-200';
+                                let statusBg = 'bg-gray-50';
+
+                                if (order.displayStatus === 'PAID') {
+                                    statusColor = 'text-green-600';
+                                    barColor = 'bg-green-500';
+                                    statusBg = 'bg-green-50';
+                                } else if (order.displayStatus === 'PARTIAL') {
+                                    statusColor = 'text-blue-600';
+                                    barColor = 'bg-blue-500';
+                                    statusBg = 'bg-blue-50';
+                                }
+
+                                return (
+                                    <tr
+                                        key={order.id}
+                                        className="hover:bg-white/80 transition-all cursor-pointer group"
+                                        onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+                                    >
+                                        <td className="px-6 py-5">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-gray-900 text-base">#{order.orderNumber}</span>
+                                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{order.items} items</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                                                    {order.customer ? order.customer.firstName[0] : "G"}
+                                                </div>
+                                                <span className="font-medium text-gray-700">
+                                                    {order.customer ? `${order.customer.firstName} ${order.customer.lastName || ''}` : "Guest"}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className="font-bold text-gray-900">
+                                                {order.currency} {total.toLocaleString()}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="w-36">
+                                                <div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
+                                                    <span className={statusColor}>{order.displayStatus}</span>
+                                                    <span className="text-gray-400">{Math.round(percent)}%</span>
+                                                </div>
+                                                <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden p-[1px]">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${Math.min(percent, 100)}%` }}
+                                                        transition={{ duration: 1, ease: "easeOut" }}
+                                                        className={`h-full rounded-full ${barColor} shadow-sm`}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5 text-right">
+                                            {balance > 0 ? (
+                                                <span className="font-mono font-bold text-red-500 bg-red-50 px-3 py-1 rounded-lg">
+                                                    -₦{balance.toLocaleString()}
+                                                </span>
+                                            ) : (
+                                                <span className="font-mono font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg">
+                                                    Cleared
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </motion.div>
     );
 }

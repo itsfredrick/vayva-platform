@@ -1,14 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { authClient } from "@/lib/neon-auth";
 import { apiClient } from "@vayva/api-client";
 import {
   User,
   MerchantContext,
   UserRole,
   OnboardingStatus,
-  BusinessType,
 } from "@vayva/shared";
 
 import { InactivityListener } from "@/components/auth/InactivityListener";
@@ -18,65 +18,86 @@ interface AuthContextType {
   merchant: MerchantContext | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (token: string, user: User, merchant?: MerchantContext) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [merchant, setMerchant] = useState<MerchantContext | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use Better Auth hook
+  const { data: session, isPending: isSessionLoading } = authClient.useSession();
+
+  const sessionUser = session;
+  const isSignedIn = !!sessionUser;
+
+  const [profile, setProfile] = useState<{ user: User | null; merchant: MerchantContext | null }>({
+    user: null,
+    merchant: null,
+  });
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
 
   const router = useRouter();
   const pathname = usePathname();
 
+  // Configure API Client - Better Auth uses cookies by default on same-domain
+  useEffect(() => {
+    if (isSignedIn) {
+      // If we needed a token, we could get it here. 
+      // For now, we assume cookies are handled by browser.
+    }
+  }, [isSignedIn]);
+
   const fetchProfile = async () => {
+    if (!isSignedIn) {
+      setProfile({ user: null, merchant: null });
+      setIsProfileLoading(false);
+      return;
+    }
+
     try {
       const data = await apiClient.auth.me();
-      setUser(data.user);
-      setMerchant(data.merchant || null);
+      setProfile({
+        user: data.user,
+        merchant: data.merchant || null,
+      });
     } catch (error) {
-      // API not available in development or user not authenticated - this is expected
-      // console.warn('Profile fetch skipped:', error instanceof Error ? error.message : 'API unavailable');
-      setUser(null);
-      setMerchant(null);
+      console.warn('Profile fetch failed:', error);
+      // Fallback to basic session data if backend sync fails/hasn't happened yet
+      if (sessionUser) {
+        setProfile(prev => ({
+          ...prev,
+          user: prev.user || {
+            id: sessionUser.user.id,
+            email: sessionUser.user.email,
+            // Map Better Auth user fields to our User type
+            firstName: sessionUser.user.name?.split(' ')[0] || "",
+            lastName: sessionUser.user.name?.split(' ').slice(1).join(' ') || "",
+            avatarUrl: sessionUser.user.image || "",
+            authId: sessionUser.user.id,
+            isEmailVerified: sessionUser.user.emailVerified,
+            createdAt: sessionUser.user.createdAt,
+            updatedAt: sessionUser.user.updatedAt,
+          } as any
+        }));
+      }
+    } finally {
+      setIsProfileLoading(false);
     }
   };
 
   useEffect(() => {
-    // Since we use httpOnly cookies, we just try to fetch /me on mount
-    fetchProfile().finally(() => setIsLoading(false));
-  }, []);
-
-  const login = (
-    newToken: string,
-    newUser: User,
-    newMerchant?: MerchantContext,
-  ) => {
-    // Token is handled by gateway cookie, but we still update local state
-    setUser(newUser);
-    setMerchant(newMerchant || null);
-
-    if (newMerchant?.onboardingStatus === OnboardingStatus.COMPLETE) {
-      router.push("/admin/dashboard");
-    } else {
-      router.push("/onboarding/resume");
+    if (!isSessionLoading) {
+      fetchProfile();
     }
-  };
+  }, [isSessionLoading, isSignedIn, sessionUser?.user.id]);
 
   const logout = async () => {
-    try {
-      await apiClient.auth.logout();
-    } catch (e) {
-      console.error("Logout error", e);
-    }
-    setUser(null);
-    setMerchant(null);
+    await authClient.signOut();
     router.push("/signin");
   };
+
+  const isLoading = isSessionLoading || (isSignedIn && isProfileLoading);
 
   // Route Guard & Redirection Logic
   useEffect(() => {
@@ -88,22 +109,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       "/forgot-password",
       "/reset-password",
       "/verify",
-      "/",
       "/features",
       "/marketplace",
       "/pricing",
       "/templates",
-      "/help",
-      "/legal",
-      "/contact",
-      "/about",
-      "/how-vayva-works",
-      "/store-builder",
-      "/careers",
-      "/blog",
-      "/community",
-      "/trust",
-      "/system-status",
     ];
 
     const isPublicRoute = publicRoutes.some(
@@ -111,15 +120,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
     const isAuthRoute = ["/signin", "/signup", "/verify"].includes(pathname);
 
-    if (!user && !isPublicRoute) {
-      router.push("/signin");
+    if (!isSignedIn && !isPublicRoute) {
+      const hasAccount = localStorage.getItem("vayva_has_account") === "true";
+      const rememberedEmail = localStorage.getItem("vayva_remembered_email");
+
+      if (hasAccount || rememberedEmail) {
+        router.push("/signin");
+      } else {
+        router.push("/signup");
+      }
       return;
     }
 
-    if (user) {
+    if (isSignedIn && profile.user && profile.merchant) {
       if (isAuthRoute) {
-        if (merchant?.onboardingStatus === OnboardingStatus.COMPLETE) {
-          router.push("/admin/dashboard");
+        if (profile.merchant?.onboardingStatus === OnboardingStatus.COMPLETE) {
+          router.push("/dashboard");
         } else {
           router.push("/onboarding/resume");
         }
@@ -127,28 +143,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       // Enhanced Onboarding Gating
-      if (merchant) {
+      if (profile.merchant) {
         const isConfigured = [
           OnboardingStatus.COMPLETE,
           OnboardingStatus.REQUIRED_COMPLETE,
           OnboardingStatus.OPTIONAL_INCOMPLETE,
-        ].includes(merchant.onboardingStatus);
+        ].includes(profile.merchant.onboardingStatus);
 
-        // Block dashboard access if onboarding incomplete/not configured
         if (pathname.startsWith("/admin") && !isConfigured) {
           router.push("/onboarding/resume");
           return;
         }
 
-        // Block direct onboarding access if already fully configured (optional)
-        // However, user might want to access optional steps via /onboarding URLs.
-        // The prompt says: "send to /admin/dashboard with checklist" if REQUIRED_COMPLETE.
         if (
           pathname.startsWith("/onboarding") &&
           isConfigured &&
           pathname !== "/onboarding/resume"
         ) {
-          // Allow specific onboarding sub-routes if they are part of the optional checklist
           const allowedOptionalRoutes = [
             "/onboarding/whatsapp",
             "/onboarding/order-flow",
@@ -162,24 +173,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             pathname.startsWith(p),
           );
           if (!isOptionalStep) {
-            router.push("/admin/dashboard");
+            router.push("/dashboard");
             return;
           }
         }
       }
     }
-  }, [user, merchant, isLoading, pathname]);
+  }, [isSignedIn, profile, isLoading, pathname]);
 
-  const value = {
-    user,
-    merchant,
+  const value = useMemo(() => ({
+    user: profile.user,
+    merchant: profile.merchant,
     isLoading,
-    isAuthenticated: !!user,
-    login,
+    isAuthenticated: isSignedIn,
     logout,
     refreshProfile: fetchProfile,
-  };
-
+  }), [profile.user, profile.merchant, isLoading, isSignedIn]);
 
   return (
     <AuthContext.Provider value={value}>

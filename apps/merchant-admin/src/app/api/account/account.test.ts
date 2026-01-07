@@ -7,7 +7,7 @@ import {
 } from "./domains/route";
 import { POST as verifyDomain } from "./domains/verify/route";
 import { POST as changePassword } from "./security/change-password/route";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import bcrypt from "bcryptjs";
 
@@ -16,7 +16,7 @@ const testUserId = "user_test_999";
 const testSession = { user: { id: testUserId, storeId: testStoreId } };
 
 // Global Mocks
-vi.mock("@/lib/auth/session", () => ({
+vi.mock("@/lib/session", () => ({
   requireAuth: vi.fn(),
 }));
 

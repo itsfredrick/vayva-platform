@@ -5,6 +5,7 @@ import {
 } from "@/hooks/storefront/useStorefront";
 import { useStorefrontCart } from "@/hooks/storefront/useStorefrontCart";
 import { CheckoutModal } from "./CheckoutModal";
+import { StorefrontCart } from "./StorefrontCart";
 import {
   ShoppingBag,
   X,
@@ -15,15 +16,27 @@ import {
   Minus,
   Video,
 } from "lucide-react";
+import Image from "next/image";
+import { StorefrontSEO } from "./StorefrontSEO";
 
 export function ProConsultBooking({
   storeName: initialStoreName,
   storeSlug,
+  config: configOverride,
 }: {
   storeName: string;
   storeSlug?: string;
+  config?: any;
 }) {
   const { store } = useStorefrontStore(storeSlug);
+
+  // Configuration Merging
+  const config = {
+    primaryColor: configOverride?.primaryColor || store?.templateConfig?.primaryColor || "#2563eb", // blue-600
+    heroTitle: configOverride?.heroTitle || store?.templateConfig?.heroTitle || "Expert advice, on demand.",
+    heroDesc: configOverride?.heroDesc || store?.templateConfig?.heroDesc || "Connect with top-tier consultants across tech, marketing, legal, and finance via high-quality video calls.",
+    accentColor: configOverride?.accentColor || store?.templateConfig?.accentColor || "#0f172a", // slate-900
+  };
   const { products, isLoading } = useStorefrontProducts(storeSlug, {
     limit: 12,
   });
@@ -44,6 +57,7 @@ export function ProConsultBooking({
 
   return (
     <div className="bg-white min-h-screen font-sans text-slate-800">
+      <StorefrontSEO store={store} products={products} />
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -56,8 +70,8 @@ export function ProConsultBooking({
       {/* Navbar */}
       <nav className="border-b border-slate-100 flex justify-between items-center px-8 py-5 sticky top-0 bg-white/90 backdrop-blur z-50">
         <div className="flex items-center gap-3 font-bold text-xl text-slate-900 tracking-tight">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg">
-            P
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-lg" style={{ backgroundColor: config.primaryColor }}>
+            {displayName.charAt(0)}
           </div>
           {displayName}
         </div>
@@ -86,99 +100,16 @@ export function ProConsultBooking({
         </div>
       </nav>
 
-      {/* Cart Drawer */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div
-            className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm"
-            onClick={() => setIsCartOpen(false)}
-          />
-          <div className="relative w-full max-w-md bg-white h-full p-6 flex flex-col shadow-2xl animate-in slide-in-from-right">
-            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-              <h2 className="text-xl font-bold text-slate-900">
-                Session Summary
-              </h2>
-              <button onClick={() => setIsCartOpen(false)}>
-                <X className="w-5 h-5 text-slate-400" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-auto space-y-4">
-              {cart.length === 0 ? (
-                <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                  <Calendar className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                  <p className="text-slate-500 text-sm">
-                    No sessions scheduled.
-                  </p>
-                </div>
-              ) : (
-                cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="border border-slate-200 rounded-lg p-4 hover:border-blue-200 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-slate-900 text-sm">
-                        {item.name}
-                      </h3>
-                      <span className="font-bold text-blue-600 text-sm">
-                        ₦{(item.price * item.quantity).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-50 rounded px-2 py-1">
-                        <Video className="w-3 h-3" />
-                        <span>Video Call</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center border border-slate-200 rounded px-1">
-                          <button
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="p-1 hover:text-blue-600"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="text-xs px-2">{item.quantity}</span>
-                          <button
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="p-1 hover:text-blue-600"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </div>
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-xs text-red-500 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {cart.length > 0 && (
-              <div className="pt-6 border-t border-slate-100 mt-4">
-                <div className="flex justify-between text-lg font-bold mb-6 text-slate-900">
-                  <span>Total Due</span>
-                  <span>₦{total.toLocaleString()}</span>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsCartOpen(false);
-                    setIsCheckoutOpen(true);
-                  }}
-                  className="w-full bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all"
-                >
-                  Confirm & Pay
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Shared Cart Component */}
+      <StorefrontCart
+        storeSlug={storeSlug || ""}
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onCheckout={() => {
+          setIsCartOpen(false);
+          setIsCheckoutOpen(true);
+        }}
+      />
 
       {/* Hero */}
       <header className="bg-slate-900 text-white py-24 relative overflow-hidden">
@@ -189,16 +120,21 @@ export function ProConsultBooking({
               TRUSTED BY 500+ COMPANIES
             </div>
             <h1 className="text-5xl font-bold mb-6 leading-tight">
-              Expert advice,
-              <br />
-              on demand.
+              {config.heroTitle.split(",").length > 1 ? (
+                <>
+                  {config.heroTitle.split(",")[0]},
+                  <br />
+                  {config.heroTitle.split(",")[1]}
+                </>
+              ) : (
+                config.heroTitle
+              )}
             </h1>
             <p className="text-lg text-slate-300 mb-8 max-w-md">
-              Connect with top-tier consultants across tech, marketing, legal,
-              and finance via high-quality video calls.
+              {config.heroDesc}
             </p>
             <div className="flex gap-4">
-              <button className="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-colors">
+              <button className="px-8 py-3 text-white font-bold rounded-lg transition-colors" style={{ backgroundColor: config.primaryColor }}>
                 Find an Expert
               </button>
               <button className="px-8 py-3 bg-white/10 text-white font-bold rounded-lg hover:bg-white/20 transition-colors backdrop-blur">
@@ -228,7 +164,7 @@ export function ProConsultBooking({
       </header>
 
       {/* Experts Grid */}
-      <section className="py-24 max-w-7xl mx-auto px-8">
+      <main className="py-24 max-w-7xl mx-auto px-8">
         <div className="flex justify-between items-end mb-12">
           <div>
             <h2 className="text-3xl font-bold text-slate-900 mb-2">
@@ -252,7 +188,7 @@ export function ProConsultBooking({
         ) : (
           <div className="grid md:grid-cols-3 gap-8">
             {products.map((expert) => (
-              <div
+              <article
                 key={expert.id}
                 className="border border-slate-200 rounded-xl hover:shadow-xl hover:border-blue-100 transition-all bg-white group cursor-pointer"
                 onClick={() => addToCart(expert)}
@@ -260,12 +196,15 @@ export function ProConsultBooking({
                 <div className="p-8">
                   <div className="flex justify-between items-start mb-6">
                     <div className="w-16 h-16 bg-slate-100 rounded-full overflow-hidden border-2 border-white shadow-sm">
-                      <img
+                      <Image
                         src={
                           expert.image ||
                           `https://via.placeholder.com/100x100?text=${expert.name.charAt(0)}`
                         }
-                        className="w-full h-full object-cover"
+                        alt={expert.name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
                       />
                     </div>
                     <div className="bg-green-50 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
@@ -308,11 +247,11 @@ export function ProConsultBooking({
                     </button>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
-      </section>
+      </main>
 
       <footer className="bg-white border-t border-slate-100 py-12 text-center text-slate-400 text-sm">
         <p>&copy; 2024 {displayName} Consulting.</p>

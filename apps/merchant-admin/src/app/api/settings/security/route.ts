@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     const securitySetting = await prisma.securitySetting.findUnique({
       where: { storeId },
@@ -18,7 +18,7 @@ export async function GET() {
       take: 10,
     });
 
-    // Test sessions for now as we don't have a formal session table yet
+    // Test sessions for now as we don't have a formal user table yet
     const sessions = [
       {
         id: "1",
@@ -53,8 +53,8 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
     const body = await req.json();
 
     const { mfaRequired, sessionTimeoutMinutes } = body;
@@ -73,7 +73,7 @@ export async function PATCH(req: Request) {
     });
 
     // Log audit event
-    await logAuditEvent(storeId, session.user.id, AuditEventType.ACCOUNT_SECURITY_ACTION, {
+    await logAuditEvent(storeId, user.id, AuditEventType.ACCOUNT_SECURITY_ACTION, {
       action: "SECURITY_SETTINGS_UPDATED",
       mfaRequired,
       sessionTimeoutMinutes,

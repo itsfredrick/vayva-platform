@@ -3,19 +3,37 @@ import { AuthMeResponse } from "@vayva/shared";
 // Use relative path to work with Next.js API routes in all environments
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
+export interface ApiClientConfig {
+  getAccessToken?: () => Promise<string | null>;
+}
+
 class ApiClient {
+  private config: ApiClientConfig = {};
+
+  configure(config: ApiClientConfig) {
+    this.config = { ...this.config, ...config };
+  }
+
   private async request<T>(
     path: string,
     options: RequestInit = {},
   ): Promise<T> {
     const url = `${API_BASE_URL}${path}`;
 
-    // Ensure credentials are sent for httpOnly cookies
+    const headers = new Headers(options.headers || {});
+    headers.set("Content-Type", "application/json");
+
+    // Add Bearer token if provided
+    if (this.config.getAccessToken) {
+      const token = await this.config.getAccessToken();
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+    }
+
+    // Ensure credentials are sent for httpOnly cookies (Better-Auth)
     options.credentials = "include";
-    options.headers = {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    };
+    options.headers = headers;
 
     const response = await fetch(url, options);
 
@@ -31,39 +49,8 @@ class ApiClient {
 
   // Auth
   auth = {
-    login: (data: any) =>
-      this.request<any>("/auth/merchant/login", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    register: (data: any) =>
-      this.request<any>("/auth/merchant/register", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    verifyOtp: (data: any) =>
-      this.request<any>("/auth/merchant/verify-otp", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    resendOtp: (data: any) =>
-      this.request<any>("/auth/merchant/resend-otp", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    forgotPassword: (data: any) =>
-      this.request<any>("/auth/merchant/forgot-password", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    resetPassword: (data: any) =>
-      this.request<any>("/auth/merchant/reset-password", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    logout: () =>
-      this.request<any>("/auth/merchant/logout", { method: "POST" }),
     me: () => this.request<AuthMeResponse>("/auth/merchant/me"),
+    logout: () => this.request<any>("/auth/merchant/logout", { method: "POST" }),
   };
 
   // Onboarding

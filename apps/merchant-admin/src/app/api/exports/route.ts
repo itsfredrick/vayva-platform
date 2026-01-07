@@ -1,21 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { logAudit } from "@/lib/audit";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { requireAuth } from "@/lib/session";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const user = await requireAuth();
+    if (!user || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
 
-    const jobs = await (prisma as any).exportJob.findMany({
-      where: { storeId },
+    const jobs = await prisma.exportJob.findMany({
+      where: { merchantId: storeId },
       orderBy: { createdAt: "desc" },
       take: 10,
     });
@@ -32,13 +33,13 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const user = await requireAuth();
+    if (!user || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const storeId = (session.user as any).storeId;
-    const userId = session.user.id;
+    const storeId = user.storeId;
+    const userId = user.id;
 
     // Rate Limit: 3 per hour
     await checkRateLimit(userId, "export_request", 3, 3600, storeId);
@@ -53,9 +54,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const job = await (prisma as any).exportJob.create({
+    const job = await prisma.exportJob.create({
       data: {
-        storeId,
+        merchantId: storeId,
+        userId,
         type,
         status: "PENDING",
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
@@ -67,7 +69,7 @@ export async function POST(req: Request) {
       actor: {
         type: "USER",
         id: userId,
-        label: session.user.email || "Merchant",
+        label: user.email || "Merchant",
       },
       action: "EXPORT_GENERATED",
       entity: { type: "ExportJob", id: job.id },

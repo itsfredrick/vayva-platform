@@ -25,7 +25,6 @@ export async function POST(request: Request) {
     }
 
     // 3. Find Shipment using trackingCode (mapped to External Job ID)
-    // @ts-ignore - Schema confirms field exists
     const shipment = await prisma.shipment.findFirst({
       where: { trackingCode: job_id },
     });
@@ -39,22 +38,27 @@ export async function POST(request: Request) {
     const newStatus = mapKwikStatusToInternal(status);
 
     // 5. Update Shipment
-    // Append update to notes since providerRawStatus might be missing in older Prisma client
-    // @ts-ignore - Schema confirms field exists
     const currentNotes = shipment.notes || "";
     const newNote = `[${new Date().toISOString()}] Status Update: ${status}`;
 
-    await prisma.shipment.update({
-      where: { id: shipment.id },
-      data: {
-        status: newStatus,
-        trackingUrl: tracking_url || shipment.trackingUrl,
-        // @ts-ignore - Schema confirms field exists
-        notes: currentNotes ? `${currentNotes}\n${newNote}` : newNote,
-      },
-    });
-
-    // NOT writing to DeliveryEvent as it appears missing in the generated client
+    await prisma.$transaction([
+      prisma.shipment.update({
+        where: { id: shipment.id },
+        data: {
+          status: newStatus,
+          trackingUrl: tracking_url || shipment.trackingUrl || undefined,
+          notes: currentNotes ? `${currentNotes}\n${newNote}` : newNote,
+        },
+      }),
+      prisma.deliveryEvent.create({
+        data: {
+          shipmentId: shipment.id,
+          status: newStatus,
+          providerStatus: status,
+          note: `Raw payload: ${JSON.stringify(payload)}`
+        },
+      }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

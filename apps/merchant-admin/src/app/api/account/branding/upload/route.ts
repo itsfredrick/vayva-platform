@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { randomUUID } from "crypto";
 
 export async function POST(request: Request) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     const formData = await request.formData();
     const file = formData.get("file") as File;

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
+
+
 
 export async function POST(
   req: Request,
@@ -9,9 +10,8 @@ export async function POST(
 ) {
   const params = await props.params;
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await requireAuth();
+
 
     const body = await req.json();
     const { message } = body;
@@ -20,29 +20,33 @@ export async function POST(
       return NextResponse.json({ error: "Message required" }, { status: 400 });
 
     // 1. Create Reply
-    const reply = await (prisma as any).ticketMessage.create({
+    const reply = await prisma.ticketMessage.create({
       data: {
         ticketId: params.id,
         message,
         sender: "OPS",
         authorType: "OPS",
-        authorId: session.user.id,
-        authorName: `${session.user.name || "Admin"} (Support)`,
+        authorId: user.id,
+        authorName: `${user.name || "Admin"} (Support)`,
       },
     });
 
     // 2. Update Ticket Timestamp
     // 2. Update Ticket Metadata
-    const ticket = await (prisma as any).supportTicket.findUnique({
+    const ticket = await prisma.supportTicket.findUnique({
       where: { id: params.id },
     });
+
+    if (!ticket) {
+      return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+    }
 
     const updateData: any = { lastMessageAt: new Date() };
     if (!ticket.firstOpsReplyAt) {
       updateData.firstOpsReplyAt = new Date();
     }
 
-    await (prisma as any).supportTicket.update({
+    await prisma.supportTicket.update({
       where: { id: params.id },
       data: updateData,
     });

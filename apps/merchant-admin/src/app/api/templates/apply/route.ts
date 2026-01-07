@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 import { TEMPLATE_REGISTRY } from "@/lib/templates-registry";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { FlagService } from "@/lib/flags/flagService";
+import { requireAuth } from "@/lib/session";
 
 const PLAN_HIERARCHY: Record<string, number> = {
   free: 0,
@@ -26,9 +27,9 @@ export async function POST(req: Request) {
     // 1. Auth & Permission Check
     const { checkPermission } = await import("@/lib/team/rbac");
     const { PERMISSIONS } = await import("@/lib/team/permissions");
-    const session = await checkPermission(PERMISSIONS.TEMPLATES_MANAGE);
+    const user = await checkPermission(PERMISSIONS.TEMPLATES_MANAGE);
 
-    const user = session.user as any;
+
     const userId = user.id;
     const storeId = user.storeId;
 

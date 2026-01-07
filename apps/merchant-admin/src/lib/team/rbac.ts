@@ -1,9 +1,9 @@
-import { getSessionUser } from "@/lib/session";
+import { requireAuth } from "@/lib/session";
 import { can } from "./permissions";
 import { NextResponse } from "next/server";
 
 export async function checkPermission(action: string) {
-  const user = await getSessionUser();
+  const user = await requireAuth();
   if (!user) {
     throw new Error("Unauthorized");
   }
@@ -14,7 +14,7 @@ export async function checkPermission(action: string) {
   }
 
   // Test session object structure for compatibility with existing handlers
-  return { user };
+  return user;
 }
 
 export function withRBAC(action: string, handler: Function) {

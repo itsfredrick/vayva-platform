@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 import { TemplateService } from "@/lib/templates/templateService";
 import { cookies } from "next/headers";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.id)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   // Infer Store ID from header/cookie (Middleware usually sets this)
   // For V1 MVP, pass in body or look at cookie
   const cookieStore = await cookies();
   const storeId = cookieStore.get("x-active-store-id")?.value;
   if (!storeId)
-    return new NextResponse("No active store session", { status: 400 });
+    return new NextResponse("No active store user", { status: 400 });
 
   const { templateId } = await req.json();
 
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     await TemplateService.applyTemplate(
       storeId,
       templateId,
-      (session!.user as any).id,
+      user.id,
     );
     return NextResponse.json({ success: true });
   } catch (e: any) {

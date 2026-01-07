@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Button, Icon } from "@vayva/ui";
 import { motion } from "framer-motion";
 import { Twitter, Linkedin, Instagram } from "lucide-react";
+import { BRAND } from "@vayva/shared";
 
 export default function ContactPage() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success">(
@@ -44,10 +45,10 @@ export default function ContactPage() {
                 Our support team is available 24/7 on WhatsApp and Email.
               </p>
               <a
-                href="mailto:support@vayva.ng"
+                href={`mailto:${BRAND.emails.support}`}
                 className="text-[#16a34a] font-bold hover:underline"
               >
-                support@vayva.ng
+                {BRAND.emails.support}
               </a>
             </div>
             <div>
@@ -56,10 +57,10 @@ export default function ContactPage() {
                 Ready to scale? Talk to our sales team about enterprise plans.
               </p>
               <a
-                href="mailto:sales@vayva.ng"
+                href={`mailto:${BRAND.emails.hello}`}
                 className="text-[#16a34a] font-bold hover:underline"
               >
-                sales@vayva.ng
+                {BRAND.emails.hello}
               </a>
             </div>
             <div>

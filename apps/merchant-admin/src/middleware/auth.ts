@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession, SessionPayload } from "@/lib/session";
+import { requireAuth, SessionUser as SessionPayload } from "@/lib/session";
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: SessionPayload;
@@ -15,9 +15,9 @@ export async function withAuth(
 ) {
   return async (req: NextRequest) => {
     try {
-      const session = await getSession();
+      const user = await requireAuth();
 
-      if (!session && !options.optional) {
+      if (!user && !options.optional) {
         return NextResponse.json(
           { error: "Unauthorized - Please login" },
           { status: 401 },
@@ -26,8 +26,8 @@ export async function withAuth(
 
       // Attach user to request
       const authReq = req as AuthenticatedRequest;
-      if (session) {
-        authReq.user = session;
+      if (user) {
+        authReq.user = user;
       }
 
       return handler(authReq);

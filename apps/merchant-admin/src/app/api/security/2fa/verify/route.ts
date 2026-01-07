@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import speakeasy from "speakeasy";
 
 export async function POST(request: Request) {
   try {
-    const session = await requireAuth();
-    const userId = session.user.id;
+    const user = await requireAuth();
+    const userId = user.id;
 
     const body = await request.json();
     const { code } = body;
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
 
     // Get user with 2FA secret
-    // const user = await prisma.user.findUnique({
+    // const dbUser = await prisma.user.findUnique({
     //     where: { id: userId },
     //     select: {
     //         twoFactorSecret: true,

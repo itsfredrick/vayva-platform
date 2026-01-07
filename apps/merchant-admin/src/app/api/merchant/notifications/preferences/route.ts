@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 const DEFAULT_PREFS = {
   channels: { in_app: true, banner: true, whatsapp: false, email: true },
@@ -10,12 +11,12 @@ const DEFAULT_PREFS = {
 };
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.storeId) {
+  const user = await requireAuth();
+  if (!(user as any)?.storeId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const storeId = (session!.user as any).storeId;
+  const storeId = user.storeId;
 
   const prefs = await prisma.notificationPreference.findUnique({
     where: { storeId },
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
   if (!prefs) {
     return NextResponse.json({
       ...DEFAULT_PREFS,
-      merchantId: (session!.user as any).id,
+      merchantId: user.id,
     });
   }
 
@@ -36,12 +37,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.storeId) {
+  const user = await requireAuth();
+  if (!(user as any)?.storeId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const storeId = (session!.user as any).storeId;
+  const storeId = user.storeId;
   const body = await req.json();
 
   // Upsert

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { kycService, KycMethod } from "@/services/kyc";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { FlagService } from "@/lib/flags/flagService";
@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
-    const userId = session.user.id;
+    const user = await requireAuth();
+    const storeId = user.storeId;
+    const userId = user.id;
     const body = await req.json();
 
     // Kill Switch & Rate Limit

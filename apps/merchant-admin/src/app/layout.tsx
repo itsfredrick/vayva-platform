@@ -1,6 +1,11 @@
 import { Space_Grotesk, Inter } from "next/font/google";
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/context/AuthContext";
+import QueryProvider from "@/providers/query-provider";
+// import { NeonAuthUIProvider } from "@neondatabase/neon-js/auth/react";
+// import { authClient } from "@/lib/neon-auth";
+import { Toaster } from "sonner";
+// import "@neondatabase/neon-js/ui/css";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -19,12 +24,17 @@ const inter = Inter({
   display: "swap",
 });
 
+import { BootSplash } from "@/components/pwa/BootSplash";
+
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false, // Prevents zoom for native feel, use with caution for a11y
+  userScalable: false,
 };
 
 export const metadata: Metadata = {
@@ -67,7 +77,13 @@ export default function RootLayout({
         className={`font-sans antialiased min-h-screen bg-background`}
         suppressHydrationWarning
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <QueryProvider>
+            <BootSplash />
+            {children}
+            <Toaster position="top-right" />
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

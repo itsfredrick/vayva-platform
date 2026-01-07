@@ -1,61 +1,107 @@
 import { NextResponse } from "next/server";
-import { Customer, CustomerStatus, CustomerInsight } from "@vayva/shared";
+import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
+
+
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  // In a real app, fetch from DB. Here we test based on ID or return a generic VIP profile.
+  try {
+    const { id } = await params;
+    const user = await requireAuth();
 
-  // Using the same test data source concept
-  const customer: Customer = {
-    id: id,
-    merchantId: "mer_123",
-    name: "Chioma Okeke",
-    phone: "+234 801 234 5678",
-    firstSeenAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString(),
-    lastSeenAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    totalOrders: 12,
-    totalSpend: 156000,
-    status: CustomerStatus.VIP,
-    preferredChannel: "whatsapp",
-  };
+    const customer = await prisma.customer.findUnique({
+      where: {
+        id: id,
+        storeId: user.storeId // Security check
+      },
+      include: {
+        // Get recent orders
+        orders: {
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            orderNumber: true,
+            total: true,
+            status: true,
+            paymentStatus: true,
+            createdAt: true,
+            OrderItem: {
+              select: { id: true }
+            }
+          }
+        },
+        addresses: true
+      }
+    });
 
-  const insights: CustomerInsight[] = [
-    {
-      id: "ins_1",
-      type: "timing",
-      title: "Weekend Shopper",
-      description: "Places 80% of orders on Saturdays.",
-      icon: "CalendarClock",
-      variant: "neutral",
-    },
-    {
-      id: "ins_2",
-      type: "preference",
-      title: 'Loves "Summer Collection"',
-      description: "Bought 3 items from this category.",
-      icon: "Heart",
-      variant: "positive",
-    },
-    {
-      id: "ins_3",
-      type: "spending",
-      title: "High Value",
-      description: "Top 5% of customers by spend.",
-      icon: "TrendingUp",
-      variant: "positive",
-    },
-  ];
+    if (!customer) {
+      return new NextResponse("Customer not found", { status: 404 });
+    }
 
-  return NextResponse.json({
-    profile: customer,
-    insights: insights,
-    stats: {
-      aov: 13000,
-      refunds: 0,
-      cancelRate: "0%",
-    },
-  });
+    // Calculate LTV
+    const aggregations = await prisma.order.aggregate({
+      where: {
+        storeId: user.storeId,
+        customerId: customer.id,
+        paymentStatus: 'SUCCESS' // Only count paid
+      },
+      _sum: {
+        total: true
+      },
+      _count: {
+        id: true
+      }
+    });
+
+    const totalSpent = aggregations._sum.total || 0;
+    const orderCount = aggregations._count.id || 0;
+
+    // Mocking conversations for now as Message model is complex and might be heavy to fetch all.
+    // But the user said "No Mock Data".
+    // I should fetch real conversations if they exist.
+    // Check 'Conversation' model.
+    let conversations: any[] = [];
+    if (customer.phone || customer.email) {
+      // Try to find conversation by contact match? 
+      // Schema: Conversation -> Contact. Contact has phoneE164.
+      // Customer has phone.
+      // This linking is best effort.
+      // For now, let's fetch any conversation linked to this customer? 
+      // Schema doesn't link Conversation -> Customer directly, it links Conversation -> Contact.
+      // And Customer has `whatsappContactId`? Check schema.
+      // Line 554: whatsappContactId String?
+
+      if (customer.whatsappContactId) {
+        const convs = await prisma.conversation.findMany({
+          where: { contactId: customer.whatsappContactId, storeId: user.storeId },
+          include: { messages: { take: 1, orderBy: { createdAt: 'desc' } } }
+        });
+        conversations = convs.map((c: any) => ({
+          id: c.id,
+          lastMessage: c.messages[0]?.textBody || "Active",
+          date: c.lastMessageAt,
+          platform: 'WhatsApp'
+        }));
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...customer,
+        totalSpent,
+        totalOrders: orderCount,
+        averageOrderValue: orderCount > 0 ? Number(totalSpent) / orderCount : 0,
+        conversations
+      }
+    });
+
+  } catch (error) {
+    console.error("[CUSTOMER_DETAIL_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
 }

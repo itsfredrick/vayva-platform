@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Icon } from "@vayva/ui"; // Test or lucide
 import { motion, AnimatePresence } from "framer-motion";
+import { ListSkeleton } from "@/components/LoadingSkeletons";
 
 // --- Types ---
 type Conversation = {
@@ -63,7 +64,9 @@ export default function InboxPage() {
       const res = await fetch("/api/merchant/quick-replies");
       const data = await res.json();
       setQuickReplies(data.items || []);
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Failed to fetch quick replies:", e);
+    }
   };
 
   const handleSend = async () => {
@@ -106,8 +109,8 @@ export default function InboxPage() {
 
         <div className="flex-1 overflow-y-auto">
           {loading && (
-            <div className="p-4 text-center text-gray-400 text-sm">
-              Loading...
+            <div className="p-4">
+              <ListSkeleton items={5} />
             </div>
           )}
           {conversations.map((c) => (
@@ -125,9 +128,9 @@ export default function InboxPage() {
                 <span className="text-[10px] text-gray-400">
                   {c.lastMessage
                     ? new Date(c.lastMessage.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                     : ""}
                 </span>
               </div>
@@ -254,11 +257,10 @@ export default function InboxPage() {
                   <button
                     onClick={handleSend} // Handle Note vs User Send logic
                     disabled={sending}
-                    className={`px-4 py-1.5 rounded-lg text-sm font-bold text-white transition-opacity ${sending ? "opacity-50" : ""} ${
-                      showNotesInput
-                        ? "bg-yellow-600 hover:bg-yellow-700"
-                        : "bg-green-600 hover:bg-green-700"
-                    }`}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-bold text-white transition-opacity ${sending ? "opacity-50" : ""} ${showNotesInput
+                      ? "bg-yellow-600 hover:bg-yellow-700"
+                      : "bg-green-600 hover:bg-green-700"
+                      }`}
                   >
                     {showNotesInput ? "Save Note" : "Send"}
                   </button>

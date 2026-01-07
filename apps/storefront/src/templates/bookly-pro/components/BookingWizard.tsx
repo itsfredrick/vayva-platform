@@ -65,20 +65,20 @@ export const BookingWizard = ({
           {/* Progress Bar */}
           <div className="flex gap-2 mb-8">
             <div
-              className={`h-1 flex-1 rounded-full ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`}
+              className={`h-1 flex-1 rounded-full ${step >= 1 ? "bg-brand" : "bg-gray-200"}`}
             />
             <div
-              className={`h-1 flex-1 rounded-full ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`}
+              className={`h-1 flex-1 rounded-full ${step >= 2 ? "bg-brand" : "bg-gray-200"}`}
             />
             <div
-              className={`h-1 flex-1 rounded-full ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`}
+              className={`h-1 flex-1 rounded-full ${step >= 3 ? "bg-brand" : "bg-gray-200"}`}
             />
           </div>
 
           {step === 1 && (
             <div className="space-y-6 animate-in slide-in-from-right duration-300">
               <h4 className="text-lg font-bold flex items-center gap-2">
-                <CalendarIcon size={20} className="text-blue-600" /> Select Date
+                <CalendarIcon size={20} className="text-brand" /> Select Date
               </h4>
               <div className="grid grid-cols-5 gap-3">
                 {DEMO_DATES.map((d, i) => (
@@ -97,7 +97,7 @@ export const BookingWizard = ({
               <button
                 disabled={!selectedDate}
                 onClick={() => setStep(2)}
-                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                className="w-full bg-brand text-white font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed mt-4"
               >
                 Continue
               </button>
@@ -107,7 +107,7 @@ export const BookingWizard = ({
           {step === 2 && (
             <div className="space-y-6 animate-in slide-in-from-right duration-300">
               <h4 className="text-lg font-bold flex items-center gap-2">
-                <Clock size={20} className="text-blue-600" /> Select Time
+                <Clock size={20} className="text-brand" /> Select Time
               </h4>
               <div className="grid grid-cols-3 gap-3">
                 {DEMO_SLOTS.map((t, i) => (
@@ -130,7 +130,7 @@ export const BookingWizard = ({
                 <button
                   disabled={!selectedTime}
                   onClick={() => setStep(3)}
-                  className="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg disabled:opacity-50"
+                  className="flex-1 bg-brand text-white font-bold py-3 rounded-lg disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -140,7 +140,7 @@ export const BookingWizard = ({
 
           {step === 3 && (
             <div className="space-y-6 text-center animate-in slide-in-from-right duration-300">
-              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-blue-50 text-brand rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle size={32} />
               </div>
               <div>
@@ -173,7 +173,7 @@ export const BookingWizard = ({
                 </div>
                 <div className="border-t border-gray-200 pt-3 flex justify-between">
                   <span className="font-bold text-gray-900">Total</span>
-                  <span className="font-bold text-blue-600">
+                  <span className="font-bold text-brand">
                     ₦{service.price.toLocaleString()}
                   </span>
                 </div>
@@ -188,7 +188,7 @@ export const BookingWizard = ({
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="flex-[2] bg-gray-900 text-white font-bold py-3 rounded-lg hover:bg-black transition-colors"
+                  className="flex-[2] bg-gray-900 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-colors"
                 >
                   Confirm & Pay
                 </button>

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { AnalyticsEvent } from "@/lib/analytics/events";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,9 +20,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Auth Context (Optional)
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.id;
-    const storeId = (session?.user as any)?.storeId;
+    const user = await requireAuth();
+    const userId = user?.id;
+    const storeId = (user as any)?.storeId;
 
     // Enrichment
     const userAgent = req.headers.get("user-agent") || undefined;

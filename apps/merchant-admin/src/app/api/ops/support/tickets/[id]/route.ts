@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
+
+
 
 export async function GET(
   req: Request,
@@ -9,11 +10,10 @@ export async function GET(
 ) {
   const params = await props.params;
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await requireAuth();
+    
 
-    const ticket = await (prisma as any).supportTicket.findUnique({
+    const ticket = await prisma.supportTicket.findUnique({
       where: { id: params.id },
       include: {
         store: {

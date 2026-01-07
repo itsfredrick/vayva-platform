@@ -61,7 +61,7 @@ export const ProductCardTech = ({
 
         {/* Quick Add Button - Bottom Right */}
         <button
-          className={`absolute bottom-2 right-2 p-2 rounded-lg transition-all duration-300 shadow-sm border ${added ? "bg-green-500 text-white border-green-500" : "bg-white text-blue-600 border-gray-200 hover:bg-blue-600 hover:text-white hover:border-blue-600"}`}
+          className={`absolute bottom-2 right-2 p-2 rounded-lg transition-all duration-300 shadow-sm border ${added ? "bg-green-500 text-white border-green-500" : "bg-white text-brand border-gray-200 hover:bg-brand hover:text-white hover:border-blue-600"}`}
           onClick={handleAdd}
         >
           {added ? (
@@ -73,7 +73,7 @@ export const ProductCardTech = ({
       </div>
 
       <div className="space-y-1">
-        <h3 className="font-semibold text-[#0B0F19] text-sm leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-blue-600 transition-colors">
+        <h3 className="font-semibold text-[#0B0F19] text-sm leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-brand transition-colors">
           {product.name}
         </h3>
         <div className="flex items-center justify-between">

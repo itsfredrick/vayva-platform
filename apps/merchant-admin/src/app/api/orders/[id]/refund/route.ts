@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
+import { requireAuth } from "@/lib/session";
 
 /**
  * Real Refund Implementation
@@ -12,10 +13,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.storeId) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+  const user = await requireAuth();
 
   const { id } = await params;
   let body;
@@ -26,8 +24,8 @@ export async function POST(
   }
 
   const { amount, reason } = body;
-  const storeId = session.user.storeId;
-  const userId = session.user.id;
+  const storeId = user.storeId;
+  const userId = user.id;
 
   if (!amount || amount <= 0) {
     return NextResponse.json(

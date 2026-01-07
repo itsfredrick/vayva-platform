@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
+    const user = await requireAuth();
     const store = await prisma.store.findUnique({
-      where: { id: session.user.storeId },
+      where: { id: user.storeId },
       select: { settings: true },
     });
 
@@ -30,12 +30,12 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const session = await requireAuth();
+    const user = await requireAuth();
     const body = await request.json();
 
     // Fetch current settings to merge
     const store = await prisma.store.findUnique({
-      where: { id: session.user.storeId },
+      where: { id: user.storeId },
       select: { settings: true },
     });
 
@@ -48,7 +48,7 @@ export async function PATCH(request: Request) {
     };
 
     await prisma.store.update({
-      where: { id: session.user.storeId },
+      where: { id: user.storeId },
       data: { settings: updatedSettings },
     });
 

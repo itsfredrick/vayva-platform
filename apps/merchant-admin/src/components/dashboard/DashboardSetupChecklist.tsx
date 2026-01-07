@@ -136,7 +136,8 @@ export function DashboardSetupChecklist() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8 animate-in slide-in-from-top-4 fade-in duration-500">
+    <div className="relative overflow-hidden p-6 mb-8 rounded-[2rem] border border-white/20 shadow-xl shadow-gray-200/20 bg-gradient-to-br from-white/90 to-white/50 backdrop-blur-xl animate-in slide-in-from-top-4 fade-in duration-500">
+      <div className="absolute inset-0 bg-noise opacity-5 pointer-events-none" />
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="font-bold text-lg text-gray-900">Finish your setup</h3>

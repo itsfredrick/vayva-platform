@@ -10,9 +10,11 @@ import { ShoppingCart, X, Plus, Minus, Cpu } from "lucide-react";
 export function GizmoTechHome({
   storeName: initialStoreName,
   storeSlug,
+  config,
 }: {
   storeName: string;
   storeSlug?: string;
+  config?: any;
 }) {
   const { store } = useStorefrontStore(storeSlug);
   const { products, isLoading } = useStorefrontProducts(storeSlug, {
@@ -33,8 +35,13 @@ export function GizmoTechHome({
 
   const displayName = store?.name || initialStoreName;
 
+  const primaryColor = config?.branding?.primaryColor || "#00ff41";
+
   return (
-    <div className="min-h-screen bg-[#050505] text-[#00ff41] font-mono selection:bg-[#003300] selection:text-[#00ff41]">
+    <div
+      className="min-h-screen bg-[#050505] font-mono selection:bg-[#003300]"
+      style={{ color: primaryColor } as any}
+    >
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -45,14 +52,16 @@ export function GizmoTechHome({
       />
 
       {/* Matrix Background */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-5"
-        style={{
-          backgroundImage:
-            "linear-gradient(0deg, transparent 24%, rgba(0, 255, 65, .3) 25%, rgba(0, 255, 65, .3) 26%, transparent 27%, transparent 74%, rgba(0, 255, 65, .3) 75%, rgba(0, 255, 65, .3) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 65, .3) 25%, rgba(0, 255, 65, .3) 26%, transparent 27%, transparent 74%, rgba(0, 255, 65, .3) 75%, rgba(0, 255, 65, .3) 76%, transparent 77%, transparent)",
-          backgroundSize: "50px 50px",
-        }}
-      ></div>
+      {config?.effects?.showMatrix !== false && (
+        <div
+          className="fixed inset-0 pointer-events-none opacity-5"
+          style={{
+            backgroundImage:
+              "linear-gradient(0deg, transparent 24%, rgba(0, 255, 65, .3) 25%, rgba(0, 255, 65, .3) 26%, transparent 27%, transparent 74%, rgba(0, 255, 65, .3) 75%, rgba(0, 255, 65, .3) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 65, .3) 25%, rgba(0, 255, 65, .3) 26%, transparent 27%, transparent 74%, rgba(0, 255, 65, .3) 75%, rgba(0, 255, 65, .3) 76%, transparent 77%, transparent)",
+            backgroundSize: "50px 50px",
+          }}
+        ></div>
+      )}
 
       {/* Header / HUD */}
       <header className="border-b border-[#00ff41]/30 sticky top-0 bg-[#050505]/90 backdrop-blur z-50">

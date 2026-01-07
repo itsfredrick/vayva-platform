@@ -18,7 +18,7 @@ export const StickyCTA = ({ price, onBuy }: StickyCTAProps) => {
       </div>
       <button
         onClick={onBuy}
-        className="flex-1 bg-[#111827] text-white font-bold py-3 rounded-xl shadow-lg"
+        className="flex-1 bg-brand text-white font-bold py-3 rounded-xl shadow-lg"
       >
         Buy Now
       </button>

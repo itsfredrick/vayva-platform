@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { checkRateLimit } from "@/lib/rate-limit";
 import { logAudit, AuditAction } from "@/lib/audit";
+import { requireAuth } from "@/lib/session";
 
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const user = await requireAuth();
+    if (!user || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id;
-    const storeId = (session.user as any).storeId;
+    const userId = user.id;
+    const storeId = user.storeId;
 
     // Safety: Rate limit - 1 per hour
     await checkRateLimit(userId, "recovery_webhook_sync", 1, 3600, storeId);
@@ -26,7 +27,7 @@ export async function POST() {
       actor: {
         type: "USER",
         id: userId,
-        label: session.user.email || "Merchant",
+        label: user.email || "Merchant",
       },
       action: "RECOVERY_WEBHOOK_SYNC_TRIGGERED",
       correlationId: `recovery-${Date.now()}`,

@@ -8,7 +8,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "var(--color-primary)",
+        brand: "var(--brand-color)",
+        primary: "var(--brand-color)",
         background: "var(--color-background)",
       },
     },

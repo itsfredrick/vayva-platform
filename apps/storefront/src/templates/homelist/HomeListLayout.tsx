@@ -70,7 +70,7 @@ export const HomeListLayout = ({ store, products }: HomeListLayoutProps) => {
                   src="https://images.unsplash.com/photo-1577086664693-8945534a253d?auto=format&fit=crop&q=80"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
+                <div className="absolute inset-0 bg-black/30 group-hover:opacity-90/40 transition-colors"></div>
                 <span className="absolute bottom-6 left-6 text-white font-bold text-xl">
                   Lekki Phase 1
                 </span>
@@ -80,7 +80,7 @@ export const HomeListLayout = ({ store, products }: HomeListLayoutProps) => {
                   src="https://images.unsplash.com/photo-1596162953282-5953041a024e?auto=format&fit=crop&q=80"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
+                <div className="absolute inset-0 bg-black/30 group-hover:opacity-90/40 transition-colors"></div>
                 <span className="absolute bottom-6 left-6 text-white font-bold text-lg">
                   Ikoyi
                 </span>
@@ -90,7 +90,7 @@ export const HomeListLayout = ({ store, products }: HomeListLayoutProps) => {
                   src="https://images.unsplash.com/photo-1628155990264-b97c88e99496?auto=format&fit=crop&q=80"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
+                <div className="absolute inset-0 bg-black/30 group-hover:opacity-90/40 transition-colors"></div>
                 <span className="absolute bottom-6 left-6 text-white font-bold text-lg">
                   Abuja
                 </span>

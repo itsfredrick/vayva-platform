@@ -1,9 +1,7 @@
 import { prisma } from "@vayva/db";
-import Groq from "groq-sdk";
+import { GroqClient } from "../ai/groq-client";
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY_RESCUE || process.env.GROQ_API_KEY || "",
-});
+const groqClient = new GroqClient("MERCHANT");
 
 export class MerchantRescueService {
     /**
@@ -17,8 +15,8 @@ export class MerchantRescueService {
         userId?: string;
         fingerprint?: string;
     }) {
-        // 1. Redact PII
-        const redactedMessage = this.redactPII(data.errorMessage);
+        // PII is handled by GroqClient during analysis, but for DB storage we do a basic strip
+        const redactedMessage = data.errorMessage.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL]");
 
         // 2. Generate fingerprint if not provided
         const fingerprint = data.fingerprint || this.generateFingerprint("UI_ERROR", redactedMessage);
@@ -74,8 +72,8 @@ export class MerchantRescueService {
         if (!incident) return;
 
         try {
-            const completion = await groq.chat.completions.create({
-                messages: [
+            const completion = await groqClient.chatCompletion(
+                [
                     {
                         role: "system",
                         content: `
@@ -93,11 +91,14 @@ export class MerchantRescueService {
                     },
                     { role: "user", content: "Analyze this incident." },
                 ],
-                model: "llama-3.1-70b-versatile",
-                response_format: { type: "json_object" },
-            });
+                {
+                    model: "llama-3.1-70b-versatile",
+                    jsonMode: true,
+                    storeId: incident.storeId || undefined,
+                }
+            );
 
-            const analysis = JSON.parse(completion.choices[0]?.message?.content || "{}");
+            const analysis = JSON.parse(completion?.choices[0]?.message?.content || "{}");
 
             // Determine next status based on analysis
             let nextStatus = "NEEDS_ENGINEERING";
@@ -123,11 +124,6 @@ export class MerchantRescueService {
         }
     }
 
-    private static redactPII(msg: string) {
-        return msg
-            .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL]")
-            .replace(/password[:=]\s*[^\s&]+/gi, "password=[REDACTED]");
-    }
 
     private static generateFingerprint(type: string, msg: string) {
         const str = `${type}:${msg.slice(0, 100)}`;

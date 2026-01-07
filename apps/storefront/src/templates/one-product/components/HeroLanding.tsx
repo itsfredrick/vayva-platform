@@ -115,7 +115,7 @@ export const HeroLanding = ({
                 </div>
                 <button
                   onClick={() => onBuy(qty)}
-                  className="flex-1 bg-[#111827] hover:bg-black text-white h-14 rounded-xl font-bold text-lg shadow-xl shadow-gray-200 hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 bg-brand hover:opacity-90 text-white h-14 rounded-xl font-bold text-lg shadow-xl shadow-gray-200 hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
                 >
                   <span>Buy Now</span>
                   <Zap

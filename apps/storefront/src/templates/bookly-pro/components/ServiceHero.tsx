@@ -26,7 +26,7 @@ export const ServiceHero = ({
             <button className="bg-gray-900 text-white px-8 py-3.5 rounded-lg font-semibold hover:bg-gray-800 transition-all">
               View Services
             </button>
-            <button className="text-gray-600 font-medium hover:text-blue-600 px-4">
+            <button className="text-gray-600 font-medium hover:text-brand px-4">
               Our Story
             </button>
           </div>
@@ -35,7 +35,7 @@ export const ServiceHero = ({
         {/* Visual (Abstract or Photo) */}
         <div className="flex-1 w-full relative aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100">
           <img
-            src="https://placehold.co/800x600/1E3A8A/FFFFFF?text=Barber+Shop"
+            src="/images/hero-lifestyle.jpg"
             alt="Hero"
             className="object-cover w-full h-full"
           />

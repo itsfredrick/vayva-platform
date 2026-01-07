@@ -53,14 +53,44 @@ export const metadata: Metadata = {
     },
 };
 
+import Script from "next/script";
+
 export default function RootLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Vayva",
+        "url": "https://vayva.ng",
+        "logo": "https://vayva.ng/favicon.svg",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+234-XXX-XXXX-XXXX",
+            "contactType": "customer service",
+            "email": "support@vayva.ng"
+        },
+        "description": "Vayva is the leading WhatsApp Business Platform in Nigeria, helping SMEs automate sales, payments, and logistics with AI.",
+        "sameAs": [
+            "https://twitter.com/vayvang",
+            "https://www.linkedin.com/company/vayva"
+        ]
+    };
+
     return (
         <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable} light`} suppressHydrationWarning>
-            <body className="antialiased font-sans bg-white text-slate-900" style={{ backgroundColor: "#ffffff", color: "#000000" }} suppressHydrationWarning>{children}</body>
+            <head>
+                <Script
+                    id="json-ld"
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
+            </head>
+            <body className="antialiased font-sans bg-white text-slate-900" style={{ backgroundColor: "#ffffff", color: "#000000" }} suppressHydrationWarning>
+                {children}
+            </body>
         </html>
     );
 }

@@ -4,8 +4,8 @@
     "description": "Manage your store on the go",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#F7FAF7",
-    "theme_color": "#22C55E",
+    "background_color": "#0B0B0B",
+    "theme_color": "#6366F1",
     "orientation": "portrait-primary",
     "icons": [
         {

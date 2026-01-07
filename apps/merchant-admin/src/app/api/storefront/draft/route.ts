@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
     if (!storeId) {
       return NextResponse.json({ error: "No store context" }, { status: 400 });
     }
@@ -39,12 +37,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
     if (!storeId) {
       return NextResponse.json({ error: "No store context" }, { status: 400 });
     }

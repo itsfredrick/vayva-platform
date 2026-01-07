@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { authorizeAction, AppRole } from "@/lib/permissions";
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
 
 export async function GET(request: Request) {
   try {
-    const user = await getSessionUser();
+    const user = await requireAuth();
     // Permission Check (Exports are sensitive, ADMIN only for Withdrawals)
     const authError = await authorizeAction(user || undefined, AppRole.ADMIN);
     if (authError) return authError;
 
-    if (!user)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");

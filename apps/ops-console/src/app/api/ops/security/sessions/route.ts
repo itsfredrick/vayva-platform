@@ -12,16 +12,23 @@ export async function GET(request: Request) {
 
     const sessions = await prisma.merchantSession.findMany({
         where: {
-            expiresAt: { gt: new Date() } // Only active sessions
+            expiresAt: { gt: new Date() }
         },
         orderBy: { createdAt: "desc" },
-        include: {
-            User: {
-                select: { email: true, firstName: true, lastName: true }
-            }
-        },
         take: 50
     });
 
-    return NextResponse.json({ data: sessions });
+    const userIds = [...new Set(sessions.map(s => s.userId))];
+
+    const users = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, email: true, firstName: true, lastName: true }
+    });
+
+    const data = sessions.map(session => ({
+        ...session,
+        user: users.find(u => u.id === session.userId) || null
+    }));
+
+    return NextResponse.json({ data });
 }

@@ -28,6 +28,7 @@ const COMPARISON_DATA: FeatureRow[] = [
     { name: "Inventory tracking", free: false, growth: true, pro: true },
     { name: "Custom domain", free: false, growth: true, pro: true },
     { name: "Advanced Audit logs", free: false, growth: false, pro: true },
+    { name: "Vayva Cut Pro (AI)", free: false, growth: false, pro: true, tooltip: "Unlocks the premium AI background removal tool." },
     { name: "Priority Support", free: false, growth: false, pro: true },
     {
         name: "Withdrawal Transaction Fee",

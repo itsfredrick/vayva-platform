@@ -25,7 +25,7 @@ export const ServiceList = ({ services, onBook }: ServiceListProps) => {
                 <h3 className="font-bold text-xl text-gray-900">
                   {service.name}
                 </h3>
-                <span className="font-bold text-lg text-blue-600">
+                <span className="font-bold text-lg text-brand">
                   ₦{service.price.toLocaleString()}
                 </span>
               </div>

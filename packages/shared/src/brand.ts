@@ -8,6 +8,13 @@ export const BRAND = {
     canonicalOrigin: process.env.VAYVA_CANONICAL_ORIGIN || "https://vayva.ng",
     supportEmail: "support@vayva.ng",
     helloEmail: "hello@vayva.ng",
+    emails: {
+        noReply: "no-reply@vayva.ng",
+        support: "support@vayva.ng",
+        billing: "billing@vayva.ng",
+        hello: "hello@vayva.ng",
+        onboarding: "onboarding@vayva.ng"
+    }
 } as const;
 
 

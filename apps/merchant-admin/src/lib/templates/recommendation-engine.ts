@@ -16,6 +16,19 @@ export function recommendTemplate(
   // 1. Direct Category Match (if industry mapping exists)
   // Map granular onboarding industry strings to canonical categories
   const industryMap: Record<string, CanonicalCategorySlug> = {
+    // granular labels from INDUSTRY_PROFILES
+    "retail & products": "fashion-clothing", // Default to fashion for general retail
+    "food & catering": "food-restaurant",
+    "professional services": "services-appointments",
+    "digital goods": "digital-products",
+    "events & tickets": "events-ticketing",
+    "online-courses": "education-courses",
+    "online courses": "education-courses",
+    "wholesale / b2b": "wholesale-b2b",
+    "multi-vendor": "marketplace",
+    "nonprofit / charity": "donations-fundraising",
+    "real estate": "real-estate",
+    // legacy/shorthand
     fashion: "fashion-clothing",
     clothing: "fashion-clothing",
     electronics: "electronics-gadgets",
@@ -38,6 +51,7 @@ export function recommendTemplate(
     properties: "real-estate",
     real_estate: "real-estate",
     non_profit: "donations-fundraising",
+    nonprofit: "donations-fundraising",
   };
 
   // Normalize industry input

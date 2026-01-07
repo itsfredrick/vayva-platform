@@ -3,9 +3,18 @@
 import { EmptyState, Button } from "@vayva/ui";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { TableSkeleton } from "@/components/LoadingSkeletons";
+
+type InventoryProduct = {
+    id: string;
+    name: string;
+    inventory: {
+        quantity: number;
+    } | null;
+};
 
 export default function InventoryPage() {
-    const [products, setProducts] = useState<any[]>([]);
+    const [products, setProducts] = useState<InventoryProduct[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -26,7 +35,14 @@ export default function InventoryPage() {
         fetchProducts();
     }, []);
 
-    if (loading) return <div className="p-6">Loading inventory...</div>;
+    if (loading) {
+        return (
+            <div className="p-6">
+                <h1 className="text-2xl font-bold mb-6 text-gray-900">Inventory</h1>
+                <TableSkeleton rows={5} columns={3} />
+            </div>
+        );
+    }
 
     if (products.length === 0) {
         return (

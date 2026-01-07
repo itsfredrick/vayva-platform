@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const { id } = await params;
 
@@ -36,7 +36,7 @@ export async function GET(
   });
 
   if (!conversation) return new NextResponse("Not Found", { status: 404 });
-  if (conversation.storeId !== (session!.user as any).storeId)
+  if (conversation.storeId !== user.storeId)
     return new NextResponse("Forbidden", { status: 403 });
 
   // Mark as Read? Usually separated endpoint or side-effect.

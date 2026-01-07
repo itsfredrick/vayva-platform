@@ -1,24 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; // Adjust path as needed for your auth config
+import { requireAuth } from "@/lib/session";
+
+// Adjust path as needed for your auth config
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const user = await requireAuth();
+    if (!user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get Store ID (assuming single store per merchant for MVP or derived from session)
-    // Get Store ID via Memberships
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { memberships: true },
-    });
-
-    // Assuming closest store membership
-    const storeId = user?.memberships[0]?.storeId;
+    const storeId = user.storeId;
     if (!storeId)
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
 
@@ -57,16 +50,8 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { memberships: true },
-    });
-    const storeId = user?.memberships[0]?.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
     if (!storeId)
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
 

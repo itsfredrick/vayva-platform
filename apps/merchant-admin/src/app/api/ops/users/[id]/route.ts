@@ -18,7 +18,7 @@ export async function PATCH(
   if (!session || session.user.role !== "OPS_OWNER") {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
     await OpsAuthService.logEvent(
-      session?.user?.id || null,
+      session?.user.id || null,
       "OPS_UNAUTHORIZED_ACCESS",
       {
         ip,
@@ -32,7 +32,7 @@ export async function PATCH(
 
   const { id } = await params;
 
-  if (id === session.user.id) {
+  if (id === session?.user.id) {
     return NextResponse.json({ error: "Cannot modify self" }, { status: 400 });
   }
 
@@ -48,7 +48,7 @@ export async function PATCH(
         select: { id: true, email: true, isActive: true },
       });
       await OpsAuthService.logEvent(
-        session.user.id,
+        session?.user.id,
         isActive ? "OPS_USER_ENABLED" : "OPS_USER_DISABLED",
         { targetId: id },
       );
@@ -62,7 +62,7 @@ export async function PATCH(
         where: { id },
         data: { password: hash },
       });
-      await OpsAuthService.logEvent(session.user.id, "OPS_PASSWORD_RESET", {
+      await OpsAuthService.logEvent(session?.user.id, "OPS_PASSWORD_RESET", {
         targetId: id,
       });
       return NextResponse.json({ success: true, tempPassword });

@@ -26,7 +26,7 @@ export const SectionHeaderRow = ({
       {actionHref && (
         <Link
           href={actionHref}
-          className="flex items-center text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+          className="flex items-center text-xs font-semibold text-brand hover:text-blue-700 transition-colors"
         >
           See All <ChevronRight size={14} />
         </Link>

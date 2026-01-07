@@ -56,53 +56,82 @@ export function calculateNameMatch(
   return 0;
 }
 
-// Youverify Adapter (Real Implementation)
-class YouverifyProvider implements IKycProvider {
+// Adapters for Split Providers
+class CombinedProvider implements IKycProvider {
   async verify(
     request: KycVerificationRequest,
   ): Promise<KycVerificationResult> {
     try {
-      const validationData = {
-        firstName: request.firstName,
-        lastName: request.lastName,
-        dateOfBirth: request.dob,
-      };
-
-      let response;
+      // 1. BVN -> Paystack
       if (request.method === "BVN") {
-        response = await YouverifyService.verifyBVN(
-          request.idNumber,
-          validationData,
-          request.selfie,
-        );
-      } else {
-        // NIN is mapped to vNIN for Youverify
-        response = await YouverifyService.verifyVNIN(
-          request.idNumber,
-          validationData,
-          request.selfie,
-        );
+        const { PaystackService } = await import("@/lib/payment/paystack");
+        try {
+          const response = await PaystackService.resolveBVN(request.idNumber);
+
+          // Match Score Calculation
+          const nameMatch = calculateNameMatch(
+            { first: request.firstName, last: request.lastName },
+            { first: response.first_name, last: response.last_name }
+          );
+
+          // Paystack BVN Resolve doesn't return status like "found" explicitly in same way, 
+          // usually successful response implies found.
+          // Note: Paystack BVN returning data usually means it exists.
+
+          return {
+            success: true,
+            providerReference: response.bvn,
+            matchScore: nameMatch,
+            status: nameMatch >= 80 ? "VERIFIED" : "FAILED", // Fail if names don't match
+            rawResponse: response,
+            error: nameMatch < 80 ? "Name mismatch with BVN records" : undefined
+          };
+        } catch (e: any) {
+          return {
+            success: false,
+            matchScore: 0,
+            status: "FAILED",
+            error: e.message || "BVN Verification Failed",
+            rawResponse: e
+          };
+        }
       }
 
-      const selfieMatch = response.data.validations?.selfie?.selfieVerification;
+      // 2. NIN / vNIN -> YouVerify
+      else {
+        const validationData = {
+          firstName: request.firstName,
+          lastName: request.lastName,
+          dateOfBirth: request.dob,
+        };
 
-      return {
-        success: response.success && response.data.status === "found",
-        providerReference: response.data.id,
-        matchScore: response.data.allValidationPassed
-          ? 100
-          : selfieMatch?.confidenceLevel || 0,
-        status:
-          response.success && response.data.status === "found"
-            ? "VERIFIED"
-            : "FAILED",
-        rawResponse: response.data,
-        error:
-          response.data.validations?.validationMessages ||
-          (response.data.status === "not_found"
-            ? "Identity not found"
-            : undefined),
-      };
+        // NIN is mapped to vNIN for Youverify
+        const response = await YouverifyService.verifyVNIN(
+          request.idNumber,
+          validationData,
+          request.selfie,
+        );
+
+        const selfieMatch = response.data.validations?.selfie?.selfieVerification;
+
+        return {
+          success: response.success && response.data.status === "found",
+          providerReference: response.data.id,
+          matchScore: response.data.allValidationPassed
+            ? 100
+            : selfieMatch?.confidenceLevel || 0,
+          status:
+            response.success && response.data.status === "found"
+              ? "VERIFIED"
+              : "FAILED",
+          rawResponse: response.data,
+          error:
+            response.data.validations?.validationMessages ||
+            (response.data.status === "not_found"
+              ? "Identity not found"
+              : undefined),
+        };
+      }
     } catch (error: any) {
       return {
         success: false,
@@ -119,7 +148,7 @@ export class KycService {
 
   constructor() {
     // Only real provider allowed - no tests
-    this.provider = new YouverifyProvider();
+    this.provider = new CombinedProvider();
   }
 
   async verifyIdentity(

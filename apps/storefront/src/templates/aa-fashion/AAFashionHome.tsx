@@ -16,39 +16,32 @@ export const AAFashionHome = ({ store, products }: AAFashionHomeProps) => {
   const { cart } = useStore();
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Categories Derivation (Test or from products)
-  const categories = [
-    {
-      id: "c1",
-      name: "Dresses",
-      slug: "dresses",
-      imageUrl: "https://placehold.co/400x400/111/fff?text=Dresses",
-    },
-    {
-      id: "c2",
-      name: "Two Pieces",
-      slug: "two-pieces",
-      imageUrl: "https://placehold.co/400x400/222/fff?text=Sets",
-    },
-    {
-      id: "c3",
-      name: "Tops",
-      slug: "tops",
-      imageUrl: "https://placehold.co/400x400/333/fff?text=Tops",
-    },
-    {
-      id: "c4",
-      name: "Bottoms",
-      slug: "bottoms",
-      imageUrl: "https://placehold.co/400x400/444/fff?text=Pants",
-    },
-  ];
+  // Derive categories dynamically from products
+  const uniqueCategories = Array.from(
+    new Set(products.map((p) => p.category).filter(Boolean)),
+  );
+
+  const categories = uniqueCategories.slice(0, 4).map((catName, index) => {
+    const representativeProduct = products.find((p) => p.category === catName);
+    return {
+      id: `cat-${index}`,
+      name: catName as string,
+      slug: (catName as string).toLowerCase().replace(/\s+/g, "-"),
+      imageUrl:
+        representativeProduct?.images?.[0] ||
+        "/images/hero-lifestyle.jpg",
+    };
+  });
 
   const bestSellers = products.slice(0, 4);
 
   return (
     <div className="min-h-screen bg-white pb-20 font-sans text-[#111111]">
-      <MobileHeader storeName={store.name} cartItemCount={cartItemCount} />
+      <MobileHeader
+        storeName={store.name}
+        cartItemCount={cartItemCount}
+        brandColor={store.brandColor}
+      />
 
       <main>
         {/* Hero */}
@@ -69,7 +62,11 @@ export const AAFashionHome = ({ store, products }: AAFashionHomeProps) => {
           title="Best Sellers"
           actionHref={`/collections/all?store=${store.slug}`}
         />
-        <ProductGrid products={products} storeSlug={store.slug} />
+        <ProductGrid
+          products={products}
+          storeSlug={store.slug}
+          brandColor={store.brandColor}
+        />
 
         {/* Footer / Spacing */}
         <div className="mt-12 px-4 py-8 bg-gray-50 text-center text-xs text-gray-400">

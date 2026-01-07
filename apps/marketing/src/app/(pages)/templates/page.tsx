@@ -1,384 +1,388 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Check, ArrowRight, Smartphone, Monitor } from "lucide-react";
 import {
-  TEMPLATE_REGISTRY,
-  TemplateCategory,
-  getTemplatesByCategory,
-  BillingPlan,
-  getNormalizedTemplates,
+    TEMPLATE_REGISTRY,
+    TEMPLATE_CATEGORIES,
+    TemplateCategory,
+    getNormalizedTemplates
 } from "@/lib/templates-registry";
-import {
-  CATEGORY_MARKETING,
-  TEMPLATE_MARKETING,
-} from "@/lib/marketing-content";
-import { useUserPlan } from "@/hooks/useUserPlan";
-import { UpgradePlanModal } from "@/components/billing/UpgradePlanModal";
+import { Button } from "@vayva/ui";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
-import { captureUrlParams, saveAttribution } from "@/lib/attribution";
-import { Modal } from "@vayva/ui";
-import { StoreShell } from "@/components/storefront/store-shell";
-import { AAFashionHome } from "@/components/storefront/AAFashionHome";
-import { GizmoTechHome } from "@/components/storefront/GizmoTechHome";
-import { BloomeHome } from "@/components/storefront/BloomeHome";
-import { StandardRetailHome } from "@/components/storefront/StandardRetailHome";
-import { QuickBitesFood } from "@/components/storefront/QuickBitesFood";
-import { GourmetDiningFood } from "@/components/storefront/GourmetDiningFood";
-import { WellnessBooking } from "@/components/storefront/WellnessBooking";
-import { ProConsultBooking } from "@/components/storefront/ProConsultBooking";
-import { SkillAcademyCourses } from "@/components/storefront/SkillAcademyCourses";
-import { LearnHubCourses } from "@/components/storefront/LearnHubCourses";
-import { DigitalVaultStore } from "@/components/storefront/DigitalVaultStore";
+import Image from "next/image";
 
-// Helper for plan badges
-function PlanBadge({ plan }: { plan: BillingPlan }) {
-  const styles = {
-    free: "bg-gray-100 text-gray-700",
-    growth: "bg-blue-50 text-blue-700",
-    pro: "bg-black text-white",
-  };
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${styles[plan]}`}
-    >
-      {plan}
-    </span>
-  );
-}
+// --- Types ---
+type Template = ReturnType<typeof getNormalizedTemplates>[0];
 
-// Component map for previews
-const PREVIEW_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  StoreShell: StandardRetailHome,
-  AAFashionHome: AAFashionHome,
-  GizmoTechHome: GizmoTechHome,
-  BloomeHomeLayout: BloomeHome,
-  QuickBitesFood: QuickBitesFood,
-  GourmetDiningFood: GourmetDiningFood,
-  WellnessBooking: WellnessBooking,
-  ProConsultBooking: ProConsultBooking,
-  SkillAcademyCourses: SkillAcademyCourses,
-  LearnHubCourses: LearnHubCourses,
-  DigitalVaultStore: DigitalVaultStore,
-};
+// --- Components ---
 
-const DEMO_SLUGS: Record<string, string> = {
-  StoreShell: "demo-retail",
-  QuickBitesFood: "demo-food",
-  GourmetDiningFood: "demo-food",
-  AAFashionHome: "demo-retail",
-  GizmoTechHome: "demo-retail",
-  BloomeHomeLayout: "demo-retail",
-  // Fallback others to demo-retail
-};
-
-export default function TemplatesLandingPage() {
-  return <TemplatesLandingPageContent />;
-}
-
-function TemplatesLandingPageContent() {
-  const { tier: userPlan, isAuthenticated } = useUserPlan();
-  const router = useRouter();
-  const [upgradeModalOpen, setUpgradeModalOpen] = React.useState(false);
-  const [targetUpgradePlan, setTargetUpgradePlan] =
-    React.useState<BillingPlan>("free");
-  const [previewOpen, setPreviewOpen] = React.useState(false);
-  const [selectedTemplate, setSelectedTemplate] = React.useState<any>(null);
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    if (!searchParams) return;
-
-    captureUrlParams(searchParams, "templates_landing");
-
-    /* Telemetry tracked */
-    const categorySlug = searchParams.get("category");
-    if (categorySlug) {
-      const targetId = Object.values(TemplateCategory).find(
-        (c) => c.toLowerCase() === categorySlug.toLowerCase(),
-      );
-      if (targetId) {
-        setTimeout(() => {
-          const el = document.getElementById(`category-${targetId}`);
-          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 100);
-      }
-    }
-  }, [searchParams]);
-
-  const handleUnlock = (plan: BillingPlan, templateId: string) => {
-    console.log(
-      `[TELEMETRY] TEMPLATE_UNLOCK_CLICKED id=${templateId} required=${plan}`,
+function FilterPill({
+    label,
+    isActive,
+    onClick
+}: {
+    label: string;
+    isActive: boolean;
+    onClick: () => void;
+}) {
+    return (
+        <button
+            onClick={onClick}
+            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${isActive
+                ? "bg-[#0F172A] text-white shadow-lg scale-105"
+                : "bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                }`}
+        >
+            {label}
+        </button>
     );
-    setTargetUpgradePlan(plan);
-    setUpgradeModalOpen(true);
-  };
+}
 
-  const handlePreview = (template: any) => {
-    console.log(`[TELEMETRY] TEMPLATE_PREVIEW_OPENED id=${template.id}`);
-    setSelectedTemplate(template);
-    setPreviewOpen(true);
-  };
+// Mini-Skeleton that looks like a real website layout
+function MiniSitePreview({ template, colorClass }: { template: Template; colorClass: string }) {
+    const isDark = colorClass.includes('slate') || colorClass.includes('zinc') || template.category === 'Digital';
+    const bgBase = isDark ? 'bg-slate-900' : 'bg-white';
+    const textBase = isDark ? 'bg-slate-700' : 'bg-gray-200';
+    const accentBase = isDark ? 'bg-indigo-500' : 'bg-gray-300';
 
-  const handleUse = (templateId: string) => {
-    console.log(`[TELEMETRY] TEMPLATE_SELECTED id=${templateId}`);
-    saveAttribution({ initial_template: templateId });
-    router.push(`/signup?template=${templateId}`);
-  };
-
-  const categories = Object.values(TemplateCategory);
-  const PLAN_HIERARCHY: Record<BillingPlan, number> = {
-    free: 0,
-    growth: 1,
-    pro: 2,
-  };
-  const canAccess = (req: BillingPlan) =>
-    (PLAN_HIERARCHY[userPlan!] || 0) >= PLAN_HIERARCHY[req];
-
-  // Get the preview component
-  const PreviewComponent = selectedTemplate?.layoutComponent
-    ? PREVIEW_COMPONENTS[selectedTemplate.layoutComponent]
-    : null;
-
-  return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <UpgradePlanModal
-        isOpen={upgradeModalOpen}
-        onClose={() => setUpgradeModalOpen(false)}
-        currentPlan={userPlan}
-        requiredPlan={targetUpgradePlan}
-      />
-
-      <Modal
-        isOpen={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        title={selectedTemplate?.name || "Template Preview"}
-        className="max-w-6xl"
-      >
-        <div className="flex flex-col">
-          <div className="w-full h-[70vh] border border-gray-200 rounded-xl overflow-auto bg-white shadow-inner">
-            {PreviewComponent ? (
-              <PreviewComponent
-                storeName={selectedTemplate?.name || "Demo Store"}
-                storeSlug={
-                  DEMO_SLUGS[selectedTemplate.layoutComponent] || "demo-retail"
-                }
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">
-                <div className="text-center">
-                  <p className="text-sm">Preview not available</p>
-                  <p className="text-xs mt-2">
-                    This template is still being built
-                  </p>
+    return (
+        <div className={`w-full h-full ${bgBase} flex flex-col pointer-events-none select-none p-4`}>
+            {/* Nav Bar */}
+            <div className="flex items-center justify-between mb-4 opacity-50">
+                <div className={`w-8 h-2 rounded-full ${textBase}`}></div>
+                <div className="flex gap-2">
+                    <div className={`w-4 h-2 rounded-full ${textBase}`}></div>
+                    <div className={`w-4 h-2 rounded-full ${textBase}`}></div>
+                    <div className={`w-4 h-2 rounded-full ${textBase}`}></div>
                 </div>
-              </div>
+            </div>
+
+            {/* Hero Section */}
+            <div className="flex gap-4 mb-4">
+                <div className="flex-1 space-y-2 py-2">
+                    <div className={`w-3/4 h-3 rounded ${textBase}`}></div>
+                    <div className={`w-1/2 h-3 rounded ${textBase}`}></div>
+                    <div className={`w-1/3 h-5 rounded mt-2 ${accentBase} opacity-50`}></div>
+                </div>
+                <div className={`w-1/3 aspect-video rounded-md ${textBase}`}></div>
+            </div>
+
+            {/* Grid Section */}
+            <div className="grid grid-cols-3 gap-2 mt-auto">
+                <div className={`aspect-square rounded-md ${textBase}`}></div>
+                <div className={`aspect-square rounded-md ${textBase}`}></div>
+                <div className={`aspect-square rounded-md ${textBase}`}></div>
+            </div>
+        </div>
+    );
+}
+
+function TemplateCard({
+    template,
+    onSelect
+}: {
+    template: Template;
+    onSelect: (t: Template) => void;
+}) {
+    // Dynamic color based on category
+    const getCategoryColor = (cat: string) => {
+        const colors: Record<string, string> = {
+            'Retail': 'from-orange-50 to-rose-50',
+            'Food': 'from-yellow-50 to-orange-50',
+            'Service': 'from-blue-50 to-cyan-50',
+            'Digital': 'from-purple-900 to-indigo-900', // Darker for Digital
+            'Events': 'from-pink-50 to-rose-50',
+            'Education': 'from-sky-50 to-indigo-50',
+            'B2B': 'from-slate-50 to-gray-50',
+            'Real Estate': 'from-emerald-50 to-teal-50',
+            'Nonprofit': 'from-green-50 to-emerald-50',
+            'Marketplace': 'from-indigo-50 to-blue-50',
+        };
+        return colors[cat] || 'from-gray-50 to-gray-100';
+    };
+
+    const colorClass = getCategoryColor(template.category || '');
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            whileHover={{ y: -8 }}
+            className="group bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-2xl transition-all cursor-pointer relative flex flex-col"
+            onClick={() => onSelect(template)}
+        >
+            {/* New Badge */}
+            {(template.slug.includes('fashion') || template.slug.includes('give') || template.slug.includes('estate') || template.slug.includes('sound')) && (
+                <div className="absolute top-3 left-3 z-10 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-widest shadow-lg">
+                    New
+                </div>
             )}
-          </div>
 
-          <div className="flex gap-4 w-full mt-6">
-            <button
-              onClick={() => setPreviewOpen(false)}
-              className="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-all"
-            >
-              Back to Gallery
-            </button>
-            <button
-              onClick={() => handleUse(selectedTemplate?.id)}
-              className="flex-1 px-6 py-3 bg-[#10B981] text-white rounded-xl font-bold hover:bg-[#059669] transition-all shadow-lg shadow-green-100"
-            >
-              Use This Template
-            </button>
-          </div>
-          <p className="mt-4 text-xs text-gray-400 font-medium text-center">
-            Previewing {selectedTemplate?.name}. No account required to view.
-          </p>
-        </div>
-      </Modal>
+            {/* Browser Frame Header */}
+            <div className="bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center gap-1.5 h-9">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-400/80"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-green-400/80"></div>
+                <div className="ml-4 flex-1 bg-white h-5 rounded-md border border-gray-200 opacity-50 text-[8px] flex items-center px-2 text-gray-400 truncate">
+                    vayva.com/templates/{template.slug}
+                </div>
+            </div>
 
-      {/* Hero Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl mb-6">
-            Choose a template built for your business
-          </h1>
-          <p className="max-w-2xl mx-auto text-xl text-gray-500 mb-10">
-            Start fast with templates designed for how you sell, book, or
-            deliver.
-          </p>
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={() =>
-                document
-                  .getElementById("categories")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="px-8 py-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all"
-            >
-              Browse templates
-            </button>
-          </div>
-        </div>
-      </div>
+            {/* Thumbnail / Preview Area */}
+            <div className={`relative aspect-[16/10] bg-gradient-to-br ${colorClass} overflow-hidden group-hover:border-b-4 group-hover:border-blue-500 transition-all`}>
+                {template.preview?.thumbnailUrl ? (
+                    <img
+                        src={template.preview.thumbnailUrl}
+                        alt={template.name}
+                        className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105 group-hover:translate-y-1"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none'; // Fallback to mini-site
+                        }}
+                    />
+                ) : (
+                    <MiniSitePreview template={template} colorClass={colorClass} />
+                )}
 
-      {/* Category Sections */}
-      <div
-        id="categories"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 space-y-24"
-      >
-        {categories.map((cat) => {
-          const templates = getTemplatesByCategory(cat).filter((t) => t.isFree);
-          if (templates.length === 0) return null;
-
-          const copy = CATEGORY_MARKETING[cat];
-
-          return (
-            <section key={cat} id={`category-${cat}`} className="scroll-mt-24">
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900">
-                  {copy.headline}
-                </h2>
-                <p className="text-lg text-gray-500 mt-2">{copy.subheadline}</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                {templates.map((t) => {
-                  const marketing = TEMPLATE_MARKETING[t.id];
-
-                  return (
-                    <div
-                      key={t.id}
-                      className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col h-full"
-                    >
-                      {/* Live Preview */}
-                      <div
-                        className="aspect-[16/10] bg-gray-100 relative group cursor-pointer overflow-hidden"
-                        onClick={() => handlePreview(t)}
-                      >
-                        <div className="absolute inset-0 scale-[0.3] origin-top-left pointer-events-none">
-                          <div style={{ width: "333%", height: "333%" }}>
-                            {PREVIEW_COMPONENTS[t.layoutComponent || ""] ? (
-                              React.createElement(
-                                PREVIEW_COMPONENTS[t.layoutComponent || ""],
-                                {
-                                  storeName: t.name,
-                                  storeSlug:
-                                    DEMO_SLUGS[t.layoutComponent || ""] ||
-                                    "demo-retail",
-                                },
-                              )
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                                <div className="text-gray-400 text-6xl">
-                                  Preview
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute top-3 left-3">
-                          <PlanBadge plan={(t.requiredPlan || "free") as any} />
-                        </div>
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-6 flex flex-col flex-1">
-                        <div className="mb-4">
-                          <h3 className="font-bold text-gray-900 leading-tight">
-                            {t.name}
-                          </h3>
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                            {t.description}
-                          </p>
-                        </div>
-
-                        <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
-                          <button
-                            onClick={() => handlePreview(t)}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                          >
-                            Preview
-                          </button>
-                          <button
-                            onClick={() => handleUse(t.id)}
-                            className="px-4 py-2 bg-black text-white rounded-lg text-sm font-semibold hover:bg-gray-800"
-                          >
-                            Use Template
-                          </button>
-                        </div>
-                      </div>
+                {/* Hover Action Overlay */}
+                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end">
+                    <div className="bg-white rounded-full p-2 shadow-lg">
+                        <ArrowRight className="w-5 h-5 text-black" />
                     </div>
-                  );
-                })}
-              </div>
+                </div>
+            </div>
+
+            {/* Info */}
+            <div className="p-5 flex flex-col flex-1">
+                <div className="flex items-start justify-between mb-2">
+                    <div>
+                        <h3 className="font-bold text-lg text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">{template.name}</h3>
+                        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{template.registry?.businessModel || "Business"}</p>
+                    </div>
+                </div>
+                <p className="text-sm text-gray-500 line-clamp-2 mt-auto leading-relaxed opacity-80">{template.description}</p>
+            </div>
+        </motion.div>
+    );
+}
+
+function TemplateModal({
+    template,
+    onClose
+}: {
+    template: Template;
+    onClose: () => void;
+}) {
+    const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
+
+    if (!template) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+                layoutId={`modal-${template.id}`}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col md:flex-row"
+            >
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-white rounded-full transition-colors"
+                >
+                    <X className="w-5 h-5 text-gray-500" />
+                </button>
+
+                {/* Left: Preview (Scrollable) */}
+                <div className={`w-full md:w-2/3 bg-gray-100 flex flex-col relative overflow-y-auto overflow-x-hidden transition-all duration-500 ease-in-out ${viewMode === 'mobile' ? 'p-8 items-center justify-center' : ''
+                    }`}>
+
+                    {/* Controls / Device Toggle Hint */}
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+                        <div className="bg-white/90 backdrop-blur rounded-full shadow-sm border border-gray-200 p-1 flex">
+                            <button
+                                onClick={() => setViewMode('desktop')}
+                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${viewMode === 'desktop' ? 'bg-[#0F172A] text-white shadow-md' : 'text-gray-500 hover:text-gray-900'
+                                    }`}
+                            >
+                                <Monitor className="w-3 h-3" /> Desktop
+                            </button>
+                            <button
+                                onClick={() => setViewMode('mobile')}
+                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${viewMode === 'mobile' ? 'bg-[#0F172A] text-white shadow-md' : 'text-gray-500 hover:text-gray-900'
+                                    }`}
+                            >
+                                <Smartphone className="w-3 h-3" /> Mobile
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* IFRAME: Live Code Execution */}
+                    <motion.div
+                        layout
+                        className={`transition-all duration-500 ease-in-out shadow-2xl bg-white overflow-hidden relative ${viewMode === 'mobile'
+                            ? 'w-[430px] h-[932px] rounded-[55px] border-[12px] border-[#1a1a1a] scale-[0.85] origin-center'
+                            : 'w-full h-full rounded-none border-0'
+                            }`}
+                    >
+                        <iframe
+                            src={`/templates/preview/${template.id}`}
+                            className="w-full h-full border-0 bg-white"
+                            title={`Preview of ${template.name}`}
+                        />
+
+                        {/* Home Indicator */}
+                        {viewMode === 'mobile' && (
+                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[130px] h-[5px] bg-black/80 rounded-full z-20 pointer-events-none" />
+                        )}
+                    </motion.div>
+                </div>
+                {/* Right: Details */}
+                <div className="w-full md:w-1/3 p-8 border-l border-gray-100 flex flex-col h-full bg-white">
+                    <div className="flex-1">
+                        <span className="inline-block px-3 py-1 rounded-full bg-green-50 text-[#22C55E] text-xs font-bold uppercase tracking-wider mb-4">
+                            {template.category}
+                        </span>
+                        <h2 className="text-3xl font-bold text-[#0F172A] mb-4">{template.name}</h2>
+                        <p className="text-gray-600 mb-8 leading-relaxed">
+                            {template.description}
+                        </p>
+
+                        <div className="space-y-6">
+                            <div>
+                                <h4 className="font-semibold text-[#0F172A] mb-3">Best For</h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {/* Accessing internal registry details safely */}
+                                    {(template.registry.compare?.bestFor || []).map((item: string) => (
+                                        <span key={item} className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-lg">
+                                            {item}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold text-[#0F172A] mb-3">Key Features</h4>
+                                <ul className="space-y-2">
+                                    {template.features.slice(0, 4).map((feature, i) => (
+                                        <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                                            <Check className="w-4 h-4 text-[#22C55E] mt-0.5 shrink-0" />
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-8 mt-8 border-t border-gray-100">
+                        <Link href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/signup?template=${template.slug}`}>
+                            <Button className="w-full h-12 text-lg bg-[#0F172A] hover:bg-[#1E293B] text-white">
+                                Start with {template.name} <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
+
+// --- Main Page ---
+
+export default function TemplatesPage() {
+    const [activeCategory, setActiveCategory] = useState("All");
+    const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+
+    // Load templates
+    const allTemplates = getNormalizedTemplates();
+
+    // Filter logic
+    const filteredTemplates = activeCategory === "All"
+        ? allTemplates
+        : allTemplates.filter(t => t.category === activeCategory);
+
+    return (
+        <div className="min-h-screen bg-gray-50/50">
+
+            {/* 1. Hero */}
+            <section className="pt-32 pb-12 px-6 text-center">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-3xl mx-auto"
+                >
+                    <h1 className="text-4xl md:text-6xl font-bold text-[#0F172A] mb-6 tracking-tight">
+                        Choose your <span className="text-[#22C55E]">starting point</span>.
+                    </h1>
+                    <p className="text-xl text-gray-500 mb-8 max-w-2xl mx-auto">
+                        Professional, mobile-first templates designed for Nigerian businesses.
+                        Start with any specific industry design and customize it freely.
+                    </p>
+                </motion.div>
+
+                {/* Filters */}
+                <div className="flex flex-wrap justify-center gap-3 mt-8">
+                    <FilterPill
+                        label="All Templates"
+                        isActive={activeCategory === "All"}
+                        onClick={() => setActiveCategory("All")}
+                    />
+                    {TEMPLATE_CATEGORIES.filter(c => c.isActive).map((cat) => (
+                        <FilterPill
+                            key={cat.slug}
+                            label={cat.displayName}
+                            isActive={activeCategory === cat.slug}
+                            onClick={() => setActiveCategory(cat.slug)}
+                        />
+                    ))}
+                </div>
             </section>
-          );
-        })}
-      </div>
 
-      {/* Why Templates Section */}
-      <div className="bg-gray-900 text-white mt-24 py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">
-              Why start with a template?
-            </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-              Skip the months of development. Launch with a storefront that's
-              already optimized for conversion.
-            </p>
-          </div>
+            {/* 2. Grid */}
+            <section className="px-6 pb-24 max-w-7xl mx-auto">
+                <motion.div
+                    layout
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                >
+                    <AnimatePresence>
+                        {filteredTemplates.map((template) => (
+                            <TemplateCard
+                                key={template.id}
+                                template={template}
+                                onSelect={setSelectedTemplate}
+                            />
+                        ))}
+                    </AnimatePresence>
+                </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            <div>
-              <div className="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl">
-                🚀
-              </div>
-              <h3 className="text-xl font-bold mb-2">Launch Faster</h3>
-              <p className="text-gray-400">
-                Go from idea to first sale in days, not months. Visual setup,
-                zero code.
-              </p>
-            </div>
-            <div>
-              <div className="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl">
-                📈
-              </div>
-              <h3 className="text-xl font-bold mb-2">Proven Flows</h3>
-              <p className="text-gray-400">
-                Designed with checkout flows that convert. Built on years of
-                e-commerce data.
-              </p>
-            </div>
-            <div>
-              <div className="w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl">
-                🎨
-              </div>
-              <h3 className="text-xl font-bold mb-2">Fully Brandable</h3>
-              <p className="text-gray-400">
-                Customize colors, fonts, and layouts to match your unique brand
-                identity.
-              </p>
-            </div>
-          </div>
+                {filteredTemplates.length === 0 && (
+                    <div className="text-center py-20">
+                        <p className="text-gray-400">No templates found for this category.</p>
+                    </div>
+                )}
+            </section>
+
+            {/* 3. Modal */}
+            <AnimatePresence>
+                {selectedTemplate && (
+                    <TemplateModal
+                        template={selectedTemplate}
+                        onClose={() => setSelectedTemplate(null)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
-      </div>
-
-      {/* Final CTA */}
-      <div className="bg-indigo-600 text-white py-24 text-center">
-        <h2 className="text-3xl font-bold mb-8">
-          Ready to build your business?
-        </h2>
-        <div className="flex justify-center gap-4">
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="px-8 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-all"
-          >
-            See all templates
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }

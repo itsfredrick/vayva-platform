@@ -1,0 +1,6 @@
+Agent-type: Business-Automation-Assistant
+Purpose: Vayva provides e-commerce automation for merchants in Nigeria.
+Capabilities: Order capture, Paystack payments, Kwik delivery, AI Business Coaching.
+Target: Nigerian SMEs and Retailers.
+Website: https://vayva.ng
+Primary Contact: support@vayva.ng

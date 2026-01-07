@@ -23,7 +23,7 @@ export class EscalationService {
   }) {
     try {
       // 1. Create Support Ticket
-      const ticket = await (prisma as any).supportTicket.create({
+      const ticket = await prisma.supportTicket.create({
         data: {
           storeId: params.storeId,
           type: this.mapTriggerToType(params.trigger),
@@ -39,12 +39,12 @@ export class EscalationService {
       });
 
       // 2. Create Audit Event
-      await (prisma as any).handoffEvent.create({
+      await prisma.handoffEvent.create({
         data: {
           storeId: params.storeId,
           conversationId: params.conversationId,
           ticketId: ticket.id,
-          trigger: params.trigger,
+          triggerType: params.trigger,
           reason: params.reason,
           aiSummary: params.aiSummary,
           metadata: params.metadata || {},

@@ -8,6 +8,8 @@ export interface ReportDateRange {
 export interface SummaryMetrics {
   grossSales: number;
   netSales: number;
+  totalCogs: number;
+  grossProfit: number;
   paymentsReceived: number;
   refundsAmount: number;
   ordersPaidCount: number;
@@ -51,10 +53,28 @@ export class ReportsService {
         createdAt: { gte: range.from, lte: range.to },
         status: { notIn: ["DRAFT", "CANCELLED"] }, // Filter out noise
       },
-      select: { total: true, status: true, paymentStatus: true },
+      select: {
+        total: true,
+        status: true,
+        paymentStatus: true,
+        OrderItem: {
+          select: { price: true, costPrice: true, quantity: true }
+        }
+      },
     });
 
     const grossSales = orders.reduce((sum, o) => sum + Number(o.total), 0);
+
+    // Calculate COGS
+    let totalCogs = 0;
+    orders.forEach(order => {
+      order.OrderItem.forEach(item => {
+        if (item.costPrice) {
+          totalCogs += Number(item.costPrice) * item.quantity;
+        }
+      });
+    });
+
     const ordersPaidCount = orders.filter(
       (o) => o.paymentStatus === "SUCCESS" || o.paymentStatus === "VERIFIED",
     ).length;
@@ -72,6 +92,7 @@ export class ReportsService {
     const refundsCount = refunds.length;
 
     const netSales = grossSales - refundsAmount;
+    const grossProfit = netSales - totalCogs;
 
     // 3. Payments (Actual Cash Flow)
     const payments = await prisma.paymentTransaction.findMany({
@@ -112,6 +133,8 @@ export class ReportsService {
     return {
       grossSales,
       netSales,
+      totalCogs,
+      grossProfit,
       paymentsReceived,
       refundsAmount,
       ordersPaidCount,
@@ -210,8 +233,8 @@ export class ReportsService {
         date: o.createdAt,
         customerName: o.customer
           ? `${o.customer.firstName || ""} ${o.customer.lastName || ""}`.trim() ||
-            o.customer.phone ||
-            "Unknown"
+          o.customer.phone ||
+          "Unknown"
           : "Guest",
         status: o.status,
         total,
@@ -229,44 +252,93 @@ export class ReportsService {
   // --- CSV EXPORT GENERATOR ---
   static async generateCSV(
     merchantId: string,
-    type: "orders" | "payments" | "reconciliation",
+    type: "orders" | "payments" | "reconciliation" | "customers" | "finances",
     range: ReportDateRange,
   ): Promise<string> {
-    // Simplified V1: Generate string in memory. Large scale would stream.
+    const { generateCSV } = await import("./reports/generator");
 
     if (type === "reconciliation") {
-      // Fetch ALL (warn: memory)
-      // For V1 limit to 1000 items or similar safety cap
-      const { items } = await ReportsService.getReconciliation(
-        merchantId,
-        1000,
-      );
-
-      const headers = [
-        "Date",
-        "Ref",
-        "Customer",
-        "Status",
-        "Total",
-        "Paid",
-        "Refunded",
-        "Discrepancies",
-      ];
-      const rows = items.map((i) => [
-        i.date.toISOString(),
-        i.refCode,
-        i.customerName,
-        i.status,
-        i.total.toFixed(2),
-        i.paidAmount.toFixed(2),
-        i.refundedAmount.toFixed(2),
-        i.discrepancies.join(" | "),
-      ]);
-
-      return [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+      const { items } = await ReportsService.getReconciliation(merchantId, 1000);
+      return generateCSV(items, {
+        date: "Date",
+        refCode: "Ref",
+        customerName: "Customer",
+        status: "Status",
+        total: "Total",
+        paidAmount: "Paid",
+        refundedAmount: "Refunded",
+        discrepancies: "Discrepancies"
+      });
     }
 
-    // Add other types if needed
-    return "Not Implemented";
+    if (type === "orders") {
+      const orders = await prisma.order.findMany({
+        where: {
+          storeId: merchantId,
+          createdAt: { gte: range.from, lte: range.to }
+        },
+        include: { Customer: true, PaymentTransaction: true },
+        orderBy: { createdAt: "desc" },
+        take: 1000
+      });
+
+      const flatOrders = orders.map(o => ({
+        id: o.id,
+        date: o.createdAt,
+        customer: o.Customer ? `${o.Customer.firstName} ${o.Customer.lastName}` : "Guest",
+        total: Number(o.total),
+        status: o.status,
+        paymentStatus: o.paymentStatus,
+        fulfillmentStatus: o.fulfillmentStatus,
+        transactionCount: o.PaymentTransaction.length
+      }));
+
+      return generateCSV(flatOrders);
+    }
+
+    if (type === "customers") {
+      const customers = await prisma.customer.findMany({
+        where: { storeId: merchantId },
+        include: { _count: { select: { orders: true } } },
+        take: 1000
+      });
+
+      const flatCustomers = customers.map(c => ({
+        id: c.id,
+        name: `${c.firstName || ""} ${c.lastName || ""}`.trim(),
+        email: c.email,
+        phone: c.phone,
+        ordersCount: c._count.orders,
+        joinedAt: c.createdAt
+      }));
+
+      return generateCSV(flatCustomers);
+    }
+
+    if (type === "finances") {
+      const transactions = await prisma.paymentTransaction.findMany({
+        where: {
+          storeId: merchantId,
+          createdAt: { gte: range.from, lte: range.to }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 1000
+      });
+
+      const flatTx = transactions.map(t => ({
+        id: t.id,
+        date: t.createdAt,
+        reference: t.reference,
+        type: t.type,
+        amount: Number(t.amount),
+        status: t.status,
+        orderId: t.orderId
+      }));
+
+      return generateCSV(flatTx);
+    }
+
+    return "";
   }
 }
+

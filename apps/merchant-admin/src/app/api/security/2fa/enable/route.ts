@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 
 export async function POST(request: Request) {
   try {
-    const session = await requireAuth();
-    const userId = session.user.id;
+    const user = await requireAuth();
+    const userId = user.id;
 
     // Generate secret
     const secret = speakeasy.generateSecret({
-      name: `Vayva (${session.user.email})`,
+      name: `Vayva (${user.email})`,
       length: 32,
     });
 

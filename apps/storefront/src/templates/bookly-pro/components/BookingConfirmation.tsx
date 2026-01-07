@@ -32,7 +32,7 @@ export const BookingConfirmation = ({
 
         <div className="bg-gray-50 rounded-xl p-5 mb-8">
           <div className="flex items-center gap-3 mb-2 text-gray-900 font-medium">
-            <Calendar size={18} className="text-blue-600" />
+            <Calendar size={18} className="text-brand" />
             <span>
               {bookingDetails.date}th at {bookingDetails.time}
             </span>
@@ -44,7 +44,7 @@ export const BookingConfirmation = ({
 
         <button
           onClick={onClose}
-          className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-brand text-white font-bold py-3.5 rounded-xl hover:opacity-90 transition-colors flex items-center justify-center gap-2"
         >
           Done <ArrowRight size={18} />
         </button>

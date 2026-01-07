@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 const PLAN_LIMITS = {
@@ -28,8 +28,8 @@ const PLAN_LIMITS = {
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     const store = await prisma.store.findUnique({
       where: { id: storeId },
@@ -102,8 +102,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     const body = await request.json();
     const { newPlan } = body;
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
     const { PaystackService } = await import("@/lib/payment/paystack");
 
     const payment = await PaystackService.createPaymentForPlanChange(
-      session.user.email,
+      user.email,
       newPlan,
       storeId,
     );

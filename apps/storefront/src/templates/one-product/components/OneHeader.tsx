@@ -42,7 +42,7 @@ export const OneHeader = ({ storeName }: OneHeaderProps) => {
             <span className="hidden sm:inline">Track Order</span>
           </button>
 
-          <button className="bg-[#111827] text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-black transition-colors md:hidden">
+          <button className="bg-brand text-white px-5 py-2 rounded-full text-xs font-bold hover:opacity-90 transition-colors md:hidden">
             Buy Now
           </button>
         </div>

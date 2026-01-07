@@ -1,4 +1,4 @@
-import { getSessionUser } from "@/lib/session";
+import { getOnboardingUser } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { prisma } from "@vayva/db";
 import { OnboardingClientLayout } from "./OnboardingClientLayout";
@@ -11,19 +11,22 @@ export default async function OnboardingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getSessionUser();
+  const user = await getOnboardingUser();
 
   if (!user) {
     redirect("/signin");
   }
 
-  const store = await prisma.store.findUnique({
-    where: { id: user.storeId },
-    select: { onboardingCompleted: true },
-  });
+  // Only check store if it exists (legacy/migration)
+  if (user.storeId) {
+    const store = await prisma.store.findUnique({
+      where: { id: user.storeId },
+      select: { onboardingCompleted: true },
+    });
 
-  if (store?.onboardingCompleted) {
-    redirect("/admin/dashboard");
+    if (store?.onboardingCompleted) {
+      redirect("/dashboard");
+    }
   }
 
   return (

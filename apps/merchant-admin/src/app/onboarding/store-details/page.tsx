@@ -101,7 +101,7 @@ export default function StoreDetailsPage() {
       },
     });
 
-    await goToStep("brand");
+    await goToStep("templates");
   };
 
   return (

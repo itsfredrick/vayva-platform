@@ -23,6 +23,7 @@
     --muted-foreground: 215.4 16.3% 46.9%;
 
     --accent: 210 40% 96.1%;
+    /* ... variables ... */
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -33,6 +34,26 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+  }
+
+  /* FLUID TYPOGRAPHY: Scale down UI on mobile */
+  html {
+    font-size: 14px;
+    /* Mobile: 1rem = 14px */
+  }
+
+  @media (min-width: 768px) {
+    html {
+      font-size: 15px;
+      /* Tablet: 1rem = 15px */
+    }
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      font-size: 16px;
+      /* Desktop: 1rem = 16px */
+    }
   }
 
   /* MARKETING SITE IS STRICTLY LIGHT MODE */

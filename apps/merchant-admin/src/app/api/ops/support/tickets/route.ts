@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
+
+
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await requireAuth();
     // In real app, check for ADMIN/OPS role here
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
 
-    const tickets = await (prisma as any).supportTicket.findMany({
+    const tickets = await prisma.supportTicket.findMany({
       orderBy: { lastMessageAt: "desc" },
       include: {
         store: {

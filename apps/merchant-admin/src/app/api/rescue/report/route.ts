@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
 import { MerchantRescueService } from "@/lib/rescue/merchant-rescue-service";
 
 export async function POST(req: NextRequest) {
-    const session = await getServerSession(authOptions) as any;
+    const user = await requireAuth();
 
-    if (!session?.user) {
+    if (!user) {
         // We allow anonymous reporting for critical UI crashes where session might be lost/unavailable
         // BUT ideally we prefer auth. For now, let's proceed but mark user as anonymous.
     }
@@ -24,8 +23,8 @@ export async function POST(req: NextRequest) {
             errorMessage,
             stackHash,
             fingerprint,
-            storeId: session?.user?.storeId,
-            userId: session?.user?.id,
+            storeId: user?.storeId,
+            userId: user?.id,
         });
 
         return NextResponse.json({

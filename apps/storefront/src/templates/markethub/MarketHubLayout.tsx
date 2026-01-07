@@ -119,7 +119,7 @@ export const MarketHubLayout = ({ store, products }: MarketHubLayoutProps) => {
                     </span>
                     <button
                       onClick={() => addToCart(product)}
-                      className="w-8 h-8 rounded-full bg-gray-100 hover:bg-[#10B981] hover:text-white flex items-center justify-center transition-colors"
+                      className="w-8 h-8 rounded-full bg-gray-100 hover:bg-brand hover:text-white flex items-center justify-center transition-colors"
                     >
                       <ShoppingCart size={14} />
                     </button>

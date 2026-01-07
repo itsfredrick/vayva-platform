@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { getReachableAudience } from "@/lib/consent/analytics";
+import { requireAuth } from "@/lib/session";
 
 enum MessageIntent {
   MARKETING = "MARKETING",
@@ -9,8 +10,8 @@ enum MessageIntent {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.storeId) {
+  const user = await requireAuth();
+  if (!(user as any)?.storeId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
       ? MessageIntent.MARKETING
       : MessageIntent.TRANSACTIONAL;
   const audience = await getReachableAudience(
-    (session!.user as any).storeId,
+    user.storeId,
     intent as any,
   );
 

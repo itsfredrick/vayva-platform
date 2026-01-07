@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
+
+
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await requireAuth();
+
 
     const { searchParams } = new URL(req.url);
     const range = searchParams.get("range") || "today";
@@ -25,12 +25,12 @@ export async function GET(req: Request) {
 
     // 2. Fetch Aggregates
     // Tickets Created
-    const ticketsCreated = await (prisma as any).supportTicket.count({
+    const ticketsCreated = await prisma.supportTicket.count({
       where: dateFilter,
     });
 
     // Overdue (Open & Past Due)
-    const overdueTickets = await (prisma as any).supportTicket.count({
+    const overdueTickets = await prisma.supportTicket.count({
       where: {
         status: { not: "RESOLVED" },
         slaDueAt: { lt: now },
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     });
 
     // Escalation Triggers Breakdown (from Telemetry)
-    const escalations = await (prisma as any).supportTelemetryEvent.groupBy({
+    const escalations = await prisma.supportTelemetryEvent.groupBy({
       by: ["payload"],
       where: {
         eventType: "BOT_ESCALATED",
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
 
     // Manual aggregation of JSON payloads (prisma group by json is limited)
     // Ideally we'd map this, but for MVP we count raw events or query all
-    const rawEscalations = await (prisma as any).supportTelemetryEvent.findMany(
+    const rawEscalations = await prisma.supportTelemetryEvent.findMany(
       {
         where: { eventType: "BOT_ESCALATED", ...dateFilter },
         select: { payload: true },
@@ -56,8 +56,9 @@ export async function GET(req: Request) {
     );
 
     const triggerCounts: Record<string, number> = {};
-    rawEscalations.forEach((e: { payload?: { trigger?: string } }) => {
-      const t = e.payload?.trigger || "UNKNOWN";
+    rawEscalations.forEach((e: any) => {
+      const payload = e.payload as any;
+      const t = payload?.trigger || "UNKNOWN";
       triggerCounts[t] = (triggerCounts[t] || 0) + 1;
     });
 
@@ -67,7 +68,7 @@ export async function GET(req: Request) {
     }));
 
     // Feedback Stats
-    const feedback = await (prisma as any).supportBotFeedback.findMany({
+    const feedback = await prisma.supportBotFeedback.findMany({
       where: dateFilter,
     });
     const thumbsUp = feedback.filter((f: any) => f.rating === "SOLVED").length;

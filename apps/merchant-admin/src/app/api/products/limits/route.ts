@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; // Adjust import path as needed
+
+ // Adjust import path as needed
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(req: Request) {
-    const session = await getServerSession(authOptions);
+    const user = await requireAuth();
 
-    // Use storeId from session or header (depending on auth strategy)
-    // Assuming session.user.storeId exists based on project patterns
-    const storeId = (session?.user as any)?.storeId;
+    // Use storeId from user or header (depending on auth strategy)
+    // Assuming user.storeId exists based on project patterns
+    const storeId = (user as any)?.storeId;
 
     if (!storeId) {
         return new NextResponse("Unauthorized", { status: 401 });

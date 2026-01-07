@@ -9,7 +9,7 @@ interface HeroTechBannerProps {
 }
 
 export const HeroTechBanner = ({
-  imageUrl = "https://placehold.co/800x600/111/fff?text=Headphones",
+  imageUrl = "/images/hero-tech.png",
   headline = "Experience Sound Like Never Before",
   subheadline = "New Noise Cancelling Series",
   ctaText = "Shop Now",
@@ -27,7 +27,7 @@ export const HeroTechBanner = ({
       <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
 
       <div className="relative z-10 text-white max-w-lg mb-2">
-        <span className="inline-block px-2 py-1 bg-blue-600 text-[10px] font-bold uppercase tracking-wider mb-3 rounded-sm">
+        <span className="inline-block px-2 py-1 bg-brand text-[10px] font-bold uppercase tracking-wider mb-3 rounded-sm">
           {subheadline}
         </span>
         <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-tight">

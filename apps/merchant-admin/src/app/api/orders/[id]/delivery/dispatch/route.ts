@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import {
   getDeliveryProvider,
@@ -30,8 +30,8 @@ export async function POST(
       );
     }
 
-    const session = await requireAuth();
-    const { storeId, role } = session.user;
+    const user = await requireAuth();
+    const { storeId, role } = user;
 
     // Role Check: Staff+
     if (["viewer"].includes(role)) {
@@ -126,9 +126,30 @@ export async function POST(
     const result = await provider.dispatch(dispatchData, settings);
 
     if (!result.success) {
-      // Log failure locally if needed?
+      // HANDLE FAILURE: Save to DB so Ops can see it
+      await db.shipment.upsert({
+        where: { orderId },
+        create: {
+          storeId,
+          orderId,
+          provider: settings.provider,
+          status: "FAILED_DISPATCH", // New Status
+          recipientName,
+          recipientPhone,
+          addressLine1,
+          addressCity,
+          providerRawStatus: result.error === "INSUFFICIENT_FUNDS" ? "INSUFFICIENT_FUNDS" : "FAILED",
+          notes: JSON.stringify({ error: result.error, raw: result.rawResponse })
+        },
+        update: {
+          status: "FAILED_DISPATCH",
+          providerRawStatus: result.error === "INSUFFICIENT_FUNDS" ? "INSUFFICIENT_FUNDS" : "FAILED",
+          notes: JSON.stringify({ error: result.error, raw: result.rawResponse })
+        }
+      });
+
       return NextResponse.json(
-        { error: `Dispatch Failed: ${result.error}` },
+        { error: `Dispatch Failed: ${result.error}`, code: result.error },
         { status: 502 },
       );
     }

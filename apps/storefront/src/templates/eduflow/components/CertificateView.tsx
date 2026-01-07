@@ -24,7 +24,7 @@ export const CertificateView = ({
         </button>
 
         <div className="border-8 border-double border-blue-900/10 m-2 p-8 md:p-12 text-center rounded-lg bg-[#FAFAFA]">
-          <div className="w-20 h-20 mx-auto bg-blue-600 text-white rounded-full flex items-center justify-center mb-6 shadow-xl">
+          <div className="w-20 h-20 mx-auto bg-brand text-white rounded-full flex items-center justify-center mb-6 shadow-xl">
             <Award size={48} />
           </div>
 
@@ -72,7 +72,7 @@ export const CertificateView = ({
             <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded text-xs font-bold text-gray-700 hover:bg-gray-50">
               <Share2 size={14} /> Share
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 rounded text-xs font-bold text-white hover:bg-blue-700">
+            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-brand rounded text-xs font-bold text-white hover:opacity-90">
               <Download size={14} /> Download PDF
             </button>
           </div>

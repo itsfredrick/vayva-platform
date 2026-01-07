@@ -1,74 +1,94 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
+import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
+import { AuthMeResponse, UserRole, OnboardingStatus, SubscriptionPlan, BusinessType } from "@vayva/shared";
 
-export async function GET(request: NextRequest) {
+export const dynamic = "force-dynamic";
+
+export async function GET() {
   try {
-    // Get user from session
-    const sessionUser = await getSessionUser();
+    const sessionUser = await requireAuth();
 
     if (!sessionUser) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch full user data with onboarding status
-    const user = await prisma.user.findUnique({
-      where: { id: sessionUser.id },
-      include: {
-        memberships: {
-          where: {
-            storeId: sessionUser.storeId,
-            status: "active",
-          },
-          include: {
-            store: true,
-          },
-        },
-      },
+    // Fetch up-to-date store context
+    // We use findFirst to be safe, though ID should be unique.
+    const store = await prisma.store.findUnique({
+      where: { id: sessionUser.storeId },
     });
 
-    if (!user || user.memberships.length === 0) {
-      return NextResponse.json(
-        { error: "User or store not found" },
-        { status: 404 },
-      );
+    if (!store) {
+      return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
 
-    const membership = user.memberships[0];
-    const store = membership.store;
-
-    // Get onboarding status
-    const onboarding = await prisma.merchantOnboarding.findUnique({
-      where: { storeId: store.id },
-    });
-
-    return NextResponse.json({
+    // Map to AuthMeResponse
+    const response: AuthMeResponse = {
       user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        businessName: store.name,
-        emailVerified: user.isEmailVerified,
-        phoneVerified: user.isPhoneVerified || false,
+        id: sessionUser.id,
+        firstName: sessionUser.firstName || "",
+        lastName: sessionUser.lastName || "",
+        email: sessionUser.email,
+        emailVerified: sessionUser.emailVerified,
+        phoneVerified: false, // Session doesn't track this yet
+        role: sessionUser.role as UserRole,
+        storeId: sessionUser.storeId,
+        createdAt: new Date().toISOString(), // Fallback
       },
       merchant: {
-        merchantId: user.id,
+        merchantId: store.id,
         storeId: store.id,
-        storeName: store.name,
-        businessType: store.category || "UNKNOWN",
-        onboardingStatus: onboarding?.status || "UNKNOWN",
-        onboardingLastStep: store.onboardingLastStep || "welcome",
-        onboardingCompleted: store.onboardingCompleted || false,
-        onboardingUpdatedAt: onboarding?.updatedAt || new Date(),
-        onboardingData: onboarding?.data || {},
-        plan: store.plan || "UNKNOWN",
+        businessType: (store.category?.toUpperCase() as BusinessType) || BusinessType.RETAIL,
+        onboardingStatus: store.onboardingStatus as OnboardingStatus,
+        onboardingLastStep: store.onboardingLastStep || "START",
+        onboardingUpdatedAt: store.onboardingUpdatedAt.toISOString(),
+        plan: store.plan as SubscriptionPlan,
+        templateConfig: {},
+        // logoUrl and businessName removed as they don't exist in MerchantContext
+      }
+    };
+
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error("[API] Merchant Me Error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const sessionUser = await requireAuth();
+
+    if (!sessionUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    // Update user fields
+    const updatedUser = await prisma.user.update({
+      where: { id: sessionUser.id },
+      data: {
+        ...(body.firstName && { firstName: body.firstName }),
+        ...(body.lastName && { lastName: body.lastName }),
+        ...(body.phone && { phone: body.phone }),
+        // If fullName is provided, try to split it if first/last aren't explicit
+        ...(!body.firstName && body.fullName && {
+          firstName: body.fullName.split(" ")[0],
+          lastName: body.fullName.split(" ").slice(1).join(" ") || "",
+        }),
       },
     });
+
+    return NextResponse.json({ success: true, user: updatedUser });
   } catch (error) {
-    console.error("Auth me error:", error);
+    console.error("[API] Merchant Me Update Error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch user data" },
+      { error: "Internal Server Error" },
       { status: 500 },
     );
   }

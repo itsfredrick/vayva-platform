@@ -4,13 +4,15 @@ import Link from "next/link";
 import { Plus, Check } from "lucide-react";
 import { PublicProduct } from "@/types/storefront";
 import { useStore } from "@/context/StoreContext";
+import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: PublicProduct;
   storeSlug?: string;
+  brandColor?: string;
 }
 
-export const ProductCard = ({ product, storeSlug = "#" }: ProductCardProps) => {
+export const ProductCard = ({ product, storeSlug = "#", brandColor = "#111111" }: ProductCardProps) => {
   const { addToCart } = useStore();
   const [added, setAdded] = React.useState(false);
 
@@ -46,7 +48,13 @@ export const ProductCard = ({ product, storeSlug = "#" }: ProductCardProps) => {
 
         {/* Quick Add Button */}
         <button
-          className={`absolute bottom-3 right-3 p-2 rounded-full shadow-lg transition-all duration-300 ${added ? "bg-green-500 text-white" : "bg-white text-black hover:bg-black hover:text-white"}`}
+          className={cn(
+            "absolute bottom-3 right-3 p-2 rounded-full shadow-lg transition-all duration-300",
+            added ? "bg-green-500 text-white" : "text-white hover:scale-110"
+          )}
+          style={{
+            backgroundColor: added ? undefined : brandColor,
+          }}
           onClick={handleAdd}
         >
           {added ? (

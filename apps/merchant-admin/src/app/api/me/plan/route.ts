@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const sessionUser = await requireAuth();
 
-    if (!session || !session.user) {
+    if (!sessionUser) {
       return NextResponse.json({
         plan: "free",
         source: "fallback",
@@ -17,16 +16,7 @@ export async function GET(req: Request) {
       });
     }
 
-    const user = session.user as any;
-    const storeId = user.storeId;
-
-    if (!storeId) {
-      return NextResponse.json({
-        plan: "free",
-        source: "fallback_no_store",
-        isAuthenticated: true,
-      });
-    }
+    const storeId = sessionUser.storeId;
 
     const store = await prisma.store.findUnique({
       where: { id: storeId },
@@ -50,9 +40,6 @@ export async function GET(req: Request) {
     }
 
     // Normalized to BillingPlan (free | growth | pro)
-    // Note: DB values might still be 'business' etc if legacy, so we map them safely.
-    // We treat legacy 'business/enterprise' as 'pro' for access.
-
     let normalizedPlan = "free";
 
     switch (dbPlan) {

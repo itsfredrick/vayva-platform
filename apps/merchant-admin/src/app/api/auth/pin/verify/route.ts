@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { requireStoreAccess } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   try {
-    const session = await requireStoreAccess();
+    const user = await requireAuth();
 
     const body = await request.json();
     const { pin } = body;
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     const wallet = await prisma.wallet.findUnique({
-      where: { storeId: session.user.storeId },
+      where: { storeId: user.storeId },
     });
 
     if (!wallet || !wallet.pinHash) {
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
         : null;
 
       await prisma.wallet.update({
-        where: { storeId: session.user.storeId },
+        where: { storeId: user.storeId },
         data: {
           failedPinAttempts: newAttempts,
           isLocked: isNowLocked,
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
 
     // 3. Reset failures on success
     await prisma.wallet.update({
-      where: { storeId: session.user.storeId },
+      where: { storeId: user.storeId },
       data: {
         failedPinAttempts: 0,
         isLocked: false,
@@ -84,9 +84,9 @@ export async function POST(request: Request) {
       },
     });
 
-    // 4. Establish secure PIN session
+    // 4. Establish secure PIN user
     const { createPinSession } = await import("@/lib/auth/gating");
-    await createPinSession(session.user.storeId, wallet.pinVersion);
+    await createPinSession(user.storeId, wallet.pinVersion);
 
     return NextResponse.json({ success: true });
   } catch (e) {

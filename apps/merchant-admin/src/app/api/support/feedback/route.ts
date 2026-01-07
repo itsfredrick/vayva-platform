@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
+
+
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const user = await requireAuth();
+    if (!user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
     const { conversationId, messageId, rating, reason, comment } = body;
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
 
     if (!messageId || !rating) {
       return NextResponse.json(
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
     const finalComment = rating === "SOLVED" ? null : comment;
 
     // Store Feedback
-    await (prisma as any).supportBotFeedback.create({
+    await prisma.supportBotFeedback.create({
       data: {
         storeId,
         conversationId: conversationId || "unknown",
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
     });
 
     // Telemetry
-    await (prisma as any).supportTelemetryEvent.create({
+    await prisma.supportTelemetryEvent.create({
       data: {
         storeId,
         conversationId: conversationId || "unknown",

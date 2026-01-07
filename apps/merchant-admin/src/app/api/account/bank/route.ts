@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma, BankBeneficiary } from "@vayva/db";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { checkPermission } from "@/lib/team/rbac";
 import { PERMISSIONS } from "@/lib/team/permissions";
 import { logAudit, AuditAction } from "@/lib/audit";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
+    const user = await requireAuth();
     await checkPermission(PERMISSIONS.SETTINGS_VIEW);
-    const storeId = session.user.storeId;
+    const storeId = user.storeId;
 
     const accounts = await prisma.bankBeneficiary.findMany({
       where: { storeId },
@@ -49,10 +49,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const session = await requireAuth();
+    const user = await requireAuth();
     await checkPermission(PERMISSIONS.PAYOUTS_MANAGE);
 
-    const storeId = session.user.storeId;
+    const storeId = user.storeId;
     const body = await request.json();
     const { bankCode, bankName, accountNumber, accountName, isDefault } = body;
 
@@ -97,8 +97,8 @@ export async function POST(request: Request) {
       storeId,
       actor: {
         type: "USER",
-        id: session.user.id,
-        label: session.user.email || "Merchant",
+        id: user.id,
+        label: user.email || "Merchant",
       },
       action: "PAYOUTS_DESTINATION_CHANGED",
       after: { bankName, accountNumberLast4: accountNumber.slice(-4) },

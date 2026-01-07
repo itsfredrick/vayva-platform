@@ -5,6 +5,7 @@ import { Icon, cn } from "@vayva/ui";
 import { api } from "@/services/api";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   RevenueAreaChart,
   OrdersBreakdownChart,
@@ -49,6 +50,24 @@ export const RetailOverview = () => {
   const [data, setData] = useState<DashMetrics | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleShareStore = async () => {
+    const link = "https://vayva.com/store/my-shop";
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "My Vayva Store",
+          text: "Check out my store on Vayva",
+          url: link,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      await navigator.clipboard.writeText(link);
+      toast.success("Store link copied!");
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -361,15 +380,15 @@ export const RetailOverview = () => {
                   Add Product
                 </span>
               </Link>
-              <Link
-                href="/dashboard/settings/store"
+              <button
+                onClick={handleShareStore}
                 className="p-4 bg-white border border-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-gray-300 transition-all hover:shadow-sm"
               >
                 <Icon name="Share" size={20} className="text-gray-900" />
                 <span className="text-xs font-bold text-gray-600">
                   Share Store
                 </span>
-              </Link>
+              </button>
               <Link
                 href="/dashboard/whatsapp"
                 className="p-4 bg-white border border-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-gray-300 transition-all hover:shadow-sm"

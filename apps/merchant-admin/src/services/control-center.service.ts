@@ -1,77 +1,127 @@
 /**
  * STORE CONFIGURATION SERVICE
  *
- * DISABLED: Control Center requires Prisma schema migration.
- * Feature is disabled via feature flag until migration complete.
+ * This service manages the storefront configuration, including templates,
+ * branding, navigation, and domains. It maps high-level config objects
+ * to the underlying Prisma schema.
  */
 
+import { prisma } from "@vayva/db";
 import { assertFeatureEnabled } from "@/lib/env-validation";
 import {
   StoreConfig,
   StoreTemplate,
-  StorePage,
   StoreBranding,
+  StorePage,
   StoreNavigation,
   StorePolicy,
   StoreDomain,
 } from "@/types/control-center";
+import { getNormalizedTemplates } from "@/lib/templates-registry";
 
-async function getStoreConfig(storeId?: string): Promise<StoreConfig | null> {
+/**
+ * Fetches the complete configuration for a store.
+ * Maps settings JSON and relations to a StoreConfig object.
+ */
+async function getStoreConfig(storeId: string): Promise<StoreConfig | null> {
   assertFeatureEnabled("CONTROL_CENTER_ENABLED");
-  // Pending return to satisfy types
-  return {
-    templateId: "default",
-    branding: {
-      storeName: "Vayva Store",
-      accentColor: "#000000",
-      fontHeading: "Inter",
-      fontBody: "Inter",
+
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    include: {
+      storeTemplateSelection: true,
+      domainMapping: { take: 1 },
+      merchantPolicies: true,
     },
-    pages: [],
-    navigation: { header: [], footer: [] },
-    policies: [],
-    domains: { subdomain: "store", status: "active" },
-    isPublished: false,
+  }) as any;
+
+  if (!store) return null;
+
+  const settings = (store.settings as any) || {};
+  const templateSelection = store.storeTemplateSelection;
+
+  return {
+    templateId: templateSelection?.templateId || "default",
+    branding: {
+      storeName: store.name,
+      logoUrl: store.logoUrl || undefined,
+      accentColor: settings.brandColor || "#000000",
+      fontHeading: settings.fontHeading || "Inter",
+      fontBody: settings.fontBody || "Inter",
+    },
+    pages: [], // Pages implementation pending StorefrontDraft migration
+    navigation: settings.navigation || { header: [], footer: [] },
+    policies: (store.merchantPolicies || []).map((p: any) => ({
+      type: p.type as any,
+      title: p.title,
+      content: p.content,
+      isEnabled: p.isEnabled,
+    })),
+    domains: {
+      subdomain: store.slug,
+      customDomain: store.domainMapping?.[0]?.domain,
+      status: (store.domainMapping?.[0]?.status as any) || "active",
+    },
+    isPublished: store.isLive,
   };
 }
 
-async function updateTemplate(storeId?: string, templateId?: string) {
+/**
+ * Updates the active template for a store.
+ */
+async function updateTemplate(storeId: string, templateId: string) {
   assertFeatureEnabled("CONTROL_CENTER_ENABLED");
-  throw new Error("Control Center not yet implemented");
+
+  return await prisma.storeTemplateSelection.upsert({
+    where: { storeId },
+    create: {
+      storeId,
+      templateId,
+      version: "1.0.0",
+      config: {},
+    },
+    update: {
+      templateId,
+      appliedAt: new Date(),
+    },
+  });
 }
 
-import { getNormalizedTemplates } from "@/lib/templates-registry";
-
-// ...
-
-async function getTemplates(storeId?: string): Promise<StoreTemplate[]> {
-  // DO NOT block template browsing behind CONTROL_CENTER_ENABLED.
+/**
+ * Fetches available templates from the registry.
+ */
+async function getTemplates(): Promise<StoreTemplate[]> {
   return getNormalizedTemplates() as any;
 }
 
-async function updateBranding(branding: StoreBranding, storeId?: string) {
+/**
+ * Updates store branding and visual settings.
+ */
+async function updateBranding(storeId: string, branding: Partial<StoreBranding>) {
   assertFeatureEnabled("CONTROL_CENTER_ENABLED");
-  // Pending
-}
 
-async function getPages(storeId?: string): Promise<StorePage[]> {
-  assertFeatureEnabled("CONTROL_CENTER_ENABLED");
-  return [];
-}
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { settings: true },
+  });
 
-async function createPage(page: any, storeId?: string) {
-  assertFeatureEnabled("CONTROL_CENTER_ENABLED");
-  throw new Error("Control Center not yet implemented");
-}
+  if (!store) throw new Error("Store not found");
 
-async function updatePage(pageId: string, updates: any, storeId?: string) {
-  assertFeatureEnabled("CONTROL_CENTER_ENABLED");
-  throw new Error("Control Center not yet implemented");
-}
+  const currentSettings = (store.settings as any) || {};
 
-async function publishStore(storeId?: string) {
-  assertFeatureEnabled("CONTROL_CENTER_ENABLED");
-  throw new Error("Control Center not yet implemented");
+  return await prisma.store.update({
+    where: { id: storeId },
+    data: {
+      name: branding.storeName,
+      logoUrl: branding.logoUrl,
+      settings: {
+        ...currentSettings,
+        brandColor: branding.accentColor || currentSettings.brandColor,
+        fontHeading: branding.fontHeading || currentSettings.fontHeading,
+        fontBody: branding.fontBody || currentSettings.fontBody,
+      },
+    },
+  });
 }
 
 export const ControlCenterService = {
@@ -79,8 +129,59 @@ export const ControlCenterService = {
   getTemplates,
   updateTemplate,
   updateBranding,
-  getPages,
-  createPage,
-  updatePage,
-  publishStore,
+  // Pages logic will be implemented in the next phase of Storefront Builder
+  getPages: async () => [],
+  createPage: async () => { throw new Error("Page builder pending migration"); },
+  updatePage: async () => { throw new Error("Page builder pending migration"); },
+  publishStore: async (storeId: string) => {
+    return await prisma.store.update({
+      where: { id: storeId },
+      data: { isLive: true },
+    });
+  },
+
+  /**
+   * Fetches the number of templates owned by the store.
+   */
+  getOwnedTemplateCount: async (storeId: string) => {
+    return await prisma.merchantTheme.count({
+      where: { storeId },
+    });
+  },
+
+  /**
+   * Adds a template to the store's library if limits allow.
+   */
+  addToLibrary: async (storeId: string, templateId: string, maxAllowed: number) => {
+    assertFeatureEnabled("CONTROL_CENTER_ENABLED");
+
+    // 1. Check if already owned
+    const existing = await prisma.merchantTheme.findUnique({
+      where: {
+        storeId_templateId: {
+          storeId,
+          templateId,
+        },
+      },
+    });
+
+    if (existing) return existing;
+
+    // 2. Check limits
+    const count = await prisma.merchantTheme.count({ where: { storeId } });
+
+    if (count >= maxAllowed) {
+      throw new Error("PLAN_LIMIT_REACHED");
+    }
+
+    // 3. Add to library
+    return await prisma.merchantTheme.create({
+      data: {
+        storeId,
+        templateId,
+        status: "DRAFT",
+        config: {},
+      },
+    });
+  },
 };

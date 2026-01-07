@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   if (!session || !["OPS_OWNER", "OPS_ADMIN"].includes(session.user.role)) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
     await OpsAuthService.logEvent(
-      session?.user?.id || null,
+      session?.user.id || null,
       "OPS_UNAUTHORIZED_ACCESS",
       {
         ip,
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   if (!session || session.user.role !== "OPS_OWNER") {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
     await OpsAuthService.logEvent(
-      session?.user?.id || null,
+      session?.user.id || null,
       "OPS_UNAUTHORIZED_ACCESS",
       {
         ip,
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       data,
     );
 
-    await OpsAuthService.logEvent(session.user.id, "OPS_USER_CREATED", {
+    await OpsAuthService.logEvent(session?.user.id, "OPS_USER_CREATED", {
       targetUser: user.email,
       role: user.role,
     });

@@ -36,7 +36,7 @@ export const ParticleBackground: React.FC = () => {
     let animationFrameId: number = 0;
     let particles: any[] = [];
     // Reduced particle count for better performance
-    const particleCount = 30;
+    const particleCount = 80;
 
     // FPS Throttling
     let lastTime = 0;
@@ -62,8 +62,8 @@ export const ParticleBackground: React.FC = () => {
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
           size: layer === 1 ? 2 + Math.random() : 4 + Math.random() * 4,
-          vx: (Math.random() - 0.5) * (layer === 1 ? 0.4 : 0.8),
-          vy: (Math.random() - 0.5) * (layer === 1 ? 0.4 : 0.8),
+          vx: (Math.random() - 0.5) * (layer === 1 ? 0.8 : 1.6),
+          vy: (Math.random() - 0.5) * (layer === 1 ? 0.8 : 1.6),
           colorTimer: Math.random(),
           transitionSpeed: 0.005 + Math.random() * 0.01,
           layer,

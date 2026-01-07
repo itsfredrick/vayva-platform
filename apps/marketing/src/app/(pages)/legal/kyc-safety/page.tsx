@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button, Card } from "@vayva/ui";
 import Link from "next/link";
+import { BRAND } from "@vayva/shared";
 
 export default function KycSafetyPage() {
   return (
@@ -137,7 +138,7 @@ export default function KycSafetyPage() {
             Have questions about your data safety?
           </p>
           <div className="flex justify-center gap-4">
-            <Link href="mailto:compliance@vayva.ng">
+            <Link href={`mailto:${BRAND.emails.support}`}>
               <Button
                 variant="outline"
                 size="sm"

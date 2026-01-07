@@ -65,7 +65,7 @@ export const RFQDrawer = ({
               <p>Your RFQ list is empty.</p>
               <button
                 onClick={onClose}
-                className="mt-4 text-blue-600 font-bold hover:underline"
+                className="mt-4 text-brand font-bold hover:underline"
               >
                 Browse Catalog
               </button>

@@ -2,9 +2,19 @@
 
 import React, { useState, useEffect } from "react";
 import { Icon } from "@vayva/ui";
+import { TableSkeleton } from "@/components/LoadingSkeletons";
+
+type Ticket = {
+  id: string;
+  subject: string;
+  type: string;
+  description: string;
+  status: string;
+  updatedAt: string;
+};
 
 export default function SupportPage() {
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setCreateOpen] = useState(false);
 
@@ -36,7 +46,7 @@ export default function SupportPage() {
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-400">Loading...</div>
+          <TableSkeleton rows={5} columns={2} />
         ) : tickets.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -57,9 +67,8 @@ export default function SupportPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span
-                      className={`w-2 h-2 rounded-full ${
-                        t.status === "open" ? "bg-green-500" : "bg-gray-300"
-                      }`}
+                      className={`w-2 h-2 rounded-full ${t.status === "open" ? "bg-green-500" : "bg-gray-300"
+                        }`}
                     />
                     <h4 className="font-medium text-sm">{t.subject}</h4>
                     <span className="text-xs text-gray-400 uppercase border px-1 rounded">

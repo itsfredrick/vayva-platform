@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
 
@@ -8,8 +8,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
     const { id } = await params;
     const body = await request.json();
     const { status } = body; // Map next_status to status if needed, but standard is status? Previous test used next_status. I'll use status as standard.
@@ -31,7 +31,7 @@ export async function POST(
     });
 
     // Log audit event
-    await logAuditEvent(storeId, session.user.id, AuditEventType.ORDER_STATUS_CHANGED, {
+    await logAuditEvent(storeId, user.id, AuditEventType.ORDER_STATUS_CHANGED, {
       orderId: id,
       newStatus: targetStatus,
     });

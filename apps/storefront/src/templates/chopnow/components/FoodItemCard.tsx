@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus } from "lucide-react";
+import { Plus, UtensilsCrossed } from "lucide-react";
 import { PublicProduct } from "@/types/storefront";
 
 interface FoodItemCardProps {
@@ -26,11 +26,17 @@ export const FoodItemCard = ({ item, onClick }: FoodItemCardProps) => {
 
       {/* Image & Add Button */}
       <div className="relative w-24 h-24 flex-shrink-0">
-        <img
-          src={item.images?.[0] || "https://placehold.co/100x100?text=Food"}
-          alt={item.name}
-          className="w-full h-full object-cover rounded-xl bg-gray-100 shadow-sm"
-        />
+        {item.images?.[0] ? (
+          <img
+            src={item.images[0]}
+            alt={item.name}
+            className="w-full h-full object-cover rounded-xl bg-gray-100 shadow-sm"
+          />
+        ) : (
+          <div className="w-full h-full rounded-xl bg-gray-100 flex items-center justify-center">
+            <UtensilsCrossed size={24} className="text-gray-300" />
+          </div>
+        )}
         <button className="absolute -bottom-2 -right-2 bg-white text-red-600 p-1.5 rounded-full shadow-md border border-gray-100">
           <Plus size={18} strokeWidth={3} />
         </button>

@@ -9,7 +9,7 @@ interface LifestyleHeroProps {
 }
 
 export const LifestyleHero = ({
-  imageUrl = "https://placehold.co/800x1000/EAE0D5/222?text=Lifestyle",
+  imageUrl = "/images/hero-lifestyle.jpg",
   headline = "Slow down your routine.",
   subheadline = "New Collection",
   ctaText = "Shop Essentials",

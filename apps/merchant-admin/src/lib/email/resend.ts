@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { wrapEmail, renderButton, BRAND_COLOR } from "./layout";
+import { wrapEmail, Button as renderButton } from "./components";
 import { FEATURES } from "../env-validation";
 import { BRAND, getCanonicalUrl } from "@vayva/shared";
 
@@ -13,10 +13,10 @@ const resend = new Resend(RESEND_KEY);
 
 export class ResendEmailService {
   private static fromEmail =
-    process.env.RESEND_FROM_EMAIL || `No-reply@${BRAND.domain}`;
-  private static billingEmail = process.env.EMAIL_BILLING || `Billing@${BRAND.domain}`;
-  private static helloEmail = process.env.EMAIL_HELLO || `Hello@${BRAND.domain}`;
-  private static supportEmail = process.env.EMAIL_SUPPORT || `Support@${BRAND.domain}`;
+    process.env.RESEND_FROM_EMAIL || `Vayva <${BRAND.emails.noReply}>`;
+  private static billingEmail = process.env.EMAIL_BILLING || `Vayva Billing <${BRAND.emails.billing}>`;
+  private static helloEmail = process.env.EMAIL_HELLO || `Vayva <${BRAND.emails.hello}>`;
+  private static supportEmail = process.env.EMAIL_SUPPORT || `Vayva Support <${BRAND.emails.support}>`;
 
 
   /**

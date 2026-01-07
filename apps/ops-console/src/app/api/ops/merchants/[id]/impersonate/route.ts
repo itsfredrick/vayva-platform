@@ -1,8 +1,12 @@
-
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
 import { OpsAuthService } from "@/lib/ops-auth";
-import crypto from "crypto";
+import nodeCrypto from "crypto";
+import { z } from "zod";
+
+const ParamsSchema = z.object({
+    id: z.string().uuid("Invalid Store ID")
+});
 
 export async function POST(
     request: Request,
@@ -16,7 +20,7 @@ export async function POST(
         }
 
         const resolvedParams = await params;
-        const { id } = resolvedParams; // Store ID
+        const { id } = ParamsSchema.parse(resolvedParams); // Zod Validation
 
         // Find the Store Owner
         const store = await prisma.store.findUnique({
@@ -40,7 +44,7 @@ export async function POST(
         const ownerUserId = store.tenant.TenantMembership[0].userId;
 
         // Generate Merchant Session Token
-        const token = crypto.randomBytes(32).toString("hex");
+        const token = nodeCrypto.randomBytes(32).toString("hex");
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour impersonation session
 
@@ -49,9 +53,7 @@ export async function POST(
             data: {
                 userId: ownerUserId,
                 token,
-                expiresAt,
-                device: "Ops Console Impersonation",
-                ipAddress: "127.0.0.1" // In real world, extract from request
+                expiresAt
             }
         });
 

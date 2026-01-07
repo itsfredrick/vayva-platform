@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { FEATURES } from "@/lib/env-validation";
 
 export async function GET(request: Request) {
   try {
     // Get real session
-    const user = await getSessionUser();
+    const user = await requireAuth();
     if (!user) {
       return NextResponse.json(
         { error: "Unauthorized - Please login" },

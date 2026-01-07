@@ -6,7 +6,7 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  image?: string;
+  image?: string | null;
   variantId?: string;
 }
 
@@ -73,6 +73,9 @@ export function useStorefrontCart(storeSlug: string) {
           quantity,
         },
       ];
+    });
+    toast.success("Added to cart", {
+      description: `${product.name} has been added to your cart.`
     });
     setIsOpen(true); // Open cart sidebar/modal
   };

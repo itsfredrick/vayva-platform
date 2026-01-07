@@ -260,7 +260,7 @@ export const CheckoutModal = ({
             form="checkout-form"
             type="submit"
             disabled={loading}
-            className="w-full bg-[#111827] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-black transition-all disabled:opacity-50"
+            className="w-full bg-brand text-white font-bold py-4 rounded-xl shadow-lg hover:opacity-90 transition-all disabled:opacity-50"
           >
             {loading ? "Processing..." : `Pay ₦${total.toLocaleString()}`}
           </button>

@@ -1,11 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button, Card, Input, Badge } from "@vayva/ui";
-import { Plus, Zap, Trash2, Calendar, Loader2 } from "lucide-react";
+import { Button, Card, Input, Badge, Icon } from "@vayva/ui";
+import { CardSkeleton } from "@/components/LoadingSkeletons";
+
+type FlashSale = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  discount: number;
+  startTime: string;
+  endTime: string;
+};
 
 export default function FlashSalesPage() {
-  const [sales, setSales] = useState<any[]>([]);
+  const [sales, setSales] = useState<FlashSale[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -64,7 +73,7 @@ export default function FlashSalesPage() {
           </p>
         </div>
         <Button onClick={() => setIsCreating(!isCreating)} className="gap-2">
-          <Plus size={16} /> New Campaign
+          <Icon name="Plus" size={16} /> New Campaign
         </Button>
       </div>
 
@@ -134,7 +143,7 @@ export default function FlashSalesPage() {
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading && <Loader2 className="mr-2 animate-spin" size={16} />}
+                {loading && <Icon name="Loader2" className="mr-2 animate-spin" size={16} />}
                 Launch Campaign
               </Button>
             </div>
@@ -144,14 +153,20 @@ export default function FlashSalesPage() {
 
       {/* List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sales.map((sale) => (
+        {loading ? (
+          <>
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </>
+        ) : sales.map((sale) => (
           <Card
             key={sale.id}
             className="p-5 flex flex-col gap-4 relative overflow-hidden group hover:border-primary/50 transition-colors"
           >
             <div className="flex justify-between items-start">
               <div className="p-2 bg-yellow-500/10 text-yellow-500 rounded-lg">
-                <Zap size={20} />
+                <Icon name="Zap" size={20} />
               </div>
               <Badge variant={sale.isActive ? "success" : "default"}>
                 {sale.isActive ? "Active" : "Ended"}
@@ -167,13 +182,13 @@ export default function FlashSalesPage() {
 
             <div className="text-sm text-text-secondary space-y-1">
               <div className="flex items-center gap-2">
-                <Calendar size={14} />
+                <Icon name="Calendar" size={14} />
                 <span>
                   Starts: {new Date(sale.startTime).toLocaleDateString()}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar size={14} />
+                <Icon name="Calendar" size={14} />
                 <span>Ends: {new Date(sale.endTime).toLocaleDateString()}</span>
               </div>
             </div>
@@ -182,7 +197,9 @@ export default function FlashSalesPage() {
 
         {!loading && sales.length === 0 && !isCreating && (
           <div className="col-span-full py-12 text-center text-text-secondary border border-dashed border-border rounded-xl">
-            <Zap className="mx-auto mb-3 opacity-20" size={48} />
+            <div className="flex justify-center mb-3">
+              <Icon name="Zap" className="opacity-20" size={48} />
+            </div>
             <p>No active flash sales. Create one to boost revenue!</p>
           </div>
         )}

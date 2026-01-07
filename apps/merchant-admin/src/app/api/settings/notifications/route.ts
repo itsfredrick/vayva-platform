@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     const preference = await prisma.notificationPreference.findUnique({
       where: { storeId },
@@ -30,8 +30,8 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
     const body = await req.json();
 
     // Update the categories JSON field
@@ -52,8 +52,8 @@ export async function PATCH(req: Request) {
       data: {
         storeId,
         actorType: "USER",
-        actorId: session.user.id,
-        actorLabel: session.user.email || "Merchant",
+        actorId: user.id,
+        actorLabel: user.email || "Merchant",
         action: "NOTIFICATION_PREFS_UPDATED",
         entityType: "NotificationPreference",
         correlationId: `notify-${Date.now()}`,

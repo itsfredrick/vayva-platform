@@ -6,15 +6,26 @@ import {
 import { useStorefrontCart } from "@/hooks/storefront/useStorefrontCart";
 import { CheckoutModal } from "./CheckoutModal";
 import { ShoppingBag, X, Plus, Minus } from "lucide-react";
+import Image from "next/image";
+import { StorefrontSEO } from "./StorefrontSEO";
 
 export function WellnessBooking({
   storeName: initialStoreName,
   storeSlug,
+  config: configOverride,
 }: {
   storeName: string;
   storeSlug?: string;
+  config?: any;
 }) {
   const { store } = useStorefrontStore(storeSlug);
+
+  // Configuration Merging
+  const config = {
+    primaryColor: configOverride?.primaryColor || store?.templateConfig?.primaryColor || "#8B7355", // Nude/Brown
+    heroTitle: configOverride?.heroTitle || store?.templateConfig?.heroTitle || "Restore your balance.",
+    heroDesc: configOverride?.heroDesc || store?.templateConfig?.heroDesc || "Experience holistic treatments designed to rejuvenate your mind, body and spirit. Book your appointment online today.",
+  };
   const { products, isLoading } = useStorefrontProducts(storeSlug, {
     limit: 12,
   });
@@ -35,6 +46,7 @@ export function WellnessBooking({
 
   return (
     <div className="font-sans bg-[#FAF7F5] text-[#5D5D5D] min-h-screen">
+      <StorefrontSEO store={store} products={products} />
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -46,7 +58,7 @@ export function WellnessBooking({
 
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-        <div className="text-2xl font-serif text-[#8B7355] font-bold">
+        <div className="text-2xl font-serif font-bold" style={{ color: config.primaryColor }}>
           {displayName}
         </div>
         <div className="hidden md:flex gap-8 text-sm font-medium uppercase tracking-wider text-[#8B7355]">
@@ -61,7 +73,8 @@ export function WellnessBooking({
           </a>
         </div>
         <button
-          className="flex items-center gap-2 bg-[#8B7355] text-white px-5 py-2 rounded-full hover:bg-[#6F5B43] transition-colors"
+          className="flex items-center gap-2 text-white px-5 py-2 rounded-full transition-colors"
+          style={{ backgroundColor: config.primaryColor }}
           onClick={() => setIsCartOpen(true)}
         >
           <ShoppingBag className="w-4 h-4" />
@@ -158,14 +171,16 @@ export function WellnessBooking({
       <header className="relative py-24 px-8 text-center bg-white">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-serif font-medium text-[#2d2d2d] mb-6 leading-tight">
-            Restore your balance.
+            {config.heroTitle}
           </h1>
           <p className="text-lg text-[#888] mb-10 max-w-xl mx-auto leading-relaxed">
-            Experience holistic treatments designed to rejuvenate your mind,
-            body and spirit. Book your appointment online today.
+            {config.heroDesc}
           </p>
           <div className="flex justify-center gap-4">
-            <button className="px-8 py-3 bg-[#8B7355] text-white rounded-full font-medium shadow-lg hover:bg-[#6F5B43] transition-colors">
+            <button
+              className="px-8 py-3 text-white rounded-full font-medium shadow-lg transition-colors"
+              style={{ backgroundColor: config.primaryColor }}
+            >
               Book an Appointment
             </button>
           </div>
@@ -173,7 +188,7 @@ export function WellnessBooking({
       </header>
 
       {/* Services Grid */}
-      <section className="py-20 px-8 max-w-6xl mx-auto">
+      <main className="py-20 px-8 max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-serif text-[#2d2d2d] mb-3">
             Our Treatments
@@ -192,17 +207,20 @@ export function WellnessBooking({
         ) : (
           <div className="grid md:grid-cols-3 gap-8">
             {products.map((service) => (
-              <div
+              <article
                 key={service.id}
                 className="bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-shadow duration-300 group border border-[#F0EBE5]"
               >
                 <div className="aspect-video bg-[#FAF7F5] relative overflow-hidden">
-                  <img
+                  <Image
                     src={
                       service.image ||
                       `https://via.placeholder.com/400x300?text=${encodeURIComponent(service.name)}`
                     }
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
+                    alt={service.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#8B7355]">
                     60 min
@@ -227,11 +245,11 @@ export function WellnessBooking({
                     </button>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
-      </section>
+      </main>
 
       {/* Footer */}
       <footer className="bg-white py-12 text-center text-[#888] text-sm mt-12 border-t border-[#F0EBE5]">

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
+import { requireAuth } from "@/lib/session";
 
 /**
  * Real Payout Accounts Implementation
@@ -10,12 +11,12 @@ import { logAuditEvent, AuditEventType } from "@/lib/audit";
  */
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.storeId) return new NextResponse("Unauthorized", { status: 401 });
+  const user = await requireAuth();
+  
 
   try {
     const accounts = await prisma.bankBeneficiary.findMany({
-      where: { storeId: session.user.storeId },
+      where: { storeId: user.storeId },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(accounts);
@@ -25,13 +26,13 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.storeId) return new NextResponse("Unauthorized", { status: 401 });
+  const user = await requireAuth();
+  
 
   try {
     const body = await req.json();
-    const storeId = session.user.storeId;
-    const userId = session.user.id;
+    const storeId = user.storeId;
+    const userId = user.id;
 
     const { bankName, bankCode, accountNumber, accountName, isDefault } = body;
 

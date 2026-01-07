@@ -1,16 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { clearSession } from "@/lib/session";
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
-    // Clear session and delete from database
-    await clearSession();
-
-    return NextResponse.json({
-      message: "Logged out successfully",
+    await auth.api.signOut({
+      headers: await headers()
     });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Logout error:", error);
-    return NextResponse.json({ error: "Logout failed" }, { status: 500 });
+    console.error("[API] Logout Error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

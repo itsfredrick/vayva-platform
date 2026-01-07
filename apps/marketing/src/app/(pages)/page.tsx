@@ -55,8 +55,9 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-xl text-[#64748B] mb-10 max-w-3xl mx-auto leading-relaxed">
-            Stop fighting with chat bubbles. Let Vayva's AI auto-capture orders,
-            track payments, and organize your business so you can finally relax.
+            Most of us are working two jobs just to survive. But the hustle doesn't have to break you.
+            Vayva sets up your shop, handles the customers (and their wahala), and makes sales for you while you focus on your 9-5.
+            It's not just a tool; it's your freedom.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6 items-center">
@@ -72,9 +73,9 @@ export default function LandingPage() {
             Trusted by modern businesses
           </p>
 
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-80 grayscale hover:grayscale-0 transition-all duration-500">
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
             <Image
-              src="/logos/partner-paystack.png"
+              src="/logos/partner-paystack.svg"
               alt="Paystack"
               width={120}
               height={40}
@@ -95,8 +96,8 @@ export default function LandingPage() {
               className="h-10 w-auto object-contain mix-blend-multiply"
             />
             <Image
-              src="/logos/oral4_logo.png"
-              alt="Oral4"
+              src="/logos/partner-kwik.png"
+              alt="Kwik"
               width={120}
               height={40}
               className="h-10 w-auto object-contain mix-blend-multiply"
@@ -140,18 +141,16 @@ export default function LandingPage() {
               <br />
               <span className="text-red-500">Business shouldn't be.</span>
             </h2>
-            <div className="space-y-6">
-              {[
-                "Orders get lost in chat threads",
-                "Prices change mid-conversation",
-                "No records of what was sold",
-                "No accountability or audit trail",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-4 text-[#64748B] text-lg font-medium">
-                  <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center text-red-500">×</div>
-                  {item}
-                </div>
-              ))}
+            <div className="text-lg text-[#64748B] font-medium leading-loose space-y-6">
+              <p>
+                You know the feeling. You're at your main job, trying to focus, but your phone is buzzing with customers asking "How much?" or "Is this available?" for the hundredth time.
+              </p>
+              <p>
+                You reply late, they get angry, you lose the sale. Or worse, you sell the item, but forget to record it, and at the end of the month, you can't tell if you actually made a profit or just stressed yourself out for nothing.
+              </p>
+              <p className="text-[#0F172A] font-semibold">
+                It's exhausting. And it's not sustainable.
+              </p>
             </div>
           </div>
         </motion.div>
@@ -176,12 +175,12 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { title: "Orders from chat", Icon: MessageSquareText, color: "text-blue-500", bg: "bg-blue-50" },
-              { title: "Payments & reconciliation", Icon: CreditCard, color: "text-green-500", bg: "bg-green-50" },
-              { title: "Inventory tracking", Icon: Package, color: "text-orange-500", bg: "bg-orange-50" },
-              { title: "Delivery coordination", Icon: Truck, color: "text-purple-500", bg: "bg-purple-50" },
-              { title: "Business records", Icon: BarChart3, color: "text-indigo-500", bg: "bg-indigo-50" },
-              { title: "Multi-staff access", Icon: Users, color: "text-pink-500", bg: "bg-pink-50" },
+              { title: "It catches orders for you", desc: "When a customer asks for a product, Vayva is there instantly to secure the order. No waiting, no missed opportunities.", Icon: MessageSquareText, color: "text-blue-500", bg: "bg-blue-50" },
+              { title: "It handles the money", desc: "We track every kobo. You can see exactly who paid, who owes, and what your profit looks like without opening a spreadsheet.", Icon: CreditCard, color: "text-green-500", bg: "bg-green-50" },
+              { title: "It watches your stock", desc: "Never sell what you don't have. Vayva automatically updates your inventory so you don't have to apologize to customers later.", Icon: Package, color: "text-orange-500", bg: "bg-orange-50" },
+              { title: "It organizes delivery", desc: "Once an order is paid, we help sort out how it gets to the customer. You don't need to be the middleman anymore.", Icon: Truck, color: "text-purple-500", bg: "bg-purple-50" },
+              { title: "It keeps the records", desc: "Every single transaction is saved. This means you have a clean history to show banks or investors when you're ready to grow big.", Icon: BarChart3, color: "text-indigo-500", bg: "bg-indigo-50" },
+              { title: "It grows with you", desc: "Need to hire help? Add staff to your account with limited access, so they can work for you without seeing everything.", Icon: Users, color: "text-pink-500", bg: "bg-pink-50" },
             ].map((feature, i) => (
               <motion.div
                 key={i}
@@ -195,7 +194,7 @@ export default function LandingPage() {
                   <feature.Icon className={`w-7 h-7 ${feature.color}`} />
                 </div>
                 <h3 className="text-xl font-bold text-[#0F172A] mb-3">{feature.title}</h3>
-                <p className="text-[#64748B] text-sm leading-relaxed">Integrated features designed for speed.</p>
+                <p className="text-[#64748B] text-sm leading-relaxed">{feature.desc}</p>
               </motion.div>
             ))}
           </div>

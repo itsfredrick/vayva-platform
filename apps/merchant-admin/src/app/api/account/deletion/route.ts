@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { DeletionService } from "@/services/DeletionService";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.storeId)
-    return new NextResponse("Unauthorized", { status: 401 });
+  const user = await requireAuth();
+  
 
-  const status = await DeletionService.getStatus(session.user.storeId);
+  const status = await DeletionService.getStatus(user.storeId);
   return NextResponse.json({ status });
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.storeId || !session.user.id)
+  const user = await requireAuth();
+  if (!user?.storeId || !user.id)
     return new NextResponse("Unauthorized", { status: 401 });
 
   // Verify Owner Role
-  const userRole = (session.user as any).role;
+  const userRole = user.role;
   if (userRole !== "OWNER") {
     return new NextResponse("Forbidden - Only Owner can request deletion", {
       status: 403,
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
     const { reason } = body;
 
     const result = await DeletionService.requestDeletion(
-      session.user.storeId,
-      session.user.id,
+      user.storeId,
+      user.id,
       reason,
     );
 
@@ -52,14 +52,14 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.storeId || !session.user.id)
+  const user = await requireAuth();
+  if (!user?.storeId || !user.id)
     return new NextResponse("Unauthorized", { status: 401 });
 
   try {
     const result = await DeletionService.cancelDeletion(
-      session.user.storeId,
-      session.user.id,
+      user.storeId,
+      user.id,
     );
 
     if (!result.success) {

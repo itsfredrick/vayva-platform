@@ -22,11 +22,23 @@ export class FlagService {
     context: FlagContext = {},
   ): Promise<boolean> {
     try {
+      // Development fallback: Allow all flags if FEATURE_FLAGS_ENABLED=true
+      const envFlag = process.env.FEATURE_FLAGS_ENABLED;
+      console.log(`[FlagService] Checking ${key}, FEATURE_FLAGS_ENABLED=${envFlag}`);
+
+      if (envFlag === "true") {
+        console.log(`[FlagService] ${key} enabled via environment variable`);
+        return true;
+      }
+
       const flag = await prisma.featureFlag.findUnique({
         where: { key },
       });
 
-      if (!flag) return false; // Default safe
+      if (!flag) {
+        console.log(`[FlagService] ${key} not found in database, defaulting to false`);
+        return false; // Default safe
+      }
 
       // 1. Check Global Disable (if not enabled and no rules override - usually enabled is the master switch)
       // Actually, usually 'enabled' means "Global ON unless rules restrict" or "Off unless rules enable".

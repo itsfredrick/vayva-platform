@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { verifyDomainDns } from "@/lib/jobs/domain-verification";
 
 export async function POST(req: Request) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
     const { domainMappingId } = await req.json();
 
     if (!domainMappingId) {

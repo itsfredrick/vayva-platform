@@ -1,4 +1,4 @@
-import { requireAuth } from "./session";
+import { requireAuth } from "../session";
 import { prisma } from "@vayva/db";
 import { cookies } from "next/headers";
 import { sign, verify } from "jsonwebtoken";
@@ -20,8 +20,13 @@ export type GatingResult = {
 export async function checkFeatureAccess(
   feature: string,
 ): Promise<GatingResult> {
-  const session = await requireAuth();
-  const storeId = session.user.storeId;
+  // TESTING MODE: All features unlocked
+  if (process.env.NODE_ENV === "development" || process.env.DISABLE_FEATURE_GATING === "true") {
+    return { allowed: true };
+  }
+
+  const user = await requireAuth();
+  const storeId = user.storeId;
 
   const store = await prisma.store.findUnique({
     where: { id: storeId },
@@ -49,7 +54,7 @@ export async function checkFeatureAccess(
       };
     }
 
-    // Check PIN session cookie
+    // Check PIN user cookie
     const cookieStore = await cookies();
     const pinCookie = cookieStore.get(PIN_COOKIE_NAME);
     if (!pinCookie) {
@@ -71,14 +76,14 @@ export async function checkFeatureAccess(
       ) {
         return {
           allowed: false,
-          reason: "Invalid or expired security session",
+          reason: "Invalid or expired security user",
           requiredAction: "VERIFY_PIN",
         };
       }
     } catch (e: any) {
       return {
         allowed: false,
-        reason: "Security session expired",
+        reason: "Security user expired",
         requiredAction: "VERIFY_PIN",
       };
     }
@@ -121,7 +126,7 @@ export async function checkFeatureAccess(
 }
 
 /**
- * Creates a secure PIN session cookie valid for 30 minutes.
+ * Creates a secure PIN user cookie valid for 30 minutes.
  * Includes pinVersion to allow invalidation on PIN change.
  */
 export async function createPinSession(storeId: string, pinVersion: number) {

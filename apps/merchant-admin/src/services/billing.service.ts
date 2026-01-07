@@ -137,4 +137,10 @@ export const BillingService = {
       addon.isActive = !addon.isActive;
     }
   },
+
+  cancelSubscription: async (): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    currentSubscription.cancelAtPeriodEnd = true;
+    // In a real app, this would trigger the "Pause after cycle" logic
+  },
 };

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { PaystackService } from "@/lib/payment/paystack";
 import { prisma } from "@vayva/db";
 
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const session = await requireAuth();
+    const user = await requireAuth();
     const { templateId, amountNgn } = await request.json();
 
     if (!templateId || !amountNgn) {
@@ -28,9 +28,9 @@ export async function POST(request: Request) {
     }
 
     const payment = await PaystackService.initiateTemplatePurchase(
-      session.user.email,
+      user.email,
       templateId,
-      session.user.storeId,
+      user.storeId,
       amountNgn,
     );
 

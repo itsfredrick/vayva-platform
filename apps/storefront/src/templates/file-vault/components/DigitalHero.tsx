@@ -23,7 +23,7 @@ export const DigitalHero = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="w-full sm:w-auto bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/50">
+          <button className="w-full sm:w-auto bg-brand text-white px-8 py-4 rounded-xl font-bold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/50">
             Explore Products
           </button>
           <div className="flex items-center gap-2 text-gray-500 text-sm font-medium px-6">

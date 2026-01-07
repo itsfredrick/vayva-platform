@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 import { validateRow } from "@/lib/imports/csv";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const { jobId } = await req.json();
 
   const job = await prisma.importJob.findUnique({ where: { id: jobId } });
-  if (!job || job.merchantId !== (session!.user as any).storeId)
+  if (!job || job.merchantId !== user.storeId)
     return new NextResponse("Forbidden", { status: 403 });
 
   // Idempotency: If already completed, just return. (But 'run' might imply restart if failed? Plan said allow re-run only if failed/pending).

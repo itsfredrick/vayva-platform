@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getSessionUser } from "@/lib/session";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     // We don't block on this, and fail gracefully if auth fails/missing
     let storeId = properties?.storeId;
     try {
-      const sessionUser = await getSessionUser();
+      const sessionUser = await requireAuth();
       if (sessionUser?.storeId) {
         storeId = sessionUser.storeId;
       }

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
+import { requireAuth } from "@/lib/session";
 import { computeMerchantReadiness } from "@/lib/ops/computeReadiness";
 
 export async function GET(req: NextRequest) {
-  const user = await getSessionUser();
+  const user = await requireAuth();
   if (!user?.storeId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

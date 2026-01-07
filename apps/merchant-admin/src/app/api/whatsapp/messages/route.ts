@@ -5,7 +5,7 @@ import {
   WhatsAppLinkedEntityType,
 } from "@vayva/shared";
 import { prisma, MessageType, Direction, MessageStatus } from "@vayva/db";
-import { getSessionUser } from "@/lib/session";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   }
 
   // Auth check
-  const user = await getSessionUser();
+  const user = await requireAuth();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  const user = await getSessionUser();
+  const user = await requireAuth();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

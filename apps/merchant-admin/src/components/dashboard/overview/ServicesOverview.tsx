@@ -2,8 +2,30 @@
 
 import React from "react";
 import { Icon } from "@vayva/ui";
+import { toast } from "sonner";
 
 export const ServicesOverview = () => {
+  const handleShare = async () => {
+    // TODO: Get actual store slug from context
+    const link = "https://vayva.com/book/my-store";
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Book an appointment",
+          text: "Book your session with me on Vayva",
+          url: link,
+        });
+      } catch (err) {
+        // User cancelled or share failed
+        console.error(err);
+      }
+    } else {
+      await navigator.clipboard.writeText(link);
+      toast.success("Booking link copied!");
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -31,7 +53,10 @@ export const ServicesOverview = () => {
               filling your calendar.
             </p>
             <div className="flex items-center gap-3">
-              <button className="px-8 py-3 bg-black text-white rounded-full text-sm font-bold hover:scale-105 transition-transform">
+              <button
+                onClick={handleShare}
+                className="px-8 py-3 bg-black text-white rounded-full text-sm font-bold hover:scale-105 transition-transform"
+              >
                 Share Booking Link
               </button>
               <button className="px-8 py-3 bg-white border border-gray-100 text-gray-900 rounded-full text-sm font-bold hover:bg-gray-50 transition-colors">

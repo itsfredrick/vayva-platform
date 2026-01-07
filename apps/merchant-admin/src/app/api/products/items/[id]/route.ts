@@ -20,7 +20,7 @@ export const GET = withRBAC(
     props: { params: Promise<{ id: string }> },
   ) => {
     try {
-      const storeId = session.user.storeId;
+      const storeId = session.storeId;
       const { id } = await props.params;
 
       const product = await prisma.product.findUnique({
@@ -82,7 +82,7 @@ export const PUT = withRBAC(
     props: { params: Promise<{ id: string }> },
   ) => {
     try {
-      const storeId = session.user.storeId;
+      const storeId = session.storeId;
       const { id } = await props.params;
       const body = await request.json();
 
@@ -161,7 +161,7 @@ export const DELETE = withRBAC(
     props: { params: Promise<{ id: string }> },
   ) => {
     try {
-      const storeId = session.user.storeId;
+      const storeId = session.storeId;
       const { id } = await props.params;
 
       // Clean up inventory items first (FK constraint)

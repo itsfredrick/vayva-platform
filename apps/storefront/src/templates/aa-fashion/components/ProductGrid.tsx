@@ -8,9 +8,10 @@ interface ProductGridProps {
   products: PublicProduct[];
   storeSlug?: string;
   loading?: boolean;
+  brandColor?: string;
 }
 
-export const ProductGrid = ({ products, storeSlug, loading }: ProductGridProps) => {
+export const ProductGrid = ({ products, storeSlug, loading, brandColor }: ProductGridProps) => {
   if (loading) {
     return (
       <div className="grid grid-cols-2 gap-x-4 gap-y-8 px-4">
@@ -28,7 +29,12 @@ export const ProductGrid = ({ products, storeSlug, loading }: ProductGridProps) 
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-8 px-4">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} storeSlug={storeSlug} />
+        <ProductCard
+          key={product.id}
+          product={product}
+          storeSlug={storeSlug}
+          brandColor={brandColor}
+        />
       ))}
     </div>
   );

@@ -1,24 +1,16 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 import { TemplateRenderer } from "@/components/templates/TemplateRenderer";
 import { StoreProvider } from "@/context/StoreContext";
+import { requireAuth } from "@/lib/session";
 
 export default async function PreviewPage() {
   // 1. Auth & Data Fetching (Server Side)
-  const session = await getServerSession(authOptions);
+  const user = await requireAuth();
 
-  // Preview is only for the merchant themselves (for now)
-  if (!session?.user) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        Unauthorized Preview
-      </div>
-    );
-  }
-
-  const storeId = (session.user as any).storeId;
+  const storeId = user.storeId;
   if (!storeId) return <div>No Store Context</div>;
 
   // Fetch the DRAFT to show work-in-progress

@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 import { PLANS } from "@/lib/billing/plans";
+import { PaystackService } from "@/lib/payment/paystack";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.storeId)
+  const user = await requireAuth();
+  
+
+  if (!user?.storeId || !user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
@@ -17,30 +21,31 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Testing Paystack Init
-    // In real world: Call Paystack API to initialize transaction/subscription
-    // Return checkout_url
+    // Initialize Paystack Transaction
+    const { authorization_url, reference } = await PaystackService.createPaymentForPlanChange(
+      user.email,
+      plan_slug,
+      user.storeId
+    );
 
-    const checkoutUrl = `https://checkout.paystack.com/test-transaction-${Date.now()}`;
-
-    // Upsert pending subscription
+    // Upsert pending subscription with real reference
     await prisma.merchantSubscription.upsert({
-      where: { storeId: (session!.user as any).storeId },
+      where: { storeId: user.storeId },
       update: {
         planSlug: plan_slug,
         lastPaymentStatus: "pending",
-        // Don't change status to active yet until webhook logic
       },
       create: {
-        storeId: (session!.user as any).storeId,
+        storeId: user.storeId,
         planSlug: plan_slug,
         status: "pending",
         lastPaymentStatus: "pending",
       },
     });
 
-    return NextResponse.json({ ok: true, checkout_url: checkoutUrl });
+    return NextResponse.json({ ok: true, checkout_url: authorization_url });
   } catch (e: any) {
-    return new NextResponse(e.message, { status: 500 });
+    console.error("Subscription Error:", e);
+    return new NextResponse(e.message || "Payment initialization failed", { status: 500 });
   }
 }

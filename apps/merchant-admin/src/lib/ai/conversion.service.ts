@@ -74,7 +74,7 @@ export class ConversionService {
     confidence: number;
   }) {
     try {
-      await (prisma as any).persuasionAttempt.create({
+      await prisma.persuasionAttempt.create({
         data: {
           storeId: data.storeId,
           conversationId: data.conversationId,
@@ -98,7 +98,7 @@ export class ConversionService {
     valueKobo?: bigint;
   }) {
     try {
-      await (prisma as any).conversionEvent.create({
+      await prisma.conversionEvent.create({
         data: {
           storeId: data.storeId,
           conversationId: data.conversationId,

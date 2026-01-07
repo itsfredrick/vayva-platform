@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     // Fetch custom domains
     const domainMapping = await prisma.domainMapping.findFirst({
@@ -51,8 +51,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
     const body = await request.json();
     const { domain } = body;
 

@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const { id } = await params;
   const { tagIds } = await req.json(); // Expecting array of Tag IDs
@@ -18,7 +18,7 @@ export async function POST(
     return new NextResponse("Invalid tags", { status: 400 });
 
   const conv = await prisma.conversation.findUnique({ where: { id } });
-  if (!conv || conv.storeId !== (session!.user as any).storeId)
+  if (!conv || conv.storeId !== user.storeId)
     return new NextResponse("Forbidden", { status: 403 });
 
   // Transaction to replace tags

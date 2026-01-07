@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, Button, Badge } from "@vayva/ui";
 import { Users, TrendingUp, AlertCircle, Sparkles, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 export default function InsightsPage() {
   const [data, setData] = useState<any>(null);
@@ -124,20 +125,42 @@ export default function InsightsPage() {
               <Button
                 variant="ghost"
                 className="w-full justify-between group-hover:bg-white/5"
-                onClick={() => {
-                  const csvContent = "data:text/csv;charset=utf-8," +
-                    "Segment,Count,Revenue\n" +
-                    `${s.title},${segData.count},${segData.revenue}`;
-                  const encodedUri = encodeURI(csvContent);
-                  const link = document.createElement("a");
-                  link.setAttribute("href", encodedUri);
-                  link.setAttribute("download", `${s.id}_segment_export.csv`);
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
+                onClick={async () => {
+                  toast.loading(`Exporting ${s.title}...`);
+                  try {
+                    const endDate = new Date();
+                    const startDate = new Date();
+                    startDate.setDate(endDate.getDate() - 365); // Last year
+
+                    // Currently exports ALL customers, future can filter by segment if backend supports it
+                    const res = await fetch("/api/reports/generate", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        type: "customers",
+                        range: { from: startDate, to: endDate }
+                      })
+                    });
+
+                    if (!res.ok) throw new Error("Export failed");
+
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `customers_${s.id}_${startDate.toISOString().split("T")[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    toast.success("Export successful");
+                  } catch (e) {
+                    toast.error("Export failed");
+                  } finally {
+                    toast.dismiss();
+                  }
                 }}
               >
-                <span>Export List</span>
+                <span>Export List (CSV)</span>
                 <Mail size={16} />
               </Button>
             </Card>

@@ -5,7 +5,7 @@ import { PERMISSIONS } from "@/lib/team/permissions";
 
 export const GET = withRBAC(PERMISSIONS.METRICS_VIEW, async (session: any) => {
     try {
-        const storeId = session.user.storeId;
+        const storeId = session.storeId;
 
         const [firstOrder, firstPayment, activeCustomers] = await Promise.all([
             prisma.order.findFirst({ where: { storeId } }),

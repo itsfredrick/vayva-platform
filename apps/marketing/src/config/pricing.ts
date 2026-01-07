@@ -67,6 +67,7 @@ export const PLANS: Plan[] = [
             "B2B & Wholesale",
             "Multi-vendor",
             "Dedicated Support",
+            "Vayva Cut Pro (AI Background Remover)",
         ],
         ctaLabel: "Upgrade to Pro",
     },

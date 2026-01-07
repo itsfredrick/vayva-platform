@@ -29,9 +29,9 @@ const StoreContext = createContext<StoreContextType>({
   isLoading: true,
   error: null,
   cart: [],
-  addToCart: () => {},
-  removeFromCart: () => {},
-  clearCart: () => {},
+  addToCart: () => { },
+  removeFromCart: () => { },
+  clearCart: () => { },
 });
 
 export const useStore = () => useContext(StoreContext);
@@ -88,10 +88,6 @@ export function StoreProvider({ children }: { children: any }) {
 
   useEffect(() => {
     const initStore = async () => {
-      // 1. Logic to determine slug
-      // Prod: subdomain (e.g. demo.vayva.shop -> demo)
-      // Dev: query param (e.g. localhost:3001/?store=demo -> demo)
-
       let slug = searchParams.get("store");
 
       if (!slug && typeof window !== "undefined") {
@@ -112,9 +108,6 @@ export function StoreProvider({ children }: { children: any }) {
         } catch (err) {
           setError("Failed to load store");
         }
-      } else {
-        // No slug, maybe show a landing/404 or just render nothing specific yet
-        // For now, we leave store null.
       }
       setIsLoading(false);
     };
@@ -134,7 +127,23 @@ export function StoreProvider({ children }: { children: any }) {
         clearCart,
       }}
     >
+      <BrandingStyle store={store} />
       {children}
     </StoreContext.Provider>
+  );
+}
+
+function BrandingStyle({ store }: { store: PublicStore | null }) {
+  if (!store?.brandColor) return null;
+
+  return (
+    <style dangerouslySetInnerHTML={{
+      __html: `
+        :root {
+          --brand-color: ${store.brandColor};
+          --color-primary: ${store.brandColor};
+        }
+      `
+    }} />
   );
 }

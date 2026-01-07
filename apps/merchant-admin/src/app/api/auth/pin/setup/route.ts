@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { requireStoreAccess } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   try {
-    const session = await requireStoreAccess();
+    const user = await requireAuth();
 
     const body = await request.json();
     const { pin } = body;
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     // Store & Invalidate old sessions by incrementing version
     await prisma.wallet.update({
-      where: { storeId: session.user.storeId },
+      where: { storeId: user.storeId },
       data: {
         pinHash,
         pinSet: true,

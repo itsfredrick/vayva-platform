@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useUserPlan } from "@/hooks/useUserPlan";
+import { PLANS, PlanKey } from "@/lib/billing/plans";
 import { Icon } from "@vayva/ui"; // Assuming this exists or using lucide-react directly
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -19,6 +21,7 @@ type ApprovalRequest = {
 };
 
 export default function ApprovalsPage() {
+  const { tier: plan, loading: planLoading } = useUserPlan();
   const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
   const [items, setItems] = useState<ApprovalRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +32,29 @@ export default function ApprovalsPage() {
   // Decide Reason Input
   const [decisionReason, setDecisionReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Gating Check
+  const isAllowed = PLANS[plan as PlanKey]?.features.approvals;
+
+  if (planLoading) return <div className="p-8">Loading...</div>;
+
+  if (!isAllowed) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+        <div className="p-4 bg-gray-100 rounded-full">
+          <Icon name="Shield" size={48} className="text-gray-400" />
+        </div>
+        <h1 className="text-2xl font-bold">Approvals Workflow is a Pro Feature</h1>
+        <p className="text-gray-500 max-w-md">Enable strict controls and require authorization for sensitive actions like refunds, team invites, and withdrawals.</p>
+        <button
+          onClick={() => window.open('https://api.whatsapp.com/send?phone=2348000000000&text=I%20want%20to%20upgrade%20to%20Pro', '_blank')}
+          className="mt-4 px-6 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800"
+        >
+          Upgrade to Pro
+        </button>
+      </div>
+    );
+  }
 
   const fetchItems = async () => {
     setLoading(true);
@@ -130,21 +156,20 @@ export default function ApprovalsPage() {
               <div className="flex items-center gap-4">
                 {/* Status Icon */}
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    item.status === "pending"
-                      ? "bg-blue-50 text-blue-600"
-                      : item.status === "approved" || item.status === "executed"
-                        ? "bg-green-50 text-green-600"
-                        : "bg-red-50 text-red-600"
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${item.status === "pending"
+                    ? "bg-blue-50 text-blue-600"
+                    : item.status === "approved" || item.status === "executed"
+                      ? "bg-green-50 text-green-600"
+                      : "bg-red-50 text-red-600"
+                    }`}
                 >
                   {item.status === "pending" && (
                     <Icon name={"Clock" as any} size={20} />
                   )}
                   {(item.status === "approved" ||
                     item.status === "executed") && (
-                    <Icon name={"CheckCircle" as any} size={20} />
-                  )}
+                      <Icon name={"CheckCircle" as any} size={20} />
+                    )}
                   {(item.status === "rejected" || item.status === "failed") && (
                     <Icon name={"XCircle" as any} size={20} />
                   )}
@@ -179,15 +204,14 @@ export default function ApprovalsPage() {
                 )}
                 {activeTab === "history" && (
                   <span
-                    className={`text-xs font-bold uppercase ${
-                      item.status === "executed"
-                        ? "text-green-600"
-                        : item.status === "failed"
-                          ? "text-red-600"
-                          : item.status === "rejected"
-                            ? "text-gray-500"
-                            : "text-gray-400"
-                    }`}
+                    className={`text-xs font-bold uppercase ${item.status === "executed"
+                      ? "text-green-600"
+                      : item.status === "failed"
+                        ? "text-red-600"
+                        : item.status === "rejected"
+                          ? "text-gray-500"
+                          : "text-gray-400"
+                      }`}
                   >
                     {item.status}
                   </span>

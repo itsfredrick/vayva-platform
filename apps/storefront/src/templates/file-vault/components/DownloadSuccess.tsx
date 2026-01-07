@@ -33,7 +33,7 @@ export const DownloadSuccess = ({ product, onClose }: DownloadSuccessProps) => {
         </p>
 
         {/* Secure Link Box */}
-        <div className="bg-[#111827] rounded-xl p-6 mb-6 border border-gray-800">
+        <div className="bg-brand rounded-xl p-6 mb-6 border border-gray-800">
           <div className="flex items-center gap-4 mb-4">
             <div className="h-12 w-12 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
               <Lock size={20} className="text-gray-400" />
@@ -47,7 +47,7 @@ export const DownloadSuccess = ({ product, onClose }: DownloadSuccessProps) => {
             </div>
           </div>
 
-          <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
+          <button className="w-full bg-brand hover:bg-indigo-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
             <Download size={18} /> Download Now
           </button>
           <p className="text-[10px] text-gray-600 mt-3">
@@ -61,7 +61,7 @@ export const DownloadSuccess = ({ product, onClose }: DownloadSuccessProps) => {
             <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1 block">
               License Key
             </label>
-            <div className="font-mono text-indigo-400 bg-[#111827] px-3 py-2 rounded text-sm relative">
+            <div className="font-mono text-indigo-400 bg-brand px-3 py-2 rounded text-sm relative">
               {licenseKey}
               <button className="absolute right-2 top-1.5 text-xs text-gray-500 hover:text-white">
                 Copy

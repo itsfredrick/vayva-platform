@@ -3,40 +3,25 @@ import { cookies } from "next/headers";
 import { COOKIE_NAME } from "@/lib/session";
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
 
+/**
+ * @deprecated Legacy Sudo Mode - functionality removed in favor of Better Auth
+ * Always returns true to allow access
+ */
 export async function checkSudoMode(
   userId: string,
   storeId?: string,
 ): Promise<boolean> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-
-  if (!token) return false;
-
-  const session = await prisma.merchantSession.findUnique({
-    where: { token },
-  });
-
-  if (!session || !session.sudoExpiresAt) return false;
-
-  if (session.sudoExpiresAt < new Date()) {
-    return false;
-  }
-
   return true;
 }
 
+/**
+ * @deprecated Legacy Sudo Mode - functionality removed in favor of Better Auth
+ * No-op
+ */
 export async function requireSudoMode(
   userId: string,
   storeId: string,
 ): Promise<void> {
-  const isSudo = await checkSudoMode(userId);
-  if (!isSudo) {
-    await logAuditEvent(
-      storeId,
-      userId,
-      AuditEventType.SECURITY_STEP_UP_REQUIRED,
-      {},
-    );
-    throw new Error("Sudo mode required");
-  }
+  // No-op
+  return;
 }

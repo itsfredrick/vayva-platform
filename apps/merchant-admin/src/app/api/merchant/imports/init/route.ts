@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 import { randomBytes, createHash } from "crypto";
+import { requireAuth } from "@/lib/session";
 
 // In a real app, use S3 Presigned URL. For V1 local, we might just accept base64 or assuming url is passed if client uploads directly.
 // Simulating an "Upload" where we create the job.
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const body = await req.json();
   const { filename, fileUrl } = body;
@@ -29,14 +29,14 @@ export async function POST(req: NextRequest) {
 
   const job = await prisma.importJob.create({
     data: {
-      merchantId: (session!.user as any).storeId,
+      merchantId: user.storeId,
       type: "products_csv",
       status: "pending",
       originalFilename: filename,
       fileUrl: fileUrl,
       checksum,
       correlationId: randomBytes(16).toString("hex"),
-      createdBy: (session!.user as any).id,
+      createdBy: user.id,
     },
   });
 

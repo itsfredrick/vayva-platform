@@ -5,16 +5,29 @@ import {
 } from "@/hooks/storefront/useStorefront";
 import { useStorefrontCart } from "@/hooks/storefront/useStorefrontCart";
 import { CheckoutModal } from "./CheckoutModal";
+import { StorefrontCart } from "./StorefrontCart";
 import { ShoppingBag, X } from "lucide-react";
+import Image from "next/image";
+import { StorefrontSEO } from "./StorefrontSEO";
 
 export function BloomeHome({
   storeName: initialStoreName,
   storeSlug,
+  config: configOverride,
 }: {
   storeName: string;
   storeSlug?: string;
+  config?: any;
 }) {
   const { store } = useStorefrontStore(storeSlug);
+
+  // Configuration Merging
+  const config = {
+    primaryColor: configOverride?.primaryColor || store?.templateConfig?.primaryColor || "#44403C",
+    heroTitle: configOverride?.heroTitle || store?.templateConfig?.heroTitle || "Objects for Mindful Living",
+    showJournal: configOverride?.showJournal ?? store?.templateConfig?.showJournal ?? true,
+    accentColor: configOverride?.accentColor || store?.templateConfig?.accentColor || "#78716C",
+  };
   const { products, isLoading } = useStorefrontProducts(storeSlug, {
     limit: 8,
   });
@@ -38,7 +51,11 @@ export function BloomeHome({
   const displayName = store?.name || initialStoreName;
 
   return (
-    <div className="bg-[#FAFAF9] min-h-screen text-[#44403C] font-serif">
+    <div
+      className="bg-[#FAFAF9] min-h-screen font-serif"
+      style={{ color: config.primaryColor } as any}
+    >
+      <StorefrontSEO store={store} products={products} />
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -57,9 +74,11 @@ export function BloomeHome({
           <a href="#" className="hover:text-black transition-colors">
             About
           </a>
-          <a href="#" className="hover:text-black transition-colors">
-            Journal
-          </a>
+          {config.showJournal && (
+            <a href="#" className="hover:text-black transition-colors">
+              Journal
+            </a>
+          )}
         </div>
         <div className="text-3xl font-bold tracking-tight text-[#292524]">
           {displayName}
@@ -77,114 +96,37 @@ export function BloomeHome({
         </div>
       </nav>
 
-      {/* Cart Drawer */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end font-sans">
-          <div
-            className="absolute inset-0 bg-[#292524]/20 backdrop-blur-sm transition-opacity"
-            onClick={() => setIsCartOpen(false)}
-          />
-          <div className="relative w-full max-w-md bg-[#FAFAF9] h-full p-8 flex flex-col shadow-2xl animate-in slide-in-from-right duration-500">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-serif text-[#292524]">Your Cart</h2>
-              <button
-                onClick={() => setIsCartOpen(false)}
-                className="opacity-50 hover:opacity-100 transition-opacity"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-auto space-y-8 pr-2">
-              {cart.length === 0 ? (
-                <div className="text-center py-20 text-[#A8A29E]">
-                  <p className="mb-4">Your cart is currently empty.</p>
-                  <button
-                    onClick={() => setIsCartOpen(false)}
-                    className="text-[#292524] underline underline-offset-4"
-                  >
-                    Continue Browsing
-                  </button>
-                </div>
-              ) : (
-                cart.map((item) => (
-                  <div key={item.id} className="flex gap-6">
-                    <div className="w-24 h-32 bg-[#E7E5E4] flex-shrink-0">
-                      {item.image && (
-                        <img
-                          src={item.image}
-                          className="w-full h-full object-cover mix-blend-multiply"
-                        />
-                      )}
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between py-1">
-                      <div>
-                        <h3 className="font-serif text-lg text-[#292524] leading-snug">
-                          {item.name}
-                        </h3>
-                        <p className="text-sm text-[#78716C] mt-1">
-                          QTY: {item.quantity}
-                        </p>
-                      </div>
-                      <div className="flex justify-between items-end">
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-xs text-[#A8A29E] hover:text-[#78716C] underline underline-offset-2"
-                        >
-                          Remove
-                        </button>
-                        <span className="font-serif text-lg">
-                          ₦{(item.price * item.quantity).toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {cart.length > 0 && (
-              <div className="border-t border-[#E7E5E4] pt-6 mt-6">
-                <div className="flex justify-between items-center mb-6 text-[#292524]">
-                  <span className="text-sm uppercase tracking-widest">
-                    Subtotal
-                  </span>
-                  <span className="font-serif text-2xl">
-                    ₦{total.toLocaleString()}
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsCartOpen(false);
-                    setIsCheckoutOpen(true);
-                  }}
-                  className="w-full bg-[#292524] text-[#FAFAF9] py-4 text-sm font-bold uppercase tracking-widest hover:bg-[#1C1917] transition-colors"
-                >
-                  Proceed to Checkout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Shared Cart Component */}
+      <StorefrontCart
+        storeSlug={storeSlug || ""}
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onCheckout={() => {
+          setIsCartOpen(false);
+          setIsCheckoutOpen(true);
+        }}
+      />
 
       {/* Hero */}
       <header className="relative py-24 px-8 text-center max-w-4xl mx-auto">
         <span className="text-xs font-sans font-bold tracking-[0.2em] text-[#A8A29E] uppercase block mb-6">
           Est. 2024
         </span>
-        <h1 className="text-6xl md:text-8xl mb-8 leading-none tracking-tight text-[#292524]">
-          Objects for <br />{" "}
-          <i className="font-serif font-light text-[#78716C]">Mindful Living</i>
-        </h1>
+        <h1
+          className="text-6xl md:text-8xl mb-8 leading-none tracking-tight text-[#292524]"
+          dangerouslySetInnerHTML={{ __html: config.heroTitle.replace('Mindful Living', `<i class="font-serif font-light text-[${config.accentColor}]">Mindful Living</i>`) }}
+        />
         <p className="text-lg text-[#78716C] leading-relaxed max-w-xl mx-auto mb-10">
           Curated essentials designed to bring calm, balance, and beauty to your
           everyday rituals.
         </p>
-        <div className="aspect-[16/9] bg-[#E7E5E4] w-full overflow-hidden">
-          <img
+        <div className="aspect-[16/9] bg-[#E7E5E4] w-full overflow-hidden relative">
+          <Image
             src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80&w=2000"
-            className="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-[2s]"
+            alt="Hero"
+            fill
+            priority
+            className="object-cover opacity-90 hover:scale-105 transition-transform duration-[2s]"
           />
         </div>
       </header>
@@ -212,14 +154,17 @@ export function BloomeHome({
         ) : (
           <div className="grid md:grid-cols-4 gap-x-8 gap-y-12">
             {newArrivals.map((product) => (
-              <div key={product.id} className="group cursor-pointer">
+              <article key={product.id} className="group cursor-pointer">
                 <div className="aspect-[4/5] bg-[#F5F5F4] mb-6 overflow-hidden relative">
-                  <img
+                  <Image
                     src={
                       product.image ||
                       `https://via.placeholder.com/400x500?text=${encodeURIComponent(product.name)}`
                     }
-                    className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                    alt={product.name}
+                    fill
+                    className="object-cover mix-blend-multiply opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   />
                   <button
                     onClick={(e) => {
@@ -242,7 +187,7 @@ export function BloomeHome({
                     ₦{product.price.toLocaleString()}
                   </span>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
@@ -267,7 +212,7 @@ export function BloomeHome({
             </a>
           </div>
           <div className="font-serif italic text-sm">
-            © 2024 Vayva Commerce.
+            © {new Date().getFullYear()} {displayName}. All rights reserved.
           </div>
         </div>
       </footer>

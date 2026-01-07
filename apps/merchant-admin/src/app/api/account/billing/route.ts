@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 const PLAN_PRICING = {
@@ -10,8 +10,8 @@ const PLAN_PRICING = {
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     // Fetch subscription
     const subscription = await prisma.merchantSubscription.findUnique({
@@ -65,8 +65,8 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
     const body = await request.json();
     const { legalName, email, taxId, address } = body;
 
@@ -91,7 +91,7 @@ export async function PUT(request: Request) {
     const { logAuditEvent, AuditEventType } = await import("@/lib/audit");
     await logAuditEvent(
       storeId,
-      session.user.id,
+      user.id,
       AuditEventType.SETTINGS_CHANGED,
       {
         keysChanged: ["billing_profile"],

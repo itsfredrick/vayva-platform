@@ -7,8 +7,8 @@ import { logAuditEvent, AuditEventType } from "@/lib/audit";
 export async function POST(req: Request) {
   try {
     const session = await checkPermission(PERMISSIONS.TEAM_MANAGE);
-    const storeId = (session.user as any).storeId;
-    const userId = session.user.id;
+    const storeId = session.storeId;
+    const userId = session.id;
 
     const body = await req.json();
     const { email, role } = body;

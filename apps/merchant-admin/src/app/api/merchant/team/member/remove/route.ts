@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
 import { EventBus } from "@/lib/events/eventBus";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.storeId) {
+  const user = await requireAuth();
+  if (!(user as any)?.storeId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { storeId, id: userId } = session!.user as any;
+  const { storeId, id: userId } = user as any;
   const hasPerm = await hasPermission(userId, storeId, PERMISSIONS.TEAM_MANAGE);
   if (!hasPerm) {
     return new NextResponse("Forbidden", { status: 403 });
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     targetUserId,
   });
 
-  const user = session!.user as any;
+  
   const actorLabel =
     `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
     user.email ||

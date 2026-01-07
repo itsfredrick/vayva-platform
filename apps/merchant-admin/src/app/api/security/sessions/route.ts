@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const userId = session.user.id;
+    const user = await requireAuth();
+    const userId = user.id;
 
     // Get all sessions for this user
     // Note: This requires a Session model in your Prisma schema

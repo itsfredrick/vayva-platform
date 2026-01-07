@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
+import { requireAuth } from "@/lib/session";
 import { TeamService } from "@/lib/team/teamService";
 
 export async function POST(
@@ -8,7 +8,7 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
-    const user = await getSessionUser();
+    const user = await requireAuth();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

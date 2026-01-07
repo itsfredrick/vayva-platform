@@ -1,3 +1,5 @@
+import { streamText } from "ai";
+import { groq } from "@ai-sdk/groq";
 import { GroqClient } from "./groq-client";
 import {
   MerchantBrainService,
@@ -14,6 +16,7 @@ import { ConversionService } from "./conversion.service";
 import { reportError } from "../error";
 // Types
 import Groq from "groq-sdk";
+// import { CoreMessage } from "ai";
 
 // Initialize centralised client
 const groqClient = new GroqClient("SUPPORT");
@@ -32,6 +35,84 @@ export class SalesAgent {
    * Handle a message from a customer
    */
   static async handleMessage(
+    storeId: string,
+    messages: Groq.Chat.ChatCompletionMessageParam[],
+    options?: {
+      conversationId?: string;
+      userId?: string;
+      requestId?: string;
+    },
+  ): Promise<SalesAgentResponse> {
+    return this.handleMessageInternal(storeId, messages, options);
+  }
+
+  /**
+   * Handle a message from a customer with streaming
+   */
+  static async streamMessage(
+    storeId: string,
+    messages: any[],
+    options?: {
+      conversationId?: string;
+      userId?: string;
+      requestId?: string;
+    },
+  ) {
+    try {
+      const lastMessage = messages[messages.length - 1].content as string;
+      const conversationId = options?.conversationId || "anon";
+
+      // 1. Pre-Check Limits (Synchronous check before streaming)
+      const limitCheck = await AiUsageService.checkLimits(storeId);
+      if (!limitCheck.allowed) {
+        throw new Error(`Limit reached: ${limitCheck.reason}`);
+      }
+
+      // 2. Load Context (Persona + RAG)
+      const [store, profile, context] = await Promise.all([
+        prisma.store.findUnique({
+          where: { id: storeId },
+          select: { name: true, category: true },
+        }),
+        prisma.merchantAiProfile.findUnique({ where: { storeId } }),
+        MerchantBrainService.retrieveContext(storeId, lastMessage, 3),
+      ]);
+
+      const contextString = context
+        .map((c: RetrievalResult) => `[${c.sourceType}]: ${c.content}`)
+        .join("\n");
+
+      const systemPrompt = this.getSystemPrompt(
+        store?.name || "the store",
+        store?.category,
+        profile,
+        contextString,
+      );
+
+      // 3. Stream Text using Vercel AI SDK
+      return streamText({
+        model: groq("llama-3.1-70b-versatile"),
+        system: systemPrompt,
+        messages: messages as any,
+        temperature: 0.1,
+        onFinish: async (result) => {
+          // Log Usage & Governance in background
+          await AiUsageService.logUsage({
+            storeId,
+            model: "llama-3.1-70b-versatile",
+            inputTokens: (result.usage as any).promptTokens || 0,
+            outputTokens: (result.usage as any).completionTokens || 0,
+            requestId: options?.requestId,
+          });
+        },
+      });
+    } catch (error: any) {
+      reportError(error, { context: "SalesAgent.streamMessage", storeId });
+      throw error;
+    }
+  }
+
+  private static async handleMessageInternal(
     storeId: string,
     messages: Groq.Chat.ChatCompletionMessageParam[],
     options?: {
@@ -79,14 +160,22 @@ export class SalesAgent {
       }
 
       // 2. Load Context (Persona + RAG + Conversion Policies)
-      const [store, profile, context] = await Promise.all([
+      const [store, profile, context, conversation] = await Promise.all([
         prisma.store.findUnique({
           where: { id: storeId },
           select: { name: true, category: true },
         }),
         prisma.merchantAiProfile.findUnique({ where: { storeId } }),
         MerchantBrainService.retrieveContext(storeId, lastMessage, 3),
+        conversationId !== "anon"
+          ? prisma.conversation.findUnique({
+            where: { id: conversationId },
+            include: { contact: true }
+          })
+          : Promise.resolve(null)
       ]);
+
+      const customerPhone = conversation?.contact?.phoneE164 || "unknown";
 
       // 2.5 Conversion Intelligence (Prompt 9)
       const objection = ConversionService.classifyObjection(lastMessage);
@@ -159,6 +248,32 @@ export class SalesAgent {
             parameters: { type: "object", properties: {} },
           },
         },
+        {
+          type: "function",
+          function: {
+            name: "create_order",
+            description: "Create a draft order for the customer",
+            parameters: {
+              type: "object",
+              properties: {
+                items: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      productId: { type: "string" },
+                      variantId: { type: "string" },
+                      quantity: { type: "number" },
+                    },
+                    required: ["productId", "quantity"],
+                  },
+                },
+                address: { type: "string", description: "The customer's delivery address" },
+              },
+              required: ["items"],
+            },
+          },
+        },
       ];
 
 
@@ -210,6 +325,19 @@ export class SalesAgent {
             });
           } else if (tool.function.name === "get_promotions") {
             const result = await MerchantBrainService.getActivePromotions(storeId);
+            toolResults.push({
+              role: "tool",
+              tool_call_id: tool.id,
+              content: JSON.stringify(result),
+            });
+          } else if (tool.function.name === "create_order") {
+            const args = JSON.parse(tool.function.arguments);
+            const result = await MerchantBrainService.createOrderFromConversation(
+              storeId,
+              customerPhone,
+              args.items,
+              args.address
+            );
             toolResults.push({
               role: "tool",
               tool_call_id: tool.id,
@@ -302,6 +430,9 @@ GUIDELINES:
 
 VERIFIED KNOWLEDGE:
 ${context || "No specific knowledge found. Ask for clarification."}
+
+ORDERING:
+You can create draft orders via the 'create_order' tool. When a customer confirms they want to buy, collect their items (and address if needed) and trigger the tool. Provide the order number and total to the customer.
 
 Always aim to close the sale with expert helpfulness.`;
   }

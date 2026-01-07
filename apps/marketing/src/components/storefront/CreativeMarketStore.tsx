@@ -1,20 +1,35 @@
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   useStorefrontProducts,
   useStorefrontStore,
 } from "@/hooks/storefront/useStorefront";
 import { useStorefrontCart } from "@/hooks/storefront/useStorefrontCart";
 import { CheckoutModal } from "./CheckoutModal";
-import { ShoppingCart, X, Heart, Eye } from "lucide-react";
+import { StorefrontCart } from "./StorefrontCart";
+import { ShoppingCart, X, Heart, Eye, Star, User, ChevronRight, Download } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { StorefrontSEO } from "./StorefrontSEO";
+import { useCartQuery, useCategoryQuery } from "@/hooks/storefront/useStorefrontQuery";
 
 export function CreativeMarketStore({
   storeName: initialStoreName,
   storeSlug,
+  config: configOverride,
 }: {
   storeName: string;
   storeSlug?: string;
+  config?: any;
 }) {
   const { store } = useStorefrontStore(storeSlug);
+
+  // Configuration Merging
+  const config = {
+    primaryColor: configOverride?.primaryColor || store?.templateConfig?.primaryColor || "#22c55e", // green-500
+    heroTitle: configOverride?.heroTitle || store?.templateConfig?.heroTitle || "World-class design assets",
+    searchPlaceholder: configOverride?.searchPlaceholder || store?.templateConfig?.searchPlaceholder || "Search over 4 million fonts, graphics, and more...",
+    accentColor: configOverride?.accentColor || store?.templateConfig?.accentColor || "#1e293b", // slate-800
+  };
   const { products, isLoading } = useStorefrontProducts(storeSlug, {
     limit: 12,
   });
@@ -29,12 +44,25 @@ export function CreativeMarketStore({
     setIsOpen: setIsCartOpen,
     clearCart,
   } = useStorefrontCart(storeSlug || "");
+
+  useCartQuery(isCartOpen, setIsCartOpen);
+
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  useCategoryQuery(selectedCategory, setSelectedCategory);
 
   const displayName = store?.name || initialStoreName;
 
+  const sellers = [
+    { name: "Nordic Assets", rating: 4.9, sales: "12k", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?bg=255&w=100&fit=crop&q=80" },
+    { name: "TypeFoundry", rating: 5.0, sales: "8.5k", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?bg=255&w=100&fit=crop&q=80" },
+    { name: "MockupKing", rating: 4.8, sales: "21k", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?bg=255&w=100&fit=crop&q=80" }
+  ];
+
   return (
-    <div className="bg-[#fcfcfc] min-h-screen font-sans text-[#333]">
+    <div className="bg-[#fcfcfc] min-h-screen font-sans text-slate-800">
+      <StorefrontSEO store={store} products={products} />
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -45,34 +73,32 @@ export function CreativeMarketStore({
       />
 
       {/* Header */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="font-serif text-2xl font-bold italic tracking-tight">
+          <div className="font-serif text-2xl font-black italic tracking-tight text-slate-900">
             {displayName}
           </div>
 
-          <div className="hidden md:flex gap-6 text-sm font-medium text-gray-500">
-            <a href="#" className="hover:text-black">
-              Graphics
-            </a>
-            <a href="#" className="hover:text-black">
-              Fonts
-            </a>
-            <a href="#" className="hover:text-black">
-              Templates
-            </a>
-            <a href="#" className="hover:text-black">
-              Add-ons
-            </a>
+          <div className="hidden md:flex gap-8 text-sm font-bold text-gray-500">
+            {['Graphics', 'Fonts', 'Templates', 'Add-ons', 'Photos'].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`hover:text-slate-900 transition-colors ${selectedCategory === cat ? 'font-bold' : ''}`}
+                style={{ color: selectedCategory === cat ? config.primaryColor : undefined }}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="text-gray-500 hover:text-red-500">
+            <button className="text-gray-400 hover:text-red-500 transition-colors">
               <Heart className="w-5 h-5" />
             </button>
             <button
               onClick={() => setIsCartOpen(true)}
-              className="bg-gray-100 p-2 rounded-full hover:bg-gray-200 relative text-gray-700"
+              className="bg-gray-100 p-2 rounded-full hover:bg-gray-200 relative text-gray-700 transition-colors"
             >
               <ShoppingCart className="w-5 h-5" />
               {cart.length > 0 && (
@@ -81,191 +107,242 @@ export function CreativeMarketStore({
                 </span>
               )}
             </button>
-            <button className="bg-green-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-green-600 transition-colors">
+            <button className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-slate-800 transition-colors shadow-lg hover:shadow-xl">
               Sign In
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Cart Sidebar */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div
-            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
-            onClick={() => setIsCartOpen(false)}
-          />
-          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="font-bold text-lg text-gray-800">Shopping Cart</h2>
-              <button onClick={() => setIsCartOpen(false)}>
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-auto p-5 space-y-5">
-              {cart.length === 0 ? (
-                <div className="text-center py-10 opacity-60">
-                  <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p className="text-gray-500">Your cart is empty.</p>
-                </div>
-              ) : (
-                cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex gap-4 border-b border-gray-100 pb-4"
-                  >
-                    <div className="w-20 h-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
-                      {item.image && (
-                        <img
-                          src={item.image}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-sm text-gray-800 line-clamp-2 mb-1">
-                        {item.name}
-                      </h3>
-                      <div className="text-xs text-gray-400 mb-2">
-                        Commercial License
-                      </div>
-                      <div className="flex justify-between items-baseline">
-                        <span className="font-bold text-green-600">
-                          ₦{item.price.toLocaleString()}
-                        </span>
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-xs text-red-500 hover:underline"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {cart.length > 0 && (
-              <div className="p-5 border-t border-gray-100 bg-gray-50">
-                <div className="flex justify-between items-center mb-4 text-sm font-medium text-gray-600">
-                  <span>Subtotal</span>
-                  <span className="text-lg font-bold text-gray-900">
-                    ₦{total.toLocaleString()}
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsCartOpen(false);
-                    setIsCheckoutOpen(true);
-                  }}
-                  className="w-full bg-green-500 text-white py-3 rounded-md font-bold hover:bg-green-600 shadow-md transition-colors"
-                >
-                  Proceed to Checkout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Shared Cart Component */}
+      <StorefrontCart
+        storeSlug={storeSlug || ""}
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onCheckout={() => {
+          setIsCartOpen(false);
+          setIsCheckoutOpen(true);
+        }}
+      />
 
       {/* Hero */}
-      <div className="bg-[#f0f5f3] py-20 border-b border-gray-200 text-center px-6">
-        <h1 className="text-3xl md:text-5xl font-serif font-bold text-gray-900 mb-6">
-          World-class design assets
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-          Bring your creative projects to life with ready-to-use design assets
-          from independent creators around the world.
-        </p>
+      <header className="bg-[#f3f5f4] py-24 border-b border-gray-200 text-center px-6 relative overflow-hidden">
+        {/* Abstract shapes */}
+        <div className="absolute top-10 left-10 w-24 h-24 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-10 right-10 w-24 h-24 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-24 h-24 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
 
-        <div className="max-w-2xl mx-auto bg-white p-2 rounded-lg shadow-sm flex items-center border border-gray-200">
-          <input
-            type="text"
-            placeholder="Search fonts, graphics, and more..."
-            className="flex-1 px-4 py-2 outline-none text-gray-700"
-          />
-          <button className="bg-red-500 text-white px-6 py-2 rounded-md font-bold hover:bg-red-600">
-            Search
-          </button>
-        </div>
-      </div>
+        <div className="relative z-10 max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-6xl font-serif font-black text-slate-900 mb-6 tracking-tight">
+            {config.heroTitle}
+          </h1>
+          <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 font-medium">
+            Bring your creative projects to life with ready-to-use design assets from independent creators around the world.
+          </p>
 
-      {/* Products Grid */}
-      <div className="max-w-[1400px] mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-bold text-gray-900">Trending Now</h2>
-          <a
-            href="#"
-            className="text-sm font-bold text-green-600 hover:underline"
-          >
-            View All
-          </a>
-        </div>
-
-        {isLoading && products.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            Loading assets...
+          <div className="max-w-2xl mx-auto bg-white p-2 rounded-xl shadow-lg flex items-center border border-gray-200 ring-4 ring-gray-100/50">
+            <input
+              type="text"
+              placeholder={config.searchPlaceholder}
+              className="flex-1 px-4 py-3 outline-none text-slate-700 font-medium placeholder:text-slate-400 bg-transparent"
+            />
+            <button
+              className="text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-md"
+              style={{ backgroundColor: config.primaryColor }}
+            >
+              Search
+            </button>
           </div>
-        ) : products.length === 0 ? (
-          <div className="text-center py-20 border border-gray-200 rounded-lg">
-            <p className="text-gray-400">No assets found.</p>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="group bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-lg transition-all overflow-hidden cursor-pointer"
-                onClick={() => addToCart(product)}
-              >
-                <div className="aspect-[4/3] bg-gray-100 relative">
-                  <img
-                    src={
-                      product.image ||
-                      `https://via.placeholder.com/400x300?text=${encodeURIComponent(product.name)}`
-                    }
-                    className="w-full h-full object-cover"
+        </div>
+      </header>
+
+      <div className="max-w-[1400px] mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Sidebar */}
+        <aside className="lg:col-span-3 space-y-8 hidden lg:block">
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-500 fill-current" /> Top Sellers
+            </h3>
+            <div className="space-y-4">
+              {sellers.map((seller, i) => (
+                <div key={i} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer group">
+                  <Image
+                    src={seller.img}
+                    alt={seller.name}
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover ring-2 ring-white shadow-sm"
                   />
-                  <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="bg-white p-2 rounded-md text-gray-600 hover:text-red-500 shadow-sm">
-                      <Heart className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-1">
-                    {product.name}
-                  </h3>
-                  <p className="text-xs text-gray-500 mb-4">
-                    by <span className="underline">Vayva Creators</span> in{" "}
-                    {product.category || "Graphics"}
-                  </p>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                    <div className="font-bold text-lg text-gray-900">
-                      ₦{product.price.toLocaleString()}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-sm text-slate-900 group-hover:text-green-600 transition-colors">{seller.name}</div>
+                    <div className="text-xs text-slate-500 flex items-center gap-1">
+                      <Star className="w-3 h-3 text-yellow-400 fill-current" /> {seller.rating} • {seller.sales} Sales
                     </div>
-                    <button
-                      className="bg-gray-100 hover:bg-green-500 hover:text-white px-3 py-1 rounded text-xs font-bold transition-colors flex items-center gap-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(product);
-                      }}
-                    >
-                      <ShoppingCart className="w-3 h-3" /> Add
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <button className="w-full mt-4 py-2 text-xs font-bold text-slate-500 hover:text-green-600 border border-slate-200 rounded-lg hover:border-green-200 transition-colors">
+              View All Creators
+            </button>
           </div>
-        )}
+
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg">
+            <h3 className="font-bold text-xl mb-2">Get 3 Free Goods</h3>
+            <p className="text-sm text-indigo-100 mb-4">Sign up for our weekly newsletter and get free assets every Monday.</p>
+            <button className="w-full py-2 bg-white text-indigo-600 font-bold rounded-lg text-sm hover:bg-indigo-50 transition-colors">
+              Join the List
+            </button>
+          </div>
+        </aside>
+
+        {/* Products */}
+        <main className="lg:col-span-9">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-slate-900">Trending Now</h2>
+            <div className="flex items-center gap-4 text-sm font-bold text-slate-500">
+              <span className="text-slate-900 underline decoration-2 decoration-green-500 underline-offset-4">Popular</span>
+              <span className="hover:text-slate-900 cursor-pointer">Newest</span>
+              <span className="hover:text-slate-900 cursor-pointer">Handpicked</span>
+            </div>
+          </div>
+
+          {isLoading && products.length === 0 ? (
+            <div className="grid md:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>)}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-20 border border-gray-200 rounded-lg">
+              <p className="text-gray-400">No assets found.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8">
+              {products.map((product) => (
+                <article
+                  key={product.id}
+                  className="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col h-full"
+                  onClick={() => addToCart(product)}
+                >
+                  <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden rounded-t-xl">
+                    <Image
+                      src={
+                        product.image ||
+                        `https://source.unsplash.com/random/400x300?graphic,design&sig=${product.id}`
+                      }
+                      alt={product.name}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                    />
+                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="bg-white p-2 rounded-full text-slate-400 hover:text-red-500 shadow-md hover:scale-110 transition-transform">
+                        <Heart className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/50 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-between items-end">
+                      <span className="text-white text-xs font-bold bg-black/50 backdrop-blur px-2 py-1 rounded">25 files</span>
+                      <span className="text-white text-xs font-bold bg-green-500 px-2 py-1 rounded flex items-center gap-1"><Download className="w-3 h-3" /> Instant</span>
+                    </div>
+                  </div>
+
+                  <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="font-bold text-slate-900 mb-1 line-clamp-1 group-hover:text-green-600 transition-colors text-lg">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-xs text-slate-500 font-medium">by <span className="text-slate-900 font-bold hover:underline">{sellers[Math.floor(Math.random() * sellers.length)].name}</span></span>
+                      <span className="text-xs text-slate-300">•</span>
+                      <div className="flex text-yellow-400">
+                        <Star className="w-3 h-3 fill-current" /><Star className="w-3 h-3 fill-current" /><Star className="w-3 h-3 fill-current" /><Star className="w-3 h-3 fill-current" /><Star className="w-3 h-3 fill-current" />
+                      </div>
+                      <span className="text-xs text-slate-400">(42)</span>
+                    </div>
+
+                    <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-slate-400 line-through font-medium">₦{(product.price * 1.5).toLocaleString()}</span>
+                        <span className="font-bold text-xl text-slate-900">₦{product.price.toLocaleString()}</span>
+                      </div>
+                      <button
+                        className="bg-gray-100 hover:bg-green-600 hover:text-white p-3 rounded-lg font-bold transition-all shadow-sm hover:shadow-md active:scale-95"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(product);
+                        }}
+                      >
+                        <ShoppingCart className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          {/* Cross-Sell / More from Shop Mock */}
+          <div className="mt-16 pt-8 border-t border-gray-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-lg text-slate-900">More from Top Sellers</h3>
+              <a href="#" className="text-sm font-bold text-green-600 hover:underline flex items-center gap-1">View All <ChevronRight className="w-4 h-4" /></a>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="group cursor-pointer">
+                  <div className="bg-gray-100 rounded-lg aspect-square mb-2 overflow-hidden relative">
+                    <Image
+                      src={`https://source.unsplash.com/random/200x200?texture,pattern&sig=${i}`}
+                      alt={`Texture Pack Vol. ${i}`}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                    />
+                  </div>
+                  <div className="font-bold text-sm text-slate-800 truncate group-hover:text-green-600">Texture Pack Vol. {i}</div>
+                  <div className="text-xs text-slate-500">₦5,000</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
 
-      <footer className="bg-white border-t border-gray-200 mt-20 py-12 text-center text-gray-400 text-sm">
-        &copy; 2024 {displayName} Market.
+      <footer className="bg-slate-900 mt-20 py-16 text-slate-400 text-sm">
+        <div className="max-w-[1400px] mx-auto px-6 grid md:grid-cols-4 gap-12">
+          <div>
+            <div className="font-serif text-2xl font-black italic tracking-tight text-white mb-6">
+              {displayName}
+            </div>
+            <p className="mb-4">Empowering creators to bring their ideas to life.</p>
+            <p>&copy; 2024 {displayName} Market.</p>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-xs">Shop</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="hover:text-white">Graphics</a></li>
+              <li><a href="#" className="hover:text-white">Fonts</a></li>
+              <li><a href="#" className="hover:text-white">Templates</a></li>
+              <li><a href="#" className="hover:text-white">Add-ons</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-xs">Legal</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="hover:text-white">Terms of Service</a></li>
+              <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-white">License Agreement</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-xs">Social</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="hover:text-white">Instagram</a></li>
+              <li><a href="#" className="hover:text-white">Pinterest</a></li>
+              <li><a href="#" className="hover:text-white">Twitter</a></li>
+              <li><a href="#" className="hover:text-white">Facebook</a></li>
+            </ul>
+          </div>
+        </div>
       </footer>
     </div>
   );

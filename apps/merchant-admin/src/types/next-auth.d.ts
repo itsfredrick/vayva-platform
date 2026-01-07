@@ -5,6 +5,7 @@ declare module "next-auth" {
     storeId: string;
     storeName: string;
     role: string;
+    plan: string;
   }
 
   interface Session {
@@ -15,6 +16,7 @@ declare module "next-auth" {
       storeId: string;
       storeName: string;
       role: string;
+      plan: string;
     };
   }
 }

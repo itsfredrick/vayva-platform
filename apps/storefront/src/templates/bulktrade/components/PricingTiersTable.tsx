@@ -37,13 +37,13 @@ export const PricingTiersTable = ({
           return (
             <React.Fragment key={idx}>
               <div
-                className={`py-1 font-medium ${isActive ? "text-blue-600 font-bold" : "text-gray-700"}`}
+                className={`py-1 font-medium ${isActive ? "text-brand font-bold" : "text-gray-700"}`}
               >
                 {tier.minQty}
                 {nextTier ? ` - ${nextTier.minQty - 1}` : "+"}
               </div>
               <div
-                className={`py-1 text-right font-medium ${isActive ? "text-blue-600 font-bold" : "text-gray-900"}`}
+                className={`py-1 text-right font-medium ${isActive ? "text-brand font-bold" : "text-gray-900"}`}
               >
                 ₦{tier.price.toLocaleString()}
               </div>

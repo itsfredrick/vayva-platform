@@ -10,10 +10,9 @@ import { Logo } from "@/components/Logo";
 import { Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
-  { href: "/features", label: "Features" },
+  { href: "/how-vayva-works", label: "How it Works" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/templates", label: "Templates" },
-  { href: "/marketplace", label: "Marketplace" },
+  { href: "/blog", label: "Blog" },
   { href: "/help", label: "Help" },
 ];
 

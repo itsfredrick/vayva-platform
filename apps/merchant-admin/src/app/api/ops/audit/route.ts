@@ -22,7 +22,7 @@ export async function GET(req: Request) {
       ];
     }
 
-    const logs = await (prisma as any).auditLog.findMany({
+    const logs = await prisma.auditLog.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: limit,

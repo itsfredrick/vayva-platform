@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth"; // Test or real
-import { authOptions } from "@/lib/auth";
+ // Test or real
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.id)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   try {
     // Find all stores where user is a member
     const memberships = await prisma.membership.findMany({
-      where: { userId: (session!.user as any).id },
+      where: { userId: user.id },
       include: { store: true },
     });
 
@@ -24,16 +24,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.id)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   // Check if user is allowed to create more stores (Growth/Pro limit?)
   // For now, allow open creation.
 
   const body = await req.json();
   const { name, slug, category } = body;
-  const { id: userId } = session!.user as any;
+  const { id: userId } = user as any;
 
   if (!name || !slug)
     return new NextResponse("Name and Slug required", { status: 400 });
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest) {
         onboardingStatus: "NOT_STARTED", // Explicitly new
         memberships: {
           create: {
-            userId: (session!.user as any).id,
+            userId: user.id,
             role: "OWNER",
           },
         },

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { BRAND } from "@vayva/shared";
 
 export function MarketingFooter() {
   return (
@@ -148,34 +149,10 @@ export function MarketingFooter() {
               </li>
               <li>
                 <Link
-                  href="/features"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
-                >
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/pricing"
                   className="text-sm text-gray-600 hover:text-black transition-colors"
                 >
                   Pricing
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/templates"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
-                >
-                  Templates
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/store-builder"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
-                >
-                  Store Builder
                 </Link>
               </li>
             </ul>
@@ -191,14 +168,6 @@ export function MarketingFooter() {
                   className="text-sm text-gray-600 hover:text-black transition-colors"
                 >
                   About Vayva
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/careers"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
-                >
-                  Careers
                 </Link>
               </li>
               <li>
@@ -230,30 +199,6 @@ export function MarketingFooter() {
                   className="text-sm text-gray-600 hover:text-black transition-colors"
                 >
                   Help Center
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/system-status"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
-                >
-                  System Status
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/trust"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
-                >
-                  Trust & Security
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/community"
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
-                >
-                  Community
                 </Link>
               </li>
             </ul>
@@ -349,10 +294,10 @@ export function MarketingFooter() {
               <br />
               Contact{" "}
               <a
-                href="mailto:support@vayva.ng"
+                href={`mailto:${BRAND.emails.support}`}
                 className="text-[#22C55E] hover:underline"
               >
-                support@vayva.ng
+                {BRAND.emails.support}
               </a>{" "}
               for inquiries.
             </div>

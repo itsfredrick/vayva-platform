@@ -28,7 +28,7 @@ export const CategoryTileGrid = ({ categories }: CategoryTileGridProps) => {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
+          <div className="absolute inset-0 bg-black/10 group-hover:opacity-90/20 transition-colors" />
           <div className="absolute bottom-3 left-3">
             <span className="text-white text-sm font-bold drop-shadow-md">
               {cat.name}

@@ -19,29 +19,30 @@ export const BusinessHealthWidget = ({
   data: BusinessHealthData;
 }) => {
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600 bg-green-50 border-green-100";
-    if (score >= 60) return "text-amber-600 bg-amber-50 border-amber-100";
-    return "text-red-600 bg-red-50 border-red-100";
+    if (score >= 80) return "text-green-600 border-green-200 shadow-[0_0_20px_rgba(34,197,94,0.15)]";
+    if (score >= 60) return "text-amber-600 border-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.15)]";
+    return "text-red-600 border-red-200 shadow-[0_0_20px_rgba(239,68,68,0.15)]";
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+    <div className="relative overflow-hidden p-6 rounded-[2rem] border border-white/20 shadow-xl shadow-gray-200/20 bg-gradient-to-br from-white/90 to-white/50 backdrop-blur-xl transition-all hover:shadow-2xl hover:scale-[1.01] duration-300">
+      <div className="absolute inset-0 bg-noise opacity-5 pointer-events-none" />
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-          <Icon name="Activity" size={20} /> Business Health
+          <Icon name="Activity" size={20} className="text-indigo-600" /> Business Health
         </h3>
-        <span className="text-xs text-gray-400">Updated just now</span>
+        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Live Sync</span>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6 text-center sm:text-left">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6 text-center sm:text-left transition-all">
         <div
           className={cn(
-            "w-24 h-24 rounded-full flex flex-col items-center justify-center border-4 shrink-0",
+            "w-24 h-24 rounded-full flex flex-col items-center justify-center border-4 shrink-0 bg-white/50 backdrop-blur-sm transition-all duration-500",
             getScoreColor(data.score),
           )}
         >
           <span className="text-3xl font-heading font-bold">{data.score}</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider">
+          <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">
             {data.status}
           </span>
         </div>

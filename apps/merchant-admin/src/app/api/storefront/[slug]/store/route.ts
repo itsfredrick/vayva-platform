@@ -35,6 +35,13 @@ export async function GET(
             pickupPhone: true,
           },
         },
+        storefrontSettings: {
+          select: {
+            seoTitle: true,
+            seoDescription: true,
+            socialLinks: true,
+          },
+        },
       },
     });
 

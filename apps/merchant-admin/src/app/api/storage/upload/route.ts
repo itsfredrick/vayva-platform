@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { StorageService } from "@/lib/storage/storageService";
 import { FEATURES } from "@/lib/env-validation";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(request: NextRequest) {
-  if (!getServerSession(authOptions)) {
+  const user = await requireAuth();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -17,10 +19,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     if (!FEATURES.STORAGE_ENABLED) {
       return NextResponse.json(
@@ -63,10 +62,10 @@ export async function POST(request: NextRequest) {
     }
 
     const ctx = {
-      userId: (session.user as any).id,
-      merchantId: (session.user as any).id, // Using user ID as merchant ID context for now
-      storeId: (session.user as any).storeId,
-      roles: [(session.user as any).role || "owner"],
+      userId: user.id,
+      merchantId: user.id, // Using user ID as merchant ID context for now
+      storeId: user.storeId,
+      roles: [user.role || "owner"],
     };
 
     const url = await StorageService.upload(ctx, file.name, file);

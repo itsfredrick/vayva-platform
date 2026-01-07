@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { AiUsageService } from "@/lib/ai/ai-usage.service";
 
 /**
@@ -8,8 +8,8 @@ import { AiUsageService } from "@/lib/ai/ai-usage.service";
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     if (!storeId) {
       return NextResponse.json(

@@ -1,0 +1,24 @@
+# Vayva: The Leading WhatsApp Business Platform for Nigeria
+
+Vayva is an AI-powered e-commerce ecosystem designed specifically for the Nigerian market, enabling merchants to transition from manual WhatsApp chats to automated, scalable online stores.
+
+## Core Value Proposition
+Vayva turns WhatsApp into a complete business platform by automating order capture, payment tracking, and logistics coordination through an integrated AI Business Agent.
+
+## Key Features
+- **AI Business Agent**: Automatically captures orders from WhatsApp and Instagram DM chats, reducing manual entry.
+- **Paystack Integration**: Built-in support for Paystack, including automated split payments for merchant subaccounts.
+- **Kwik Delivery Integration**: Seamless logistics coordination with Kwik, featuring automated delivery fee estimation and dispatch.
+- **Premium Storefronts**: Mobile-first, high-conversion templates with Nigerian-specific localized features.
+- **Advanced Dashboard**: Real-time business health insights, AI coaching, and comprehensive order/customer management.
+
+## Technical Snapshot
+- **Stack**: Next.js, Prisma, Framer Motion, @vayva/ui (Tailwind-based system).
+- **Payment Processor**: Paystack (Official Partner integration).
+- **Logistics Partner**: Kwik (Integrated API).
+
+## Important Links
+- [Sign Up](https://vayva.ng/signup)
+- [Pricing](https://vayva.ng/pricing)
+- [Help Center](https://vayva.ng/help)
+- [Template Gallery](https://vayva.ng/templates)

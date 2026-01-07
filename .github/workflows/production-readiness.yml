@@ -68,6 +68,17 @@ jobs:
         working-directory: apps/merchant-admin
         run: pnpm run typecheck
       
+      - name: 🏃 Run Onboarding QA Audit (Headless)
+        run: |
+          cd apps/merchant-admin
+          # Needs DATABASE_URL from environment for Prisma
+          npx tsx scripts/qa_verify_onboarding.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: ✅ Build Project
+        run: pnpm build --filter=merchant-admin...
+      
       - name: Run Tests
         working-directory: apps/merchant-admin
         run: pnpm test

@@ -1,8 +1,6 @@
-import Groq from "groq-sdk";
+import { GroqClient } from "./groq-client";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || "",
-});
+const groqClient = new GroqClient("MERCHANT");
 
 export interface AIMessage {
   role: "system" | "user" | "assistant";
@@ -41,17 +39,18 @@ export class AIService {
       // Build system prompt with business context
       const systemPrompt = this.buildSystemPrompt(context);
 
-      const completion = await groq.chat.completions.create({
-        messages: [{ role: "system", content: systemPrompt }, ...messages],
-        model: process.env.AI_MODEL || "llama-3.1-70b-versatile",
-        temperature: parseFloat(process.env.AI_TEMPERATURE || "0.7"),
-        max_tokens: parseInt(process.env.AI_MAX_TOKENS || "2048"),
-        top_p: 1,
-        stream: false,
-      });
+      const completion = await groqClient.chatCompletion(
+        [{ role: "system", content: systemPrompt }, ...messages] as any,
+        {
+          model: process.env.AI_MODEL || "llama-3.1-70b-versatile",
+          temperature: parseFloat(process.env.AI_TEMPERATURE || "0.7"),
+          maxTokens: parseInt(process.env.AI_MAX_TOKENS || "2048"),
+          storeId: context?.storeName ? "context-aware" : undefined, // Placeholder logic for storeId tracking
+        }
+      );
 
       const responseMessage =
-        completion.choices[0]?.message?.content ||
+        completion?.choices[0]?.message?.content ||
         "I apologize, I could not process that request.";
 
       // Analyze intent

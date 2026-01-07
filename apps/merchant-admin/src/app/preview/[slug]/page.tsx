@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { notFound } from "next/navigation";
 import { getNormalizedTemplates } from "@/lib/templates-registry";
 import { LivePreviewClient } from "@/components/preview/LivePreviewClient";
@@ -18,9 +19,10 @@ const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
 export default function TemplatePreviewPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const template = getNormalizedTemplates().find((t) => t.slug === params.slug);
+  const { slug } = use(params);
+  const template = getNormalizedTemplates().find((t) => t.slug === slug);
   if (!template) return notFound();
 
   const layoutName = (template as any).layoutComponent as

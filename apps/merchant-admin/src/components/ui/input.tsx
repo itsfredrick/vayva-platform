@@ -6,6 +6,8 @@ export const Input = ({
   placeholder,
   type = "text",
   required,
+  className,
+  ...props
 }: any) => (
   <BaseInput
     label=""
@@ -14,5 +16,7 @@ export const Input = ({
     onChange={onChange}
     placeholder={placeholder}
     required={required}
+    className={className}
+    {...props}
   />
 );

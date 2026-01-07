@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { authorizeAction, AppRole } from "@/lib/permissions";
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
@@ -8,9 +8,8 @@ import { requireSudoMode } from "@/lib/security";
 
 export async function POST(request: Request) {
   try {
-    const user = await getSessionUser();
-    if (!user)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await requireAuth();
+
 
     const body = await request.json();
     const { type, filters } = body;

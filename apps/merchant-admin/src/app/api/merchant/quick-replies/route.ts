@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const body = await req.json();
   const { title, content, category } = body;
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   const reply = await prisma.quick_reply.create({
     data: {
-      merchantId: (session!.user as any).storeId,
+      merchantId: user.storeId,
       title,
       content,
       category,
@@ -27,12 +27,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const count = await prisma.quick_reply.count({
-    where: { merchantId: (session!.user as any).storeId },
+    where: { merchantId: user.storeId },
   });
 
   if (count === 0) {
@@ -99,7 +98,7 @@ export async function GET(req: NextRequest) {
 
     await prisma.quick_reply.createMany({
       data: defaults.map((d: any) => ({
-        merchantId: (session!.user as any).storeId,
+        merchantId: user.storeId,
         title: d.title,
         content: d.content,
         category: d.category,
@@ -108,7 +107,7 @@ export async function GET(req: NextRequest) {
   }
 
   const items = await prisma.quick_reply.findMany({
-    where: { merchantId: (session!.user as any).storeId, isActive: true },
+    where: { merchantId: user.storeId, isActive: true },
     orderBy: { title: "asc" },
   });
 

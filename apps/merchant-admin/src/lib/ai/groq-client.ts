@@ -1,6 +1,8 @@
 import { Groq } from "groq-sdk";
 import { logger } from "@/lib/logger";
 import { prisma } from "@vayva/db";
+import { createGroq } from "@ai-sdk/groq";
+import { streamText } from "ai";
 
 
 // Regex to identify potential emails and phone numbers for stripping
@@ -14,21 +16,33 @@ const PII_REGEX = {
 
 export class GroqClient {
     private client: Groq;
-    private context: "MERCHANT" | "SUPPORT";
+    private context: "MERCHANT" | "SUPPORT" | "WHATSAPP";
+    private apiKey: string;
 
-    constructor(context: "MERCHANT" | "SUPPORT" = "MERCHANT") {
+    constructor(context: "MERCHANT" | "SUPPORT" | "WHATSAPP" = "MERCHANT") {
         this.context = context;
-        const apiKey =
-            context === "MERCHANT"
-                ? process.env.GROQ_API_KEY_MERCHANT
-                : process.env.GROQ_API_KEY_SUPPORT;
+        let apiKey;
+
+        switch (context) {
+            case "WHATSAPP":
+                apiKey = process.env.GROQ_WHATSAPP_KEY;
+                break;
+            case "MERCHANT":
+                apiKey = process.env.GROQ_ADMIN_KEY;
+                break;
+            case "SUPPORT":
+                apiKey = process.env.GROQ_MARKETING_KEY;
+                break;
+        }
 
         if (!apiKey) {
             logger.warn(`[GroqClient] No API key found for ${context} context. AI features will fallback.`);
         }
 
+        this.apiKey = apiKey || "placeholder-key";
+
         this.client = new Groq({
-            apiKey: apiKey || "placeholder-key", // Prevent crash on init, fail on call if needed
+            apiKey: this.apiKey, // Prevent crash on init, fail on call if needed
             dangerouslyAllowBrowser: false,
         });
     }
@@ -110,6 +124,69 @@ export class GroqClient {
         } catch (error: any) {
             logger.error("[GroqClient] API call failed", { error });
             return null; // Graceful degradation
+        }
+    }
+
+    /**
+     * Stream a chat completion using Vercel AI SDK
+     */
+    async streamChat(
+        messages: any[],
+        options: {
+            model?: string;
+            temperature?: number;
+            maxTokens?: number;
+            storeId?: string;
+            requestId?: string;
+        } = {}
+    ) {
+        if (!this.apiKey || this.apiKey === "placeholder-key") {
+            throw new Error("Missing API Key for streaming");
+        }
+
+        const groq = createGroq({
+            apiKey: this.apiKey,
+        });
+
+        // 1. Sanitize (Simple pass-through for now, assuming CoreMessage structure)
+        const safeMessages = messages.map(m => ({
+            ...m,
+            content: typeof m.content === 'string' ? this.sanitizeInput(m.content) : m.content
+        })) as any[];
+
+        // 2. Stream
+        try {
+            const result = await streamText({
+                model: groq(options.model || "llama-3.1-8b-instant"),
+                messages: safeMessages,
+                temperature: options.temperature ?? 0.7,
+                onFinish: async ({ text, usage }) => {
+                    // 3. Audit Log on finish
+                    if (options.storeId) {
+                        try {
+                            await prisma.aiUsageEvent.create({
+                                data: {
+                                    storeId: options.storeId,
+                                    model: options.model || "llama-3.1-70b-versatile",
+                                    inputTokens: (usage as any).promptTokens || (usage as any).inputTokens || 0,
+                                    outputTokens: (usage as any).completionTokens || (usage as any).outputTokens || 0,
+                                    toolCallsCount: 0,
+                                    requestId: options.requestId,
+                                    success: true,
+                                    channel: this.context === "MERCHANT" ? "INAPP" : "WHATSAPP",
+                                }
+                            });
+                        } catch (e) {
+                            logger.warn("[GroqClient] Stream audit log failed", { error: e });
+                        }
+                    }
+                }
+            });
+
+            return result;
+        } catch (error) {
+            logger.error("[GroqClient] Stream failed", { error });
+            throw error;
         }
     }
 }

@@ -101,11 +101,20 @@ export default function TeamSettingsPage() {
   };
 
   const handleRevoke = async (inviteId: string) => {
-    // Endpoint to implement or use generic remove?
-    // Prompt says: POST /api/merchant/team/invite/revoke
-    // I need to implement that API or omit.
-    // I listed it in plan. I might have skipped creating the file in previous batch.
-    // I'll skip implementation for now or add quickly.
+    if (!confirm("Revoke this invite?")) return;
+    try {
+      const res = await fetch("/api/merchant/team/invite/revoke", {
+        method: "POST",
+        body: JSON.stringify({ inviteId }),
+      });
+      if (res.ok) {
+        fetchData();
+      } else {
+        alert("Failed to revoke");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (loading) return <div className="p-8">Loading...</div>;

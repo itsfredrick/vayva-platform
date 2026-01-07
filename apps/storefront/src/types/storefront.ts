@@ -2,8 +2,15 @@ export interface PublicStore {
   id: string;
   slug: string;
   name: string;
+  description?: string;
+  logo?: string;
+  brandColor?: string;
   tagline?: string;
-  logoUrl?: string;
+  socials?: {
+    instagram?: string;
+    x?: string;
+    facebook?: string;
+  };
   theme: {
     primaryColor: string;
     accentColor: string;
@@ -39,16 +46,16 @@ export interface PublicProduct {
   rituals?: { step: string; description: string }[];
   subscriptionOptions?: { available: boolean; frequencies: string[] };
   type?:
-    | "physical"
-    | "service"
-    | "food"
-    | "digital"
-    | "ticket"
-    | "course"
-    | "wholesale"
-    | "marketplace"
-    | "donation"
-    | "property";
+  | "physical"
+  | "service"
+  | "food"
+  | "digital"
+  | "ticket"
+  | "course"
+  | "wholesale"
+  | "marketplace"
+  | "donation"
+  | "property";
   serviceDetails?: {
     duration: number; // minutes
     hasDeposit: boolean;

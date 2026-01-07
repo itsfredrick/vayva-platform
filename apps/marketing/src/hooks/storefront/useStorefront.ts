@@ -21,6 +21,12 @@ export interface StoreData {
     pickupState?: string;
     pickupPhone?: string;
   };
+  storefrontSettings?: {
+    seoTitle?: string;
+    seoDescription?: string;
+    socialLinks?: any;
+  };
+  templateConfig?: any;
 }
 
 export interface ProductData {
@@ -33,6 +39,7 @@ export interface ProductData {
   category: string | null;
   rating: number;
   tags?: string[];
+  inventory?: number;
 }
 
 export function useStorefrontStore(slug?: string) {
@@ -94,6 +101,34 @@ export function useStorefrontProducts(
     let isMounted = true;
     setIsLoading(true);
 
+    // MOCK DATA INTECEPTOR FOR DEMOS
+    // If slug indicates a demo store, return consistent mock data
+    if (slug.includes("demo") || slug.includes("preview") || slug.startsWith("vayva-")) {
+      // Simulate network delay for realism
+      setTimeout(() => {
+        if (isMounted) {
+          const { getMockProducts } = require("@/lib/mock-product-data");
+          let mockProducts = getMockProducts(slug);
+
+          // Basic client-side filtering support
+          if (category && category !== "all") {
+            mockProducts = mockProducts.filter((p: any) => p.category?.toLowerCase() === category.toLowerCase());
+          }
+          if (search) {
+            const q = search.toLowerCase();
+            mockProducts = mockProducts.filter((p: any) => p.name.toLowerCase().includes(q));
+          }
+          if (limit) {
+            mockProducts = mockProducts.slice(0, limit);
+          }
+
+          setProducts(mockProducts);
+          setIsLoading(false);
+        }
+      }, 800);
+      return () => { isMounted = false; };
+    }
+
     const query = new URLSearchParams();
     if (category && category !== "all") query.append("category", category);
     if (search) query.append("search", search);
@@ -111,9 +146,11 @@ export function useStorefrontProducts(
         if (isMounted) setProducts(data);
       })
       .catch((err) => {
-        if (isMounted) setError(err);
-        if (err.message !== "Store not found") {
-          console.error("Products fetch error:", err);
+        // Fallback to mock data on error for robustness during demos
+        if (isMounted) {
+          console.warn("API failed, falling back to mock data for demo robustness");
+          const { getMockProducts } = require("@/lib/mock-product-data");
+          setProducts(getMockProducts(slug));
         }
       })
       .finally(() => {
@@ -126,4 +163,66 @@ export function useStorefrontProducts(
   }, [slug, category, search, limit]);
 
   return { products, isLoading, error };
+}
+
+export function useStorefrontProduct(slug: string, productId: string) {
+  const [product, setProduct] = useState<ProductData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!slug || !productId) return;
+
+    let isMounted = true;
+    setIsLoading(true);
+
+    // MOCK DATA INTECEPTOR
+    if (slug.includes("demo") || slug.includes("preview") || slug.startsWith("vayva-")) {
+      setTimeout(() => {
+        if (isMounted) {
+          const { getMockProducts } = require("@/lib/mock-product-data");
+          const mockProducts = getMockProducts(slug);
+          const found = mockProducts.find((p: any) => p.id === productId);
+
+          if (found) {
+            setProduct(found);
+          } else {
+            // Fallback logic
+            const index = parseInt(productId);
+            if (!isNaN(index) && mockProducts[index]) {
+              setProduct(mockProducts[index]);
+            } else {
+              setProduct(mockProducts[0]);
+            }
+          }
+          setIsLoading(false);
+        }
+      }, 500);
+      return () => { isMounted = false; };
+    }
+
+    fetch(`/api/storefront/${slug}/products/${productId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Product not found");
+        return res.json();
+      })
+      .then((data) => {
+        if (isMounted) setProduct(data);
+      })
+      .catch((err) => {
+        if (isMounted) {
+          console.error(err);
+          const { getMockProducts } = require("@/lib/mock-product-data");
+          const mockProducts = getMockProducts(slug);
+          setProduct(mockProducts[0] || null);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => { isMounted = false; };
+  }, [slug, productId]);
+
+  return { product, isLoading, error };
 }

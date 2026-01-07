@@ -1,21 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
 import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
 import { prisma } from "@vayva/db";
 import { EventBus } from "@/lib/events/eventBus";
+import { PLANS } from "@/lib/billing/plans";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
+  const user = await requireAuth();
+  if (!user || !user.storeId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { actionType, entityType, entityId, payload, reason, merchantId } =
-    body;
-  const storeId = merchantId || (session!.user as any).storeId; // Fallback
+  const { actionType, entityType, entityId, payload, reason } = body;
+  const storeId = user.storeId;
 
-  if (!storeId) return new NextResponse("Store ID required", { status: 400 });
+  // --- GATING CHECK ---
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { plan: true }
+  });
+
+  if (!store) return NextResponse.json({ error: "Store not found" }, { status: 404 });
+
+  const planSlug = (store.plan || "free").toLowerCase();
+  const plan = PLANS[planSlug] || PLANS["free"];
+
+  if (!plan.features.approvals) {
+    return NextResponse.json(
+      { error: "Plan limit reached. Approvals are a Pro feature.", code: "PLAN_LIMIT_REACHED" },
+      { status: 403 }
+    );
+  }
+  // --------------------
 
   // Validate permission to REQUEST?
   // Usually ANY staff can request, but maybe restricted?
@@ -29,8 +45,8 @@ export async function POST(req: NextRequest) {
     const approval = await prisma.approval.create({
       data: {
         merchantId: storeId,
-        requestedByUserId: (session!.user as any).id,
-        requestedByLabel: `${(session!.user as any).firstName} ${(session!.user as any).lastName}`,
+        requestedByUserId: user.id,
+        requestedByLabel: `${user.firstName} ${user.lastName}`,
         actionType,
         entityType,
         entityId,
@@ -50,9 +66,9 @@ export async function POST(req: NextRequest) {
         requestedBy: approval.requestedByLabel,
       },
       ctx: {
-        actorId: (session!.user as any).id,
+        actorId: user.id,
         actorType: "user" as any,
-        actorLabel: `${(session!.user as any).firstName} ${(session!.user as any).lastName}`,
+        actorLabel: `${user.firstName} ${user.lastName}`,
         correlationId,
       },
     });
@@ -65,15 +81,15 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
+  const user = await requireAuth();
+  if (!user || !user.storeId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const storeId = (session!.user as any).storeId;
+  const storeId = user.storeId;
 
   // Check View Permission
   const canView = await hasPermission(
-    (session!.user as any).id,
+    user.id,
     storeId,
     PERMISSIONS.APPROVALS_VIEW,
   );

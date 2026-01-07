@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
@@ -15,8 +15,8 @@ export async function POST(
 ) {
   try {
     const { id: orderId } = await context.params;
-    const session = await requireAuth();
-    const { storeId, role } = session.user;
+    const user = await requireAuth();
+    const { storeId, role } = user;
 
     if (["viewer"].includes(role))
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

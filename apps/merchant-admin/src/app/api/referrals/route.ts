@@ -1,12 +1,12 @@
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { ReferralService } from "@/services/referral.service";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     const store = await prisma.store.findUnique({
       where: { id: storeId },

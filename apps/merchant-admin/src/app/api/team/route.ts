@@ -6,7 +6,7 @@ import { PERMISSIONS } from "@/lib/team/permissions";
 export async function GET() {
   try {
     const session = await checkPermission(PERMISSIONS.SETTINGS_VIEW);
-    const storeId = (session.user as any).storeId;
+    const storeId = session.storeId;
 
     const [members, invites] = await Promise.all([
       prisma.membership.findMany({

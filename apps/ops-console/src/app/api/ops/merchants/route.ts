@@ -15,6 +15,9 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const search = searchParams.get("q") || searchParams.get("search") || "";
+    // Filters
+    const plan = searchParams.get("plan");
+    const statusFilter = searchParams.get("status"); // trial, active, expired
 
     const skip = (page - 1) * limit;
 
@@ -25,8 +28,11 @@ export async function GET(request: Request) {
             { name: { contains: search, mode: "insensitive" } },
             { slug: { contains: search, mode: "insensitive" } },
           ]
-        } : {}
+        } : {},
+        plan ? { plan: plan as any } : {},
       ]
+      // Status filtering logic would go here if simple, but subscription status is derived.
+      // We'll filter post-fetch or need complex relation queries. For now simple search.
     };
 
     const [stores, total] = await Promise.all([
@@ -57,6 +63,7 @@ export async function GET(request: Request) {
               orders: true,
             },
           },
+          aiSubscription: true,
         },
       }),
       prisma.store.count({ where }),
@@ -65,7 +72,6 @@ export async function GET(request: Request) {
     const data = stores.map((store: any) => {
       // Find owner from tenant memberships
       const members = store.tenant?.TenantMembership || [];
-      // Assuming default owner role string "OWNER", adjust if it is strictly typed enum
       const ownerMember = members.find((m: any) => m.role === "OWNER") || members[0];
       const owner = ownerMember?.User;
 
@@ -73,17 +79,27 @@ export async function GET(request: Request) {
         ? `${owner.firstName || ""} ${owner.lastName || ""}`.trim()
         : "Unknown";
 
+      const aiSub = store.aiSubscription;
+
+      // Determine Subscription Status
+      let subStatus = "ACTIVE"; // Default
+      if (aiSub?.status) subStatus = aiSub.status;
+      // If no AI sub and plan is FREE, maybe just "FREEMIUM" or "ACTIVE"
+
       return {
         id: store.id,
         name: store.name,
         slug: store.slug,
         ownerName: ownerName || "Unknown",
         ownerEmail: owner?.email || "Unknown",
-        status: "ACTIVE", // TODO: Map from store.onboardingStatus or similar?
-        plan: store.plan || "FREE",
+        status: statusFilter ? subStatus : "ACTIVE", // Placeholder for general status
+        plan: aiSub?.planKey || store.plan || "FREE",
+        subscriptionStatus: subStatus,
+        trialEndsAt: aiSub?.trialExpiresAt ? aiSub.trialExpiresAt.toISOString() : null,
+        periodEnd: aiSub?.periodEnd ? aiSub.periodEnd.toISOString() : null,
         kycStatus: "APPROVED", // Placeholder
         riskFlags: [],
-        gmv30d: 0, // Placeholder needs aggregation
+        gmv30d: 0,
         lastActive: store.createdAt.toISOString(),
         createdAt: store.createdAt.toISOString(),
         location: "N/A",

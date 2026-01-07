@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "./route";
-import { getServerSession } from "next-auth";
+
 import { prisma } from "@vayva/db";
 import { NextResponse } from "next/server";
 
@@ -25,6 +25,7 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 
 import { checkPermission } from "@/lib/team/rbac";
+import { requireAuth } from "@/lib/session";
 
 const createRequest = (body: any) =>
   new Request("https://api.test/api/templates/apply", {

@@ -10,9 +10,11 @@ import { ShoppingBag, X, Plus, Minus } from "lucide-react";
 export function AAFashionHome({
   storeName: initialStoreName,
   storeSlug,
+  config,
 }: {
   storeName: string;
   storeSlug?: string;
+  config?: any;
 }) {
   const { store } = useStorefrontStore(storeSlug);
   const { products, isLoading } = useStorefrontProducts(storeSlug, {
@@ -171,13 +173,19 @@ export function AAFashionHome({
         </div>
 
         <div className="relative z-20 text-center max-w-4xl mx-auto px-6">
-          <p className="text-sm md:text-base mb-4 font-bold tracking-[0.3em] uppercase opacity-80">
-            Season 04 / 24
-          </p>
-          <h1 className="text-6xl md:text-9xl font-bold tracking-tighter mb-8 leading-[0.8]">
-            DARK
-            <br />
-            MATTER
+          {config?.hero?.showAnnouncement !== false && (
+            <p className="text-sm md:text-base mb-4 font-bold tracking-[0.3em] uppercase opacity-80">
+              Season 04 / 24
+            </p>
+          )}
+          <h1 className="text-6xl md:text-9xl font-bold tracking-tighter mb-8 leading-[0.8]" style={{ color: config?.branding?.primaryColor }}>
+            {config?.hero?.heroTitle || (
+              <>
+                DARK
+                <br />
+                MATTER
+              </>
+            )}
           </h1>
           <button className="border border-white px-12 py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-black transition-all duration-500">
             View Lookbook

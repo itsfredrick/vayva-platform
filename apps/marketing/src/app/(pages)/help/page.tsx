@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { HELP_ARTICLES, HelpArticle } from "@/lib/help";
+import { BRAND } from "@vayva/shared";
 
 import { HelpAIChat } from "@/components/marketing/HelpAIChat";
 
@@ -104,8 +105,8 @@ export default function HelpCenterPage() {
                   <h3 className="text-xl font-bold text-[#0F172A]">Flexible Delivery Options</h3>
                   <p className="text-gray-600 mt-2 mb-4">
                     Vayva gives you the freedom to choose your logistics partner.
-                    Use our integrated **Kwik Delivery** partner for automatic dispatch,
-                    or manage your own **Local Riders** easily.
+                    Use our integrated <span className="font-bold text-[#0F172A]">Kwik Delivery</span> partner for automatic dispatch,
+                    or manage your own <span className="font-bold text-[#0F172A]">Local Riders</span> easily.
                   </p>
                   <Link
                     href="/help/delivery-options"
@@ -129,7 +130,7 @@ export default function HelpCenterPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
                 <a
-                  href="mailto:support@vayva.ng"
+                  href={`mailto:${BRAND.emails.support}`}
                   className="px-8 py-4 bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold rounded-xl shadow-lg transition-all"
                 >
                   Email Support

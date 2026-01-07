@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { getIntegrationHealth } from "@/lib/integration-health";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
+
+
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const user = await requireAuth();
+    if (!user || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
 
     // Ensure env var is set for library logic
     process.env.OPS_INTEGRATION_HEALTH_ENABLED = "true";

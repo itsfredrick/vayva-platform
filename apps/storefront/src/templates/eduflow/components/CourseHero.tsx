@@ -51,7 +51,7 @@ export const CourseHero = ({ course, onEnroll }: CourseHeroProps) => {
           <div className="flex items-center gap-4 pt-2">
             <button
               onClick={onEnroll}
-              className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-blue-200 transition-all text-lg"
+              className="flex-1 sm:flex-none bg-brand hover:opacity-90 text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-blue-200 transition-all text-lg"
             >
               {course.price === 0
                 ? "Start Learning for Free"
@@ -66,12 +66,12 @@ export const CourseHero = ({ course, onEnroll }: CourseHeroProps) => {
             src={course.images?.[0]}
             className="w-full aspect-video object-cover"
           />
-          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-            <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center text-blue-600 backdrop-blur-sm shadow-lg group-hover:scale-110 transition-transform">
+          <div className="absolute inset-0 bg-black/20 group-hover:opacity-90/10 transition-colors flex items-center justify-center">
+            <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center text-brand backdrop-blur-sm shadow-lg group-hover:scale-110 transition-transform">
               <PlayCircle
                 size={32}
                 fill="currentColor"
-                className="text-blue-600"
+                className="text-brand"
               />
             </div>
           </div>

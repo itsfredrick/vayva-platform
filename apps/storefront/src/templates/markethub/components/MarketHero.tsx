@@ -6,11 +6,11 @@ export const MarketHero = () => {
     <section className="bg-gray-100 py-8 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 h-[400px] md:h-[350px]">
         {/* Main Carousel / Featured */}
-        <div className="md:col-span-8 bg-[#111827] rounded-2xl p-8 md:p-12 relative overflow-hidden flex flex-col justify-center text-white">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#10B981] rounded-full blur-[80px] opacity-20 translate-x-1/2 -translate-y-1/2"></div>
+        <div className="md:col-span-8 bg-brand rounded-2xl p-8 md:p-12 relative overflow-hidden flex flex-col justify-center text-white">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand rounded-full blur-[80px] opacity-20 translate-x-1/2 -translate-y-1/2"></div>
 
           <div className="relative z-10 max-w-lg">
-            <span className="inline-block bg-[#10B981] text-white text-xs font-bold px-2 py-1 rounded mb-4">
+            <span className="inline-block bg-brand text-white text-xs font-bold px-2 py-1 rounded mb-4">
               FLASH SALE
             </span>
             <h2 className="text-4xl md:text-5xl font-black mb-4 leading-tight">
@@ -41,7 +41,7 @@ export const MarketHero = () => {
             </div>
           </div>
 
-          <div className="flex-1 bg-[#10B981] rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group cursor-pointer text-white">
+          <div className="flex-1 bg-brand rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group cursor-pointer text-white">
             <div className="relative z-10">
               <h3 className="font-bold text-xl mb-1">New Vendors</h3>
               <p className="text-sm opacity-90">Fresh arrivals this week</p>

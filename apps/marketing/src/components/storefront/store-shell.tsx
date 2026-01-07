@@ -14,7 +14,7 @@ interface StoreShellProps {
 
 export function StoreShell({
   children,
-  storeName = "Vayva Store",
+  storeName = "My Store",
   slug = "demo-store",
   plan = "STARTER",
 }: StoreShellProps) {
@@ -23,7 +23,7 @@ export function StoreShell({
 
   return (
     <div className="min-h-screen bg-[#142210] text-white font-sans selection:bg-primary/30 relative">
-      {/* Vayva Watermark (Starter Plan Only) */}
+      {/* Store Watermark (Starter Plan Only) */}
       {plan === "STARTER" && (
         <div className="fixed bottom-6 right-6 z-[60] bg-white text-black px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105 transition-transform cursor-pointer">
           <svg
@@ -34,21 +34,16 @@ export function StoreShell({
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="M10 10L50 90L90 10"
+              d="M50 5 L95 27.5 V72.5 L50 95 L5 72.5 V27.5 Z"
               stroke="#059669"
               strokeWidth="15"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <path
-              d="M10 10L35 60"
-              stroke="#0B0B0B"
-              strokeWidth="18"
-              strokeLinecap="round"
-            />
+
           </svg>
           <span className="text-[10px] font-black uppercase tracking-widest text-[#0B0B0B]">
-            Powered by Vayva
+            Powered by {storeName}
           </span>
         </div>
       )}
@@ -70,7 +65,7 @@ export function StoreShell({
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  d="M10 10L50 90L90 10"
+                  d="M50 5 L95 27.5 V72.5 L50 95 L5 72.5 V27.5 Z"
                   stroke="black"
                   strokeWidth="20"
                   strokeLinecap="round"
@@ -225,7 +220,7 @@ export function StoreShell({
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M10 10L50 90L90 10"
+                    d="M50 5 L95 27.5 V72.5 L50 95 L5 72.5 V27.5 Z"
                     stroke="#000"
                     strokeWidth="20"
                     strokeLinecap="round"
@@ -236,7 +231,7 @@ export function StoreShell({
               <span className="font-bold text-lg">{storeName}</span>
             </div>
             <p className="text-xs text-text-secondary mb-4">
-              Premium shopping experience powered by Vayva AI.
+              Premium shopping experience powered by {storeName} AI.
               <br />
               Lagos, Nigeria.
             </p>
@@ -255,7 +250,7 @@ export function StoreShell({
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="M10 10L50 90L90 10"
+                d="M50 5 L95 27.5 V72.5 L50 95 L5 72.5 V27.5 Z"
                 stroke="white"
                 strokeWidth="15"
                 strokeLinecap="round"
@@ -264,7 +259,7 @@ export function StoreShell({
               />
             </svg>
             <p className="font-bold uppercase tracking-widest">
-              Powered by Vayva
+              Powered by {storeName}
             </p>
           </div>
         </div>

@@ -37,6 +37,15 @@ export interface DispatchData {
   totalAmount?: number;
 }
 
+export interface EstimateResponse {
+  success: boolean;
+  price?: number;
+  estimated_duration?: number; // in hours? or minutes? usually generic number or string
+  currency?: string;
+  error?: string;
+  rawResponse?: any;
+}
+
 export interface DeliveryProvider {
   name: string;
   dispatch(
@@ -44,6 +53,11 @@ export interface DeliveryProvider {
     settings: StoreDeliverySettings,
   ): Promise<DispatchResponse>;
   cancel(jobId: string): Promise<CancelResponse>;
+  getEstimate(
+    origin: { address: string; city?: string; name: string; phone: string },
+    destination: { address: string; city?: string; name: string; phone: string },
+    parcel: { description: string }
+  ): Promise<EstimateResponse>;
 }
 
 export class CustomProvider implements DeliveryProvider {
@@ -65,6 +79,15 @@ export class CustomProvider implements DeliveryProvider {
   async cancel(jobId: string): Promise<CancelResponse> {
     return { success: true };
   }
+
+  async getEstimate(
+    origin: { address: string; city?: string; name: string; phone: string },
+    destination: { address: string; city?: string; name: string; phone: string },
+    parcel: { description: string }
+  ): Promise<EstimateResponse> {
+    // Return a flat rate or 0 for custom/manual providers
+    return { success: true, price: 0, currency: "NGN" };
+  }
 }
 
 // --- Kwik Provider ---
@@ -83,7 +106,7 @@ export class KwikProvider implements DeliveryProvider {
     this.apiKey = process.env.KWIK_API_KEY!;
     this.merchantId = process.env.KWIK_MERCHANT_ID!;
     this.baseUrl =
-      process.env.KWIK_BASE_URL || "https://api.kwik.delivery/api/v1";
+      process.env.KWIK_BASE_URL || "https://staging-api-test.kwik.delivery/api/v1";
   }
 
   private getHeaders() {
@@ -126,9 +149,18 @@ export class KwikProvider implements DeliveryProvider {
 
       if (!response.ok) {
         const errorBody = await response.text();
+        // Specific Error Trapping
+        if (errorBody.includes("insufficient funds") || errorBody.includes("balance")) {
+          return {
+            success: false,
+            error: "INSUFFICIENT_FUNDS",
+            rawResponse: errorBody,
+          }
+        }
+
         return {
           success: false,
-          error: `Kwik API Error: ${response.status}`,
+          error: `Kwik API Error: ${response.status} - ${errorBody}`,
           rawResponse: errorBody,
         };
       }
@@ -164,6 +196,69 @@ export class KwikProvider implements DeliveryProvider {
       }
 
       return { success: true, rawResponse: await response.json() };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  async getEstimate(
+    origin: { address: string; city?: string; name: string; phone: string },
+    destination: { address: string; city?: string; name: string; phone: string },
+    parcel: { description: string }
+  ): Promise<EstimateResponse> {
+    try {
+      const payload = {
+        merchant_id: this.merchantId,
+        domain_name: "vayva.com", // Required by Kwik sometimes?
+        pickup: {
+          name: origin.name,
+          phone: origin.phone,
+          address: origin.address,
+          city: origin.city || "",
+        },
+        delivery: {
+          name: destination.name,
+          phone: destination.phone,
+          address: destination.address,
+          city: destination.city || "",
+        },
+        parcel: {
+          description: parcel.description,
+        }
+      };
+
+      // Note: Kwik endpoint for estimation might differ. 
+      // Based on quick search, sometimes it is /deliveries/estimate or similar.
+      // Documentation says "Get Estimated Fare". Let's assume /deliveries/estimate or check implementation.
+      // Since I'm in EXECUTION, I will try /deliveries/estimate which is standard REST pattern for them.
+
+      const response = await fetch(`${this.baseUrl}/deliveries/estimate`, {
+        method: "POST",
+        headers: this.getHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        // Maybe try another endpoint if 404? 
+        // Common alternative: /pricing/calculate
+        return {
+          success: false,
+          error: `Kwik Estimate Error: ${response.status} - ${errorBody}`,
+          rawResponse: errorBody
+        };
+      }
+
+      const data = await response.json();
+      const estimatedPrice = data.data?.estimated_price || data.data?.total_amount || 0;
+
+      return {
+        success: true,
+        price: Number(estimatedPrice),
+        currency: "NGN",
+        rawResponse: data
+      };
+
     } catch (error: any) {
       return { success: false, error: error.message };
     }

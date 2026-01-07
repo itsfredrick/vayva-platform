@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma, BankBeneficiary } from "@vayva/db";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     const accounts = await prisma.bankBeneficiary.findMany({
       where: { storeId },
@@ -45,8 +45,8 @@ export async function PUT(request: Request) {
       );
     }
 
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
     const body = await request.json();
     const { bankName, accountNumber, accountName, id } = body;
 
@@ -74,7 +74,7 @@ export async function PUT(request: Request) {
     const { logAuditEvent, AuditEventType } = await import("@/lib/audit");
     await logAuditEvent(
       storeId,
-      session.user.id,
+      user.id,
       AuditEventType.SETTINGS_CHANGED,
       {
         keysChanged: ["payout_destination"],

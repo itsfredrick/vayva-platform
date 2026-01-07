@@ -30,7 +30,28 @@
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
     }
-  .dark {
+
+    /* FLUID TYPOGRAPHY: Scale down UI on mobile */
+    html {
+        font-size: 14px;
+        /* Mobile: 1rem = 14px */
+    }
+
+    @media (min-width: 768px) {
+        html {
+            font-size: 15px;
+            /* Tablet: 1rem = 15px */
+        }
+    }
+
+    @media (min-width: 1024px) {
+        html {
+            font-size: 16px;
+            /* Desktop: 1rem = 16px */
+        }
+    }
+
+    .dark {
         --background: 0 0% 3.9%;
         --foreground: 0 0% 98%;
         --card: 0 0% 3.9%;
@@ -64,8 +85,9 @@
     }
 
     body {
-        @apply bg-background text-text-primary;
+        @apply bg-background text-foreground;
         font-family: var(--font-inter), Inter, system-ui, -apple-system, sans-serif;
+        transition: background-color 0.3s ease;
     }
 
     h1,
@@ -98,21 +120,34 @@
     }
 
     @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
+        0% {
+            transform: translateX(-100%);
+        }
+
+        100% {
+            transform: translateX(100%);
+        }
     }
+
     .animate-shimmer {
         animation: shimmer 1.5s infinite;
     }
-}
 
+    @keyframes pulse-subtle {
 
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
 
-@layer base {
-  * {
-    @apply border-border;
+        50% {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
     }
-  body {
-    @apply bg-background text-foreground;
+
+    .animate-pulse-subtle {
+        animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
 }

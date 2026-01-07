@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 
 // GET Settings
 export async function GET(request: Request) {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     const settings = await prisma.storeDeliverySettings.findUnique({
       where: { storeId },
@@ -56,8 +56,8 @@ export async function GET(request: Request) {
 // POST Settings (Admin/Owner only)
 export async function POST(request: Request) {
   try {
-    const session = await requireAuth();
-    const { role, storeId } = session.user;
+    const user = await requireAuth();
+    const { role, storeId } = user;
 
     // Strict Role Check
     if (role !== "owner" && role !== "admin") {
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
       const { logAudit, AuditAction } = await import("@/lib/audit");
       await logAudit({
         storeId,
-        actor: { type: "USER", id: session.user.id, label: session.user.email },
+        actor: { type: "USER", id: user.id, label: user.email },
         action: "DELIVERY_AUTOMATION_UPDATED",
         entity: { type: "DELIVERY_SETTINGS", id: settings.id },
         after: {

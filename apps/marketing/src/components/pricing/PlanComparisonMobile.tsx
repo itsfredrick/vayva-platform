@@ -18,8 +18,8 @@ export const PlanComparisonMobile = () => {
                         key={plan.key}
                         onClick={() => setSelectedPlan(plan.key)}
                         className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${selectedPlan === plan.key
-                                ? "bg-white text-[#0F172A] shadow-sm"
-                                : "text-gray-400 hover:text-gray-600"
+                            ? "bg-white text-[#0F172A] shadow-sm"
+                            : "text-gray-400 hover:text-gray-600"
                             }`}
                     >
                         {plan.key === "free"
@@ -63,6 +63,7 @@ export const PlanComparisonMobile = () => {
                         },
                         { name: "Inventory tracking", val: selectedPlan !== "free" },
                         { name: "Audit Logs", val: selectedPlan === "pro" },
+                        { name: "Vayva Cut Pro (AI)", val: selectedPlan === "pro" },
                         { name: "Priority Support", val: selectedPlan === "pro" },
                         { name: "Withdrawal Fee", val: `${FEES.WITHDRAWAL_PERCENTAGE}%` },
                     ].map((feat) => (

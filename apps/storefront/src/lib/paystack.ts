@@ -23,16 +23,14 @@ export interface PaystackInitializeResponse {
 export const PaystackService = {
   initializeTransaction: async (
     payload: InitializePaymentPayload,
+    secretKey?: string
   ): Promise<PaystackInitializeResponse> => {
-    const secretKey =
-      process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_LIVE_SECRET_KEY; // Fallback to live if testing is not available? Logic check.
-    // Actually, usually test key is default for dev.
-    // Let's use strict env check.
-
+    // Priority: Custom Key -> Prod Env -> Dev Env
     const key =
-      process.env.NODE_ENV === "production"
+      secretKey ||
+      (process.env.NODE_ENV === "production"
         ? process.env.PAYSTACK_LIVE_SECRET_KEY
-        : process.env.PAYSTACK_SECRET_KEY;
+        : process.env.PAYSTACK_SECRET_KEY);
 
     if (!key) {
       console.warn("[Paystack] No Secret Key found. Payments will fail.");

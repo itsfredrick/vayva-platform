@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
+
+
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const user = await requireAuth();
+    if (!user || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q") || "";
 
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
       ];
     }
 
-    const jobs = await (prisma as any).jobRun.findMany({
+    const jobs = await prisma.jobRun.findMany({
       where,
       orderBy: { startedAt: "desc" },
       take: 20,

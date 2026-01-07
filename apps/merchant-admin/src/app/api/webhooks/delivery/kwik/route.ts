@@ -62,20 +62,28 @@ export async function POST(req: NextRequest) {
     await prisma.shipment.update({
         where: { id: shipment.id },
         data: {
-            status: vayvaStatus as any,
-            // Append to history/notes?
+            status: vayvaStatus,
         }
     });
 
     // 4. Audit Log
-    // Using dynamic import to avoid circular dep issues in this file context if any
     try {
-        // Manual simple audit if logAudit not available easily here
-        // But we should use prisma
-        /*
-        await prisma.auditLog.create(...)
-        */
-    } catch (e) { }
+        await prisma.auditLog.create({
+            data: {
+                storeId: shipment.storeId,
+                actorType: "SYSTEM",
+                actorId: "kwik_webhook",
+                actorLabel: "Kwik Logistics",
+                action: "SHIPMENT_STATUS_UPDATED",
+                entityType: "Shipment",
+                entityId: shipment.id,
+                afterState: { status: vayvaStatus },
+                correlationId: `webhook-kwik-${shipment.id}-${Date.now()}`
+            }
+        });
+    } catch (e: any) {
+        console.warn("[Kwik Webhook] Audit log failed:", e.message);
+    }
 
     return new NextResponse("Updated", { status: 200 });
 }

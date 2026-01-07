@@ -155,7 +155,7 @@ export const MultiVendorCart = ({
             </div>
             <button
               onClick={onCheckout}
-              className="w-full bg-[#111827] hover:bg-[#1F2937] text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg shadow-gray-200"
+              className="w-full bg-brand hover:bg-[#1F2937] text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg shadow-gray-200"
             >
               Checkout Now
             </button>

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
 import { cookies } from "next/headers";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.id)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const { storeId } = await req.json();
   if (!storeId) return new NextResponse("Store ID required", { status: 400 });
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   // Verify membership
   const membership = await prisma.membership.findFirst({
     where: {
-      userId: (session!.user as any).id,
+      userId: user.id,
       storeId: storeId,
     },
   });

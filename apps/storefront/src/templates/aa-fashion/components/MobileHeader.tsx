@@ -5,11 +5,13 @@ import Link from "next/link";
 interface MobileHeaderProps {
   storeName: string;
   cartItemCount?: number;
+  brandColor?: string;
 }
 
 export const MobileHeader = ({
   storeName,
   cartItemCount = 0,
+  brandColor = "#111111",
 }: MobileHeaderProps) => {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 h-[60px] flex items-center justify-between px-4">
@@ -27,7 +29,10 @@ export const MobileHeader = ({
         <Link href="/cart" className="relative p-1">
           <ShoppingBag size={22} strokeWidth={1.5} />
           {cartItemCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-[#111111] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+            <span
+              className="absolute -top-1 -right-1 text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: brandColor }}
+            >
               {cartItemCount}
             </span>
           )}

@@ -35,7 +35,7 @@ export async function logAudit(params: {
   correlationId?: string;
 }) {
   try {
-    await (prisma as any).auditLog.create({
+    await prisma.auditLog.create({
       data: {
         storeId: params.storeId,
         actorType: params.actor.type,

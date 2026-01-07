@@ -17,7 +17,7 @@ export const MarketHeader = ({
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
       {/* Top Utility Bar */}
-      <div className="bg-[#111827] text-gray-300 text-xs py-2 px-6 hidden sm:block">
+      <div className="bg-brand text-gray-300 text-xs py-2 px-6 hidden sm:block">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex gap-4">
             <Link href="#" className="hover:text-white">
@@ -44,7 +44,7 @@ export const MarketHeader = ({
           href="/"
           className="flex items-center gap-2 text-[#111827] min-w-max"
         >
-          <div className="bg-[#10B981] text-white p-1.5 rounded-lg">
+          <div className="bg-brand text-white p-1.5 rounded-lg">
             <ShoppingBag size={20} />
           </div>
           <span className="font-black text-xl tracking-tight hidden sm:inline">
@@ -66,7 +66,7 @@ export const MarketHeader = ({
                 size={16}
               />
             </div>
-            <button className="bg-[#111827] hover:bg-[#1F2937] text-white px-6 py-2.5 rounded-r-lg font-bold text-sm transition-colors">
+            <button className="bg-brand hover:bg-[#1F2937] text-white px-6 py-2.5 rounded-r-lg font-bold text-sm transition-colors">
               Search
             </button>
           </div>
@@ -95,7 +95,7 @@ export const MarketHeader = ({
             <div className="relative">
               <ShoppingBag size={20} />
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#10B981] text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
+                <span className="absolute -top-1.5 -right-1.5 bg-brand text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
                   {cartCount}
                 </span>
               )}

@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { PublishService } from "@/lib/publish/publishService";
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.storeId)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   try {
     const result = await PublishService.goLive(
-      (session!.user as any).storeId,
-      (session!.user as any).id,
-      (session!.user as any).name || (session!.user as any).email || "Merchant",
+      user.storeId,
+      user.id,
+      user.name || user.email || "Merchant",
     );
 
     // Log audit event
     await logAuditEvent(
-      (session!.user as any).storeId,
-      (session!.user as any).id,
+      user.storeId,
+      user.id,
       AuditEventType.SETTINGS_CHANGED,
       { action: "STORE_PUBLISHED", result },
     );

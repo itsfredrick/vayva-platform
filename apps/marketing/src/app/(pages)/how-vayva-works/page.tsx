@@ -26,21 +26,7 @@ export default function HowItWorksPage() {
             turn messy chat threads into structured, automated workflows so you
             can scale without the chaos.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href={`${APP_URL}/signup`}>
-              <Button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-8 py-4 text-lg font-bold rounded-xl transition-all shadow-lg shadow-green-100">
-                Get Started
-              </Button>
-            </Link>
-            <Link href="/store-builder">
-              <Button
-                variant="outline"
-                className="border-2 border-gray-200 text-[#0F172A] px-8 py-4 text-lg font-bold rounded-xl hover:bg-white transition-all"
-              >
-                View Templates
-              </Button>
-            </Link>
-          </div>
+
         </div>
       </section>
 

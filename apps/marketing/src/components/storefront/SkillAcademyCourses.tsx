@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   useStorefrontProducts,
   useStorefrontStore,
@@ -6,6 +7,8 @@ import {
 import { useStorefrontCart } from "@/hooks/storefront/useStorefrontCart";
 import { CheckoutModal } from "./CheckoutModal";
 import { ShoppingCart, X, Star, BookOpen } from "lucide-react";
+import { StorefrontSEO } from "./StorefrontSEO";
+import { useCartQuery } from "@/hooks/storefront/useStorefrontQuery";
 
 export function SkillAcademyCourses({
   storeName: initialStoreName,
@@ -29,12 +32,16 @@ export function SkillAcademyCourses({
     setIsOpen: setIsCartOpen,
     clearCart,
   } = useStorefrontCart(storeSlug || "");
+
+  useCartQuery(isCartOpen, setIsCartOpen);
+
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const displayName = store?.name || initialStoreName;
 
   return (
     <div className="bg-gray-50 min-h-screen font-sans text-gray-800">
+      <StorefrontSEO store={store} products={products} />
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -115,9 +122,12 @@ export function SkillAcademyCourses({
                   >
                     <div className="w-24 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
                       {item.image && (
-                        <img
+                        <Image
                           src={item.image}
-                          className="w-full h-full object-cover"
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                          sizes="96px"
                         />
                       )}
                     </div>
@@ -167,7 +177,7 @@ export function SkillAcademyCourses({
       )}
 
       {/* Hero */}
-      <div className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 flex items-center justify-between">
           <div className="max-w-2xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 leading-tight">
@@ -196,10 +206,10 @@ export function SkillAcademyCourses({
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Trusted By */}
-      <div className="bg-gray-50 py-8 border-b border-gray-200">
+      <section className="bg-gray-50 py-8 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
             Trusted by teams at
@@ -211,10 +221,10 @@ export function SkillAcademyCourses({
             <span>AMAZON</span>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Course List */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <main className="max-w-7xl mx-auto px-6 py-16">
         <h2 className="text-2xl font-bold mb-8 text-gray-900">
           Featured Courses
         </h2>
@@ -230,18 +240,21 @@ export function SkillAcademyCourses({
         ) : (
           <div className="grid md:grid-cols-4 gap-6">
             {products.map((course) => (
-              <div
+              <article
                 key={course.id}
                 className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow group flex flex-col h-full cursor-pointer"
                 onClick={() => addToCart(course)}
               >
                 <div className="aspect-video bg-gray-100 relative">
-                  <img
+                  <Image
                     src={
                       course.image ||
                       `https://via.placeholder.com/300x200?text=${encodeURIComponent(course.name)}`
                     }
-                    className="w-full h-full object-cover"
+                    alt={course.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                 </div>
@@ -269,11 +282,11 @@ export function SkillAcademyCourses({
                     </button>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
-      </div>
+      </main>
 
       <footer className="bg-white border-t border-gray-200 mt-20 py-12">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-8 text-sm text-gray-500">
@@ -293,6 +306,6 @@ export function SkillAcademyCourses({
           </div>
         </div>
       </footer>
-    </div>
+    </div >
   );
 }

@@ -74,7 +74,7 @@ export const BulkHeader = ({
 
           <button
             onClick={onOpenRFQ}
-            className="flex items-center gap-2 bg-[#2563EB] hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-lg transition-colors shadow-sm relative group"
+            className="flex items-center gap-2 bg-[#2563EB] hover:opacity-90 text-white font-bold px-5 py-3 rounded-lg transition-colors shadow-sm relative group"
           >
             <FileText size={18} />
             <span>Request Quote</span>

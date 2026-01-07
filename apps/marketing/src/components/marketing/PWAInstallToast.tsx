@@ -9,6 +9,11 @@ export function PWAInstallToast() {
     const { openDownloadModal } = useDownloadModal();
 
     useEffect(() => {
+        // Check if already dismissed
+        if (typeof window !== "undefined" && localStorage.getItem("vayva-pwa-toast-dismissed")) {
+            return;
+        }
+
         // Try to detect PWA status. If standalone, hide.
         const isStandalone =
             window.matchMedia("(display-mode: standalone)").matches ||
@@ -18,6 +23,12 @@ export function PWAInstallToast() {
 
         // Show after scrolling a bit, similar to Cookie Banner but right side
         const scrollHandler = () => {
+            // Double check inside handler to prevent re-showing after dynamic dismiss
+            if (localStorage.getItem("vayva-pwa-toast-dismissed")) {
+                setIsVisible(false);
+                return;
+            }
+
             if (window.scrollY > 400) {
                 setIsVisible(true);
             } else {
@@ -27,6 +38,11 @@ export function PWAInstallToast() {
         window.addEventListener("scroll", scrollHandler);
         return () => window.removeEventListener("scroll", scrollHandler);
     }, []);
+
+    const handleDismiss = () => {
+        setIsVisible(false);
+        localStorage.setItem("vayva-pwa-toast-dismissed", "true");
+    };
 
     if (!isVisible) return null;
 
@@ -38,13 +54,13 @@ export function PWAInstallToast() {
                         V
                     </div>
                     <button
-                        onClick={() => setIsVisible(false)}
+                        onClick={handleDismiss}
                         className="text-gray-400 hover:text-gray-600"
                     >
                         <X size={16} />
                     </button>
                 </div>
-                <h4 className="font-bold text-[#0F172A] mb-1">Install Vayva App</h4>
+                <h4 className="font-bold text-[#0F172A] mb-1">Install Store App</h4>
                 <p className="text-xs text-gray-500 leading-relaxed mb-4">
                     Install our web app for a faster, full-screen experience on your device.
                 </p>
@@ -56,7 +72,7 @@ export function PWAInstallToast() {
                         Install App
                     </button>
                     <button
-                        onClick={() => setIsVisible(false)}
+                        onClick={handleDismiss}
                         className="flex-1 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 py-2 rounded-lg text-xs font-bold transition-all"
                     >
                         Later

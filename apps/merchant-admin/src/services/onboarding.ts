@@ -4,7 +4,7 @@ const STORAGE_KEY = "vayva_onboarding_state";
 
 const defaultState: OnboardingState = {
   isComplete: false,
-  currentStep: "welcome",
+  currentStep: "business",
   lastUpdatedAt: new Date().toISOString(),
   whatsappConnected: false,
   templateSelected: false,
@@ -28,7 +28,7 @@ export const OnboardingService = {
             "REQUIRED_COMPLETE",
             "OPTIONAL_INCOMPLETE",
           ].includes(data.onboardingStatus),
-          currentStep: data.currentStep || "welcome",
+          currentStep: data.currentStep || "business",
           lastUpdatedAt: new Date().toISOString(),
           whatsappConnected: data.data?.whatsappConnected || false,
           templateSelected: data.data?.templateSelected || false,

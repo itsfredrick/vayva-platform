@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
 
 export async function GET() {
   try {
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     const domainMapping = await prisma.domainMapping.findFirst({
       where: { storeId },
@@ -26,9 +26,9 @@ export async function POST(req: Request) {
   try {
     const { checkPermission } = await import("@/lib/team/rbac");
     const { PERMISSIONS } = await import("@/lib/team/permissions");
-    const session = await checkPermission(PERMISSIONS.DOMAINS_MANAGE);
+    const user = await checkPermission(PERMISSIONS.DOMAINS_MANAGE);
 
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
     const body = await req.json();
 
     const { domain } = body;
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     });
 
     // Log audit event
-    await logAuditEvent(storeId, session.user.id, AuditEventType.DOMAIN_CHANGED, {
+    await logAuditEvent(storeId, user.id, AuditEventType.DOMAIN_CHANGED, {
       domain,
       mappingId: mapping.id,
     });

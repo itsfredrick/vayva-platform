@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 // Helper to bypass strict types if models are missing in generated client
 const db = prisma as any;
@@ -12,11 +13,10 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const session = await getServerSession(authOptions);
-    if (!session?.user)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await requireAuth();
+    
 
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
 
     // Use safe access to db
     const order = await db.order.findUnique({

@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; // Adjust path as per repo structure
+
+ // Adjust path as per repo structure
 import { SupportContextService } from "@/lib/support/support-context.service";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const user = await requireAuth();
+    if (!user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
     const context = await SupportContextService.getMerchantSnapshot(storeId);
 
     if (!context) {

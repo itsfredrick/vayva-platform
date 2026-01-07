@@ -54,7 +54,7 @@ export async function POST(
     });
 
     // Audit Log in Ops Log
-    await OpsAuthService.logEvent(session.user.id, "OPS_KYC_OVERRIDE", {
+    await OpsAuthService.logEvent(session?.user.id, "OPS_KYC_OVERRIDE", {
       storeId: record.storeId,
       recordId: record.id,
       reason,

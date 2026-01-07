@@ -5,7 +5,7 @@ import { PERMISSIONS } from "@/lib/team/permissions";
 
 export const GET = withRBAC(PERMISSIONS.COMMERCE_VIEW, async (session: any) => {
   try {
-    const storeId = session.user.storeId;
+    const storeId = session.storeId;
 
     // 1. Calculate Score based on real metrics
     // Metrics: Order Success Rate, AI Resolution Rate, Return Rate

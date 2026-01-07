@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { ReportsService } from "@/lib/reports";
+import { requireAuth } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const { searchParams } = new URL(req.url);
   const fromStr = searchParams.get("from");
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     ? new Date(fromStr)
     : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const data = await ReportsService.getSummary((session!.user as any).storeId, {
+  const data = await ReportsService.getSummary(user.storeId, {
     from,
     to,
   });

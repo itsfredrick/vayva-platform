@@ -1,4 +1,6 @@
-import { PLANS as CONFIG_PLANS, PlanKey } from "@/config/pricing";
+import { PLANS as CONFIG_PLANS, PlanKey as ConfigPlanKey } from "@/config/pricing";
+
+export type PlanKey = ConfigPlanKey;
 
 export const PLAN_PRICING = {
   GROWTH: CONFIG_PLANS.find((p) => p.key === "growth")?.monthlyAmount || 25000,
@@ -7,7 +9,7 @@ export const PLAN_PRICING = {
 
 export interface PlanLimits {
   teamSeats: number;
-  templatesAvailable: "limited" | "all";
+  maxOwnedTemplates: number;
   monthlyCampaignSends: number;
 }
 
@@ -33,7 +35,7 @@ export const PLANS: Record<string, PlanDefinition> = {
     priceNgn: 0,
     limits: {
       teamSeats: 1,
-      templatesAvailable: "limited",
+      maxOwnedTemplates: 0,
       monthlyCampaignSends: 100,
     },
     features: {
@@ -49,7 +51,7 @@ export const PLANS: Record<string, PlanDefinition> = {
     priceNgn: PLAN_PRICING.GROWTH,
     limits: {
       teamSeats: 1,
-      templatesAvailable: "limited",
+      maxOwnedTemplates: 3,
       monthlyCampaignSends: 1000,
     },
     features: {
@@ -65,7 +67,7 @@ export const PLANS: Record<string, PlanDefinition> = {
     priceNgn: PLAN_PRICING.PRO,
     limits: {
       teamSeats: 5,
-      templatesAvailable: "all",
+      maxOwnedTemplates: 100, // Unlimited effectively
       monthlyCampaignSends: 10000,
     },
     features: {

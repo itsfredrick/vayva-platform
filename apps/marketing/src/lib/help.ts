@@ -26,13 +26,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
         content: `
       Vayva offers two flexible delivery models:
       
-      1. **Vayva Delivery Partner (Kwik)**: 
+      1. Vayva Delivery Partner (Kwik): 
          Use our integrated partner for automatic dispatching and tracking. Suitable for Lagos-based merchants.
-      
-      2. **Own Dispatch Rider**:
+      2. Own Dispatch Rider:
          If you have your own riders, you can manage them manually. Simply select 'Self Dispatch' in your merchant settings.
          
-      To configure these, go to **Settings > Delivery** in your Merchant Dashboard.
+      To configure these, go to Settings > Delivery in your Merchant Dashboard.
     `
     },
     {

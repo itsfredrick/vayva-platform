@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button, Icon } from "@vayva/ui";
 import { PLANS, formatNGN, FEES } from "@/config/pricing";
 import { APP_URL } from "@/lib/constants";
@@ -23,21 +24,18 @@ export default function PricingPage() {
             our core WhatsApp capture engine.
           </p>
 
-          <Link href={`${APP_URL}/signup`}>
-            <Button className="mb-10 bg-[#22C55E] hover:bg-[#16A34A] text-white px-8 py-4 rounded-xl text-lg font-bold shadow-lg shadow-green-100 transition-all hover:scale-105">
-              Start Selling for Free
-            </Button>
-          </Link>
 
           {/* FEE DISCLOSURE - CLEAR & HONEST */}
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-red-50 border border-red-100 rounded-2xl animate-in fade-in slide-in-from-top-4 duration-700">
-            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-              <Icon name="Info" size={18} />
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-red-50 border border-red-100 rounded-2xl animate-in fade-in slide-in-from-top-4 duration-700">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                <Icon name="Info" size={18} />
+              </div>
+              <p className="text-sm font-bold text-red-900">
+                Honest Disclosure: A {FEES.WITHDRAWAL_PERCENTAGE}% transaction fee
+                is charged on every withdrawal.
+              </p>
             </div>
-            <p className="text-sm font-bold text-red-900">
-              Honest Disclosure: A {FEES.WITHDRAWAL_PERCENTAGE}% transaction fee
-              is charged on every withdrawal.
-            </p>
           </div>
         </div>
       </section>
@@ -45,7 +43,7 @@ export default function PricingPage() {
       {/* Pricing Cards */}
       <section className="pb-32 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-8 overflow-x-auto pb-8 lg:pb-0 px-4 -mx-4 lg:px-0 lg:mx-0 snap-x snap-mandatory scrollbar-hide">
             {PLANS.map((plan) => {
               const isCurrentPlan = isAuthenticated && tier === plan.key;
               const isUpgrade = isAuthenticated && tier === "free" && plan.key !== "free";
@@ -70,14 +68,18 @@ export default function PricingPage() {
               }
 
               return (
-                <div
+                <motion.div
                   key={plan.key}
-                  className={`relative flex flex-col p-8 rounded-[32px] border ${isCurrentPlan
+                  initial={{ scale: 0.9, opacity: 0.6 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  viewport={{ once: false, amount: 0.5 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className={`relative flex flex-col p-6 lg:p-8 rounded-[32px] border transition-all duration-300 snap-center shrink-0 w-[60vw] lg:w-full ${isCurrentPlan
                     ? "border-blue-500 shadow-2xl shadow-blue-100 ring-4 ring-blue-50 bg-blue-50/10"
                     : plan.featured
                       ? "border-[#22C55E] shadow-2xl shadow-green-100 ring-4 ring-green-50"
                       : "border-gray-100 shadow-xl"
-                    } bg-white`}
+                    } bg-white hover:scale-[1.01]`}
                 >
                   {plan.featured && !isCurrentPlan && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#22C55E] text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg">
@@ -91,18 +93,18 @@ export default function PricingPage() {
                     </div>
                   )}
 
-                  <div className="mb-8">
-                    <h3 className="text-2xl font-black text-[#0F172A] mb-2">
+                  <div className="mb-6 lg:mb-8">
+                    <h3 className="text-xl lg:text-2xl font-black text-[#0F172A] mb-2">
                       {plan.name}
                     </h3>
-                    <p className="text-sm text-gray-400 font-medium">
+                    <p className="text-sm text-gray-400 font-medium leading-relaxed">
                       {plan.tagline}
                     </p>
                   </div>
 
-                  <div className="mb-8">
+                  <div className="mb-6 lg:mb-8">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-5xl font-black text-[#0F172A]">
+                      <span className="text-4xl lg:text-5xl font-black text-[#0F172A]">
                         {formatNGN(plan.monthlyAmount)}
                       </span>
                       {plan.monthlyAmount > 0 && (
@@ -157,7 +159,7 @@ export default function PricingPage() {
                       </Button>
                     )}
                   </Link>
-                </div>
+                </motion.div>
               )
             })}
           </div>
@@ -204,7 +206,7 @@ export default function PricingPage() {
             {[
               {
                 q: "How does the 7-day trial work?",
-                a: "You get full access to the Pro features for 7 days. At the end of the trial, you can choose to subscribe or your account will be limited to the Free tier features.",
+                a: "You get full access to the starter features for 7 days. At the end of the trial, you can choose to subscribe or your account will be paused, if they dont subscribe, after 3 days it would be completely deleted.",
               },
               {
                 q: "When is the withdrawal fee charged?",
@@ -212,7 +214,7 @@ export default function PricingPage() {
               },
               {
                 q: "Can I cancel my subscription any time?",
-                a: "Yes. There are no long-term contracts. You can cancel your paid plan at any time from your billing dashboard.",
+                a: "There are no long-term contracts. You can cancel your paid plan at any time from your billing dashboard.",
               },
             ].map((faq, i) => (
               <div

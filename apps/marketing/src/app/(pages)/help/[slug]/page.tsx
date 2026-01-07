@@ -65,13 +65,19 @@ export default function HelpArticlePage() {
                   </h3>
                 );
               }
-              if (line.trim().startsWith("1.") || line.trim().startsWith("-")) {
+              if (line.trim().startsWith("1.") || line.trim().startsWith("-") || /^[0-9]\./.test(line.trim())) {
+                const cleanLine = line.trim().replace(/^[0-9]\.?\s*(- )?/, "").trim();
                 return (
-                  <li key={i} className="ml-4 mb-2">
-                    {line
-                      .trim()
-                      .replace(/^[0-9\.-]+/, "")
-                      .trim()}
+                  <li key={i} className="ml-4 mb-2 flex items-start gap-3">
+                    <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-[#22C55E] mt-2" />
+                    <span className="text-gray-700">
+                      {cleanLine.includes(":") ? (
+                        <>
+                          <span className="font-bold text-[#0F172A]">{cleanLine.split(":")[0]}:</span>
+                          {cleanLine.split(":")[1]}
+                        </>
+                      ) : cleanLine}
+                    </span>
                   </li>
                 );
               }
@@ -83,7 +89,7 @@ export default function HelpArticlePage() {
 
         <div className="mt-16 pt-12 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="text-sm text-gray-400">
-            Last updated: <strong>{article.lastUpdated}</strong>
+            Last updated: <span className="font-bold text-gray-600">{article.lastUpdated || "Jan 07, 2026"}</span>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm font-bold text-gray-900">

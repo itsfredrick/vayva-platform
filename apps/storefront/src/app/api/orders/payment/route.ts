@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PaystackService } from "@/lib/paystack";
 import { reportError } from "@/lib/error";
+import { prisma } from "@vayva/db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,16 +15,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Amount comes in as Naira, convert to Kobo if not already?
-    // Let's assume input is in Naira for safety from frontend, but usually frontend sends NGN.
-    // Paystack expects Kobo (integer).
-    // Let's ensure we are dealing with Kobo.
-    // Storefront service passes 'amount' which is usually NGN.
-    // Let's cast to Kobo: Math.round(amount * 100).
+    // 1. Fetch Order to confirm existence
+    const order = await prisma.order.findUnique({
+      where: { id: orderId }
+    });
 
-    // Wait, did the caller already convert?
-    // StorefrontService.initializePayment passes { amount: number }
-    // Let's assume it's NGN (standard display currency).
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Platform-Centric Payment:
+    // We utilize the Platform's Paystack Keys (configured in ENV).
+    // The money is collected by the Platform, then credited to the Merchant's internal Wallet via Webhook worker.
+    // Merchants withdraw from Wallet.
 
     const amountKobo = Math.round(amount * 100);
 
@@ -34,6 +38,8 @@ export async function POST(req: NextRequest) {
       callback_url: callbackUrl,
       metadata: {
         order_id: orderId,
+        storeId: order.storeId, // Important for Worker to credit correct wallet
+        type: "storefront_order", // Critical for Worker routing
         custom_fields: [
           {
             display_name: "Order ID",

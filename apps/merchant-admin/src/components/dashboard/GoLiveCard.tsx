@@ -78,32 +78,41 @@ export function GoLiveCard() {
     readiness.issues?.filter((i: any) => i.severity === "blocker") || [];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-      <div className="flex justify-between items-start mb-4">
+    <div className="glass-card p-6 rounded-3xl shadow-sm border-none">
+      <div className="flex justify-between items-start mb-6">
         <div>
           <h3 className="text-lg font-bold text-gray-900">Store Status</h3>
-          <p className="text-sm text-gray-500">Manage your public presence.</p>
+          <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">Public Presence</p>
         </div>
-        <div
-          className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-            isLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-          }`}
-        >
-          {isLive ? "Live" : "Offline"}
+        <div className="relative">
+          <div
+            className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-500 shadow-sm ${isLive
+                ? "bg-green-500 text-white shadow-green-100"
+                : "bg-gray-100 text-gray-400"
+              }`}
+          >
+            {isLive ? "Live" : "Offline"}
+          </div>
+          {isLive && (
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-25" />
+          )}
         </div>
       </div>
 
       {isLive ? (
         <div className="space-y-4">
-          <div className="p-4 bg-green-50 rounded-lg flex items-center gap-3">
-            <Icon name={"Globe" as any} className="text-green-600" />
+          <div className="p-4 bg-gray-50/50 backdrop-blur-sm rounded-2xl border border-gray-100 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-indigo-600">
+              <Icon name="Globe" size={20} />
+            </div>
             <div className="flex-1">
-              <div className="text-xs text-green-700 font-bold uppercase">
-                Public URL
+              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                Storefront URL
               </div>
               <a
                 href="#"
-                className="text-sm font-medium text-green-900 underline"
+                className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors"
+                onClick={(e) => e.preventDefault()}
               >
                 vayva.ng/store
               </a>
@@ -111,31 +120,31 @@ export function GoLiveCard() {
             <button
               onClick={handleUnpublish}
               disabled={processing}
-              className="text-xs text-red-600 font-bold hover:underline"
+              className="px-3 py-1.5 text-[10px] text-red-500 font-bold hover:bg-red-50 rounded-lg transition-all"
             >
               Unpublish
             </button>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {!isReady && (
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
-              <div className="flex items-center gap-2 mb-2 text-orange-800 font-bold text-sm">
-                <Icon name={"AlertTriangle" as any} size={16} />
-                {blockers.length} Issues preventing Go Live
+            <div className="bg-orange-50/50 backdrop-blur-sm p-4 rounded-2xl border border-orange-100">
+              <div className="flex items-center gap-2 mb-3 text-orange-800 font-bold text-sm">
+                <Icon name="AlertTriangle" size={16} />
+                <span>Requires Attention</span>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {blockers.map((b: any) => (
                   <div
                     key={b.code}
-                    className="text-xs text-orange-700 flex justify-between"
+                    className="text-xs text-orange-700 flex items-center justify-between bg-white/50 p-2 rounded-xl"
                   >
-                    <span>• {b.title}</span>
+                    <span className="font-medium">• {b.title}</span>
                     {b.actionUrl && (
                       <a
                         href={b.actionUrl}
-                        className="underline hover:text-orange-900"
+                        className="text-[10px] font-bold uppercase bg-orange-100 text-orange-800 px-2 py-1 rounded-lg hover:bg-orange-200 transition-colors"
                       >
                         Fix
                       </a>
@@ -149,15 +158,26 @@ export function GoLiveCard() {
           <button
             onClick={handleGoLive}
             disabled={!isReady || processing}
-            className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 ${
-              !isReady
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-black text-white hover:bg-gray-800"
-            }`}
+            className={`w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all group ${!isReady
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-inner"
+                : "bg-black text-white hover:bg-gray-800 hover:shadow-xl shadow-lg shadow-black/10 active:scale-[0.98]"
+              }`}
           >
-            {processing ? "Publishing..." : "Go Live Now"}
-            <Icon name={"ArrowRight" as any} size={16} />
+            {processing ? (
+              <Icon name="Loader2" size={18} className="animate-spin" />
+            ) : (
+              <>
+                <span>Launch My Store</span>
+                <Icon name="ArrowRight" size={16} className="group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
+
+          {!isReady && (
+            <p className="text-[10px] text-gray-400 text-center font-medium">
+              Complete the above tasks to enable your storefront.
+            </p>
+          )}
         </div>
       )}
     </div>

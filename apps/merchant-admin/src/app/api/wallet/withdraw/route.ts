@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@vayva/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
+import { requireAuth } from "@/lib/session";
 
 /**
  * Real Withdrawal Implementation
  * Requirements: Auth, Balance Check, Idempotent Debit, Audit Log
  */
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.storeId) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+  const user = await requireAuth();
 
   try {
     const { amount, bankAccountId, pin } = await req.json();
-    const storeId = session.user.storeId;
-    const userId = session.user.id;
+    const storeId = user.storeId;
+    const userId = user.id;
 
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });

@@ -1,3 +1,4 @@
+import { requireAuth } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 import { AIService, AIMessage } from "@/lib/ai/aiService";
 
@@ -35,10 +36,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get session for storeId
-    const { requireAuth } = await import("@/lib/auth/session");
-    const session = await requireAuth();
-    const storeId = session.user.storeId;
+    // Get user for storeId
+    const { requireAuth } = await import("@/lib/session");
+    const user = await requireAuth();
+    const storeId = user.storeId;
 
     if (!storeId) {
       return NextResponse.json(
@@ -47,8 +48,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get AI response using SalesAgent
     const { SalesAgent } = await import("@/lib/ai/sales-agent");
+
+    // Check if streaming is requested (default to true for dashboard)
+    const shouldStream = request.nextUrl.searchParams.get("stream") !== "false";
+
+    if (shouldStream) {
+      const result = await SalesAgent.streamMessage(storeId, messages, {
+        conversationId: context?.conversationId,
+        requestId: crypto.randomUUID(),
+      });
+
+      return result.toTextStreamResponse();
+    }
+
+    // Fallback to traditional JSON for non-streaming clients
     const response = await SalesAgent.handleMessage(storeId, messages, context);
 
     return NextResponse.json({
@@ -56,7 +70,7 @@ export async function POST(request: NextRequest) {
       data: response,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("AI Chat API Error:", error);
     return NextResponse.json(
       {

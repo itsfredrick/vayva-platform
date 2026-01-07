@@ -9,7 +9,7 @@ interface SplitAuthLayoutProps {
   children: React.ReactNode;
   stepIndicator?: string;
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   showSignInLink?: boolean;
   showSignUpLink?: boolean;
 }

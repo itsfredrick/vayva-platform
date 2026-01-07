@@ -44,10 +44,10 @@ const navigation = [
       },
       {
         name: "Plans & Billing",
-        href: "/dashboard/settings/subscription",
+        href: "/dashboard/billing",
         icon: CreditCard,
       },
-      { name: "Billing", href: "/dashboard/settings/billing", icon: Receipt },
+      { name: "Billing", href: "/dashboard/billing", icon: Receipt },
       { name: "Invoices", href: "/dashboard/settings/invoices", icon: Receipt },
       { name: "Usage & Limits", href: "/dashboard/settings/usage", icon: BarChart3 },
       {

@@ -43,7 +43,7 @@ export default function ResumePage() {
         }
       } else {
         // Start fresh
-        router.replace("/onboarding/welcome");
+        router.replace("/onboarding/business");
       }
     }
   }, [state, loading, router]);

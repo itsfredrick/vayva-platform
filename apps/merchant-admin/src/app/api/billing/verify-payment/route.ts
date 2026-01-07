@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { PaystackService } from "@/lib/payment/paystack";
 import { prisma } from "@vayva/db";
-import { requireAuth } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/session";
 import { checkPermission } from "@/lib/team/rbac";
 import { PERMISSIONS } from "@/lib/team/permissions";
 import { logAudit, AuditAction } from "@/lib/audit";
@@ -9,11 +9,11 @@ import { logAudit, AuditAction } from "@/lib/audit";
 export async function POST(request: Request) {
   try {
     // 1. Require Session Auth & RBAC
-    const session = await requireAuth();
+    const user = await requireAuth();
     await checkPermission(PERMISSIONS.BILLING_MANAGE);
 
-    const storeId = session.user.storeId;
-    const userId = session.user.id;
+    const storeId = user.storeId;
+    const userId = user.id;
 
     const body = await request.json();
     const { reference } = body;
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
         actor: {
           type: "USER",
           id: userId,
-          label: session.user.email || "Merchant",
+          label: user.email || "Merchant",
         },
         action: AuditAction.PLAN_CHANGED,
         before: { plan: oldPlan },

@@ -1,23 +1,36 @@
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   useStorefrontProducts,
   useStorefrontStore,
 } from "@/hooks/storefront/useStorefront";
 import { useStorefrontCart } from "@/hooks/storefront/useStorefrontCart";
 import { CheckoutModal } from "./CheckoutModal";
+import { StorefrontCart } from "./StorefrontCart";
 import { ShoppingBag, X, Star, Globe, CheckCircle } from "lucide-react";
+import { StorefrontSEO } from "./StorefrontSEO";
+import { useCartQuery } from "@/hooks/storefront/useStorefrontQuery";
 
 export function LearnHubCourses({
   storeName: initialStoreName,
   storeSlug,
+  config: configOverride,
 }: {
   storeName: string;
   storeSlug?: string;
+  config?: any;
 }) {
   const { store } = useStorefrontStore(storeSlug);
   const { products, isLoading } = useStorefrontProducts(storeSlug, {
     limit: 12,
   });
+
+  // Config Merging logic
+  const config = {
+    primaryColor: configOverride?.primaryColor || store?.templateConfig?.primaryColor || "#2563eb",
+    heroTitle: configOverride?.heroTitle || store?.templateConfig?.heroTitle || "Learn without limits",
+    heroDesc: configOverride?.heroDesc || store?.templateConfig?.heroDesc || "Build skills with courses, certificates, and degrees online from world-class universities and companies.",
+  };
 
   const {
     cart,
@@ -29,12 +42,16 @@ export function LearnHubCourses({
     setIsOpen: setIsCartOpen,
     clearCart,
   } = useStorefrontCart(storeSlug || "");
+
+  useCartQuery(isCartOpen, setIsCartOpen);
+
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const displayName = store?.name || initialStoreName;
 
   return (
     <div className="bg-[#f8f9fa] min-h-screen font-sans text-[#333]">
+      <StorefrontSEO store={store} products={products} />
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -45,7 +62,7 @@ export function LearnHubCourses({
       />
 
       {/* Header */}
-      <nav className="bg-blue-600 text-white sticky top-0 z-50 shadow-lg">
+      <nav className="sticky top-0 z-50 shadow-lg" style={{ backgroundColor: config.primaryColor, color: '#fff' }}>
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="font-bold text-xl tracking-tight flex items-center gap-2">
             <Globe className="w-6 h-6" />
@@ -69,7 +86,8 @@ export function LearnHubCourses({
               Log In
             </button>
             <button
-              className="bg-white text-blue-600 px-4 py-2 rounded font-bold text-sm hover:bg-blue-50 transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2"
+              style={{ backgroundColor: '#fff', color: config.primaryColor }}
               onClick={() => setIsCartOpen(true)}
             >
               <ShoppingBag className="w-4 h-4" />
@@ -79,126 +97,71 @@ export function LearnHubCourses({
         </div>
       </nav>
 
-      {/* Cart Drawer */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div
-            className="absolute inset-0 bg-blue-900/30 backdrop-blur-sm"
-            onClick={() => setIsCartOpen(false)}
-          />
-          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="font-bold text-xl text-blue-900">
-                Your Learning Plan
-              </h2>
-              <button onClick={() => setIsCartOpen(false)}>
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-auto p-6 space-y-6">
-              {cart.length === 0 ? (
-                <div className="text-center py-10 opacity-60">
-                  <p className="text-gray-400">Cart is empty.</p>
-                </div>
-              ) : (
-                cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white border border-gray-100 rounded-lg p-4 shadow-sm"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-gray-800 text-sm">
-                        {item.name}
-                      </h3>
-                      <span className="font-bold text-blue-600">
-                        ₦{(item.price * item.quantity).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="text-xs text-green-600 font-bold flex items-center gap-1 mb-4">
-                      <CheckCircle className="w-3 h-3" /> Includes Certificate
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="text-xs text-red-500 font-medium hover:underline"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {cart.length > 0 && (
-              <div className="p-6 border-t border-gray-100 bg-gray-50">
-                <div className="flex justify-between text-lg font-bold mb-4">
-                  <span>Total:</span>
-                  <span>₦{total.toLocaleString()}</span>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsCartOpen(false);
-                    setIsCheckoutOpen(true);
-                  }}
-                  className="w-full bg-blue-600 text-white py-3 font-bold rounded shadow-lg hover:bg-blue-700 transition-colors"
-                >
-                  Proceed to Payment
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Shared Cart Component */}
+      <StorefrontCart
+        storeSlug={storeSlug || ""}
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onCheckout={() => {
+          setIsCartOpen(false);
+          setIsCheckoutOpen(true);
+        }}
+      />
 
       {/* Hero */}
-      <div className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-20 flex items-center">
           <div className="max-w-2xl">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 text-[#1f1f1f] tracking-tight">
-              Learn without limits
+              {config.heroTitle}
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-lg">
-              Build skills with courses, certificates, and degrees online from
-              world-class universities and companies.
+              {config.heroDesc}
             </p>
             <div className="flex gap-4">
-              <button className="bg-blue-600 text-white px-8 py-4 font-bold rounded text-lg shadow-blue-200 shadow-xl hover:bg-blue-700 transition-colors">
+              <button
+                className="text-white px-8 py-4 font-bold rounded text-lg shadow-xl hover:opacity-90 transition-colors"
+                style={{ backgroundColor: config.primaryColor }}
+              >
                 Start Learning Free
               </button>
-              <button className="border border-blue-600 text-blue-600 px-8 py-4 font-bold rounded text-lg hover:bg-blue-50 transition-colors">
+              <button
+                className="border px-8 py-4 font-bold rounded text-lg hover:bg-blue-50 transition-colors"
+                style={{ borderColor: config.primaryColor, color: config.primaryColor }}
+              >
                 Career Guide
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Stats */}
-      <div className="bg-gray-100 border-b border-gray-200 py-12">
+      <section className="bg-gray-100 border-b border-gray-200 py-12">
         <div className="max-w-7xl mx-auto px-6 flex justify-around text-center">
           <div>
-            <div className="text-3xl font-bold text-blue-600 mb-1">82%</div>
+            <div className="text-3xl font-bold mb-1" style={{ color: config.primaryColor }}>82%</div>
             <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
               Report Career Benefits
             </div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-blue-600 mb-1">100+</div>
+            <div className="text-3xl font-bold mb-1" style={{ color: config.primaryColor }}>100+</div>
             <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
               Global Partners
             </div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-blue-600 mb-1">24/7</div>
+            <div className="text-3xl font-bold mb-1" style={{ color: config.primaryColor }}>24/7</div>
             <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
               Online Support
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Course Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <main className="max-w-7xl mx-auto px-6 py-16">
         <h2 className="text-2xl font-bold mb-8 text-[#1f1f1f]">
           Most Popular Certificates
         </h2>
@@ -214,18 +177,21 @@ export function LearnHubCourses({
         ) : (
           <div className="grid md:grid-cols-4 gap-6">
             {products.map((course) => (
-              <div
+              <article
                 key={course.id}
                 className="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all h-full flex flex-col group cursor-pointer"
                 onClick={() => addToCart(course)}
               >
                 <div className="h-40 bg-gray-200 relative">
-                  <img
+                  <Image
                     src={
                       course.image ||
                       `https://via.placeholder.com/300x200?text=${encodeURIComponent(course.name)}`
                     }
-                    className="w-full h-full object-cover"
+                    alt={course.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   />
                   <div className="absolute top-2 left-2 bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded shadow-sm">
                     Professional Cert
@@ -252,19 +218,19 @@ export function LearnHubCourses({
                   </p>
 
                   <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-                    <div className="font-bold text-lg text-blue-700">
+                    <div className="font-bold text-lg" style={{ color: config.primaryColor }}>
                       ₦{course.price.toLocaleString()}
                     </div>
-                    <button className="text-blue-600 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: config.primaryColor }}>
                       Enroll Now →
                     </button>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
-      </div>
+      </main>
 
       <footer className="bg-white border-t border-gray-200 mt-20 py-12 text-center text-gray-500 text-sm">
         &copy; 2024 {displayName} Inc. All rights reserved.

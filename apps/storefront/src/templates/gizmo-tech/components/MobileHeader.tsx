@@ -25,12 +25,12 @@ export const MobileHeader = ({
       </div>
 
       <div className="flex items-center gap-5 text-[#0B0F19]">
-        <button className="p-1 hover:text-blue-600 transition-colors">
+        <button className="p-1 hover:text-brand transition-colors">
           <Search size={20} strokeWidth={2} />
         </button>
         <Link
           href="/cart"
-          className="relative p-1 hover:text-blue-600 transition-colors"
+          className="relative p-1 hover:text-brand transition-colors"
         >
           <ShoppingBag size={20} strokeWidth={2} />
           {cartItemCount > 0 && (

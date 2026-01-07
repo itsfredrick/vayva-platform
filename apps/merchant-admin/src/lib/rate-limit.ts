@@ -25,6 +25,12 @@ export async function checkRateLimit(
   durationSeconds: number,
   storeId?: string,
 ): Promise<void> {
+  // Disable rate limiting in development
+  if (process.env.NODE_ENV === "development" || process.env.DISABLE_RATE_LIMITING === "true") {
+    console.log(`[RateLimit] Bypassed for ${routeKey} (development mode)`);
+    return;
+  }
+
   const key = `rl:${routeKey}:${userId}`;
   const now = new Date();
 

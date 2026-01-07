@@ -7,8 +7,8 @@ import {
 } from "@vayva/db";
 import { getDeliveryProvider, DispatchData } from "./DeliveryProvider";
 
-// Helper to bypass strict typing issues with generated client temporarily
-const db = prisma as any;
+// Using global prisma instance directly now that types are aligned
+const db = prisma;
 
 interface AutoDispatchResult {
   success: boolean;
@@ -194,7 +194,9 @@ export class DeliveryService {
           provider: settings.provider,
           status: "DRAFT",
           recipientName:
-            order.Shipment?.recipientName || order.Customer?.name || "Customer",
+            order.Shipment?.recipientName ||
+            (order.Customer ? `${order.Customer.firstName || ""} ${order.Customer.lastName || ""}`.trim() : "") ||
+            "Customer",
           recipientPhone:
             order.Shipment?.recipientPhone ||
             order.customerPhone ||
@@ -218,7 +220,9 @@ export class DeliveryService {
           entity: { type: "ORDER", id: order.id },
           after: { mode: "CONFIRM", channel },
         });
-      } catch (ignore: any) { }
+      } catch (ignore: any) {
+        console.warn("[AutoDispatch] Audit log failed (CONFIRM mode):", ignore.message);
+      }
 
       return {
         success: true,
@@ -237,7 +241,9 @@ export class DeliveryService {
     const dispatchData: DispatchData = {
       id: order.id,
       recipientName:
-        order.Shipment?.recipientName || order.Customer?.name || "Customer",
+        order.Shipment?.recipientName ||
+        (order.Customer ? `${order.Customer.firstName || ""} ${order.Customer.lastName || ""}`.trim() : "") ||
+        "Customer",
       recipientPhone:
         order.Shipment?.recipientPhone ||
         order.customerPhone ||
@@ -314,7 +320,7 @@ export class DeliveryService {
           },
         });
       } catch (ignore: any) {
-        /* non-blocking */
+        console.warn("[AutoDispatch] Audit log failed (AUTO mode):", ignore.message);
       }
 
       return { success: true, status: "DISPATCHED", shipment };

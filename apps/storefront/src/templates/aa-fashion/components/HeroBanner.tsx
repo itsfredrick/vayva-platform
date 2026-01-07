@@ -8,7 +8,7 @@ interface HeroBannerProps {
 }
 
 export const HeroBanner = ({
-  imageUrl = "https://placehold.co/800x600/111111/FFFFFF?text=New+Collection",
+  imageUrl = "/images/hero-lifestyle.jpg",
   title = "NEW COLLECTION",
   subtitle = "Shop the latest arrivals",
 }: HeroBannerProps) => {

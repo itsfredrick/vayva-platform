@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await requireAuth();
 
-    if (!session || !session.user) {
+    if (!user || !user) {
       return NextResponse.json({});
     }
 
-    const user = session.user as any;
+    
     const storeId = user.storeId;
 
     if (!storeId) {

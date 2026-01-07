@@ -1,18 +1,15 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { prisma } from "@vayva/db";
+import { requireAuth } from "@/lib/session";
 
 export async function checkAppLaunchStatus() {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user) {
-    return { status: "unauthenticated" };
-  }
+  const user = await requireAuth();
 
   const store = await prisma.store.findUnique({
-    where: { id: (session.user as any).storeId },
+    where: { id: user.storeId },
     select: { onboardingCompleted: true },
   });
 

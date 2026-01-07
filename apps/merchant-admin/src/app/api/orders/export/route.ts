@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
+import { requireAuth } from "@/lib/session";
 import { prisma } from "@vayva/db";
 import { authorizeAction, AppRole } from "@/lib/permissions";
 import { logAuditEvent, AuditEventType } from "@/lib/audit";
 
 export async function GET(request: Request) {
   try {
-    const user = await getSessionUser();
+    const user = await requireAuth();
     // Permission Check (Exports are sensitive, maybe Staff+)
     const authError = await authorizeAction(user || undefined, AppRole.STAFF);
     if (authError) return authError;

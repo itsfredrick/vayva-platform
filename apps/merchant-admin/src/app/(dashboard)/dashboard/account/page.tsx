@@ -1,18 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-    User,
-    Building2,
-    CreditCard,
-    LogOut,
-    ChevronRight,
-    Shield,
-    ExternalLink,
-    HelpCircle,
-    Mail
-} from "lucide-react";
-import { Button, Card, Avatar } from "@vayva/ui";
+import { Skeleton } from "@/components/LoadingSkeletons";
+import { Icon, Button, Card, Avatar } from "@vayva/ui";
 import Link from "next/link";
 
 interface AccountData {
@@ -49,11 +39,11 @@ export default function AccountHubPage() {
 
     if (loading) {
         return (
-            <div className="p-8 max-w-4xl mx-auto space-y-8 animate-pulse">
-                <div className="h-20 w-48 bg-gray-100 rounded-lg" />
+            <div className="p-8 max-w-4xl mx-auto space-y-8">
+                <Skeleton className="h-10 w-48" />
                 <div className="space-y-4">
-                    <div className="h-40 w-full bg-gray-50 rounded-xl border border-gray-100" />
-                    <div className="h-40 w-full bg-gray-50 rounded-xl border border-gray-100" />
+                    <Skeleton className="h-40 w-full rounded-xl" />
+                    <Skeleton className="h-40 w-full rounded-xl" />
                 </div>
             </div>
         );
@@ -94,7 +84,7 @@ export default function AccountHubPage() {
                     <Card className="p-6 flex flex-col justify-between space-y-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-indigo-50 rounded-lg">
-                                <Building2 className="w-5 h-5 text-indigo-600" />
+                                <Icon name="Building2" className="text-indigo-600" size={20} />
                             </div>
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Business Name</p>
@@ -103,7 +93,7 @@ export default function AccountHubPage() {
                         </div>
                         <Link href="/dashboard/settings/profile">
                             <Button variant="ghost" size="sm" className="w-full justify-between text-indigo-600 px-0 hover:bg-transparent">
-                                Update Store Profile <ChevronRight className="w-4 h-4" />
+                                Update Store Profile <Icon name="ChevronRight" size={16} />
                             </Button>
                         </Link>
                     </Card>
@@ -111,7 +101,7 @@ export default function AccountHubPage() {
                     <Card className="p-6 flex flex-col justify-between space-y-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-emerald-50 rounded-lg">
-                                <CreditCard className="w-5 h-5 text-emerald-600" />
+                                <Icon name="CreditCard" className="text-emerald-600" size={20} />
                             </div>
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Current Plan</p>
@@ -120,7 +110,7 @@ export default function AccountHubPage() {
                         </div>
                         <Link href="/dashboard/billing">
                             <Button variant="ghost" size="sm" className="w-full justify-between text-emerald-600 px-0 hover:bg-transparent">
-                                Manage Subscription <ChevronRight className="w-4 h-4" />
+                                Manage Subscription <Icon name="ChevronRight" size={16} />
                             </Button>
                         </Link>
                     </Card>
@@ -130,15 +120,15 @@ export default function AccountHubPage() {
             {/* Utilities */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link href="/dashboard/support" className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100 group">
-                    <HelpCircle className="w-5 h-5 text-gray-500 group-hover:text-black" />
+                    <Icon name="HelpCircle" className="text-gray-500 group-hover:text-black" size={20} />
                     <span className="text-sm font-medium text-gray-700">Get Help</span>
                 </Link>
                 <Link href="/dashboard/settings/security" className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100 group">
-                    <Shield className="w-5 h-5 text-gray-500 group-hover:text-black" />
+                    <Icon name="Shield" className="text-gray-500 group-hover:text-black" size={20} />
                     <span className="text-sm font-medium text-gray-700">Security</span>
                 </Link>
                 <a href="mailto:support@vayva.ng" className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100 group">
-                    <Mail className="w-5 h-5 text-gray-500 group-hover:text-black" />
+                    <Icon name="Mail" className="text-gray-500 group-hover:text-black" size={20} />
                     <span className="text-sm font-medium text-gray-700">Compliance</span>
                 </a>
             </div>
@@ -150,7 +140,7 @@ export default function AccountHubPage() {
                     className="w-full md:w-auto text-red-600 hover:bg-red-50 hover:text-red-700 gap-2 font-bold"
                     onClick={handleSignOut}
                 >
-                    <LogOut className="w-5 h-5" />
+                    <Icon name="LogOut" size={20} />
                     Sign Out of Vayva
                 </Button>
             </div>

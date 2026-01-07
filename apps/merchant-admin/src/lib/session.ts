@@ -1,197 +1,135 @@
-import jwt from "jsonwebtoken";
 import { prisma } from "@vayva/db";
-import { cookies } from "next/headers";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  process.env.NEXTAUTH_SECRET ||
-  "dev-secret-change-in-production";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
-export const COOKIE_NAME = "vayva_session";
-
-export interface SessionPayload {
-  userId: string;
-  email: string;
-  storeId: string;
-  storeName: string;
-  role: string;
-}
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
 
 export interface SessionUser {
   id: string;
   email: string;
+  name: string | null;
   firstName: string | null;
   lastName: string | null;
+  phone: string | null;
   storeId: string;
   storeName: string;
   role: string;
+  emailVerified: boolean;
+  onboardingCompleted: boolean;
+}
+
+export interface OnboardingUser {
+  id: string;
+  email: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  emailVerified: boolean;
+  storeId?: string;
+  onboardingCompleted?: boolean;
 }
 
 /**
- * Generate JWT token for user session
+ * Internal helper to sync auth user user with Prisma DB
  */
-export function generateToken(payload: SessionPayload): string {
-  return jwt.sign({ ...payload }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN as any,
-  });
-}
+async function syncUser(sessionUser: any) {
+  const authId = sessionUser.id;
+  const email = sessionUser.email;
 
-/**
- * Verify and decode JWT token
- */
-export function verifyToken(token: string): SessionPayload | null {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as SessionPayload;
-    return decoded;
-  } catch (error: any) {
-    console.error("Token verification failed:", error);
-    return null;
-  }
-}
+  if (!email) return null;
 
-/**
- * Create session in database and set cookie
- */
-export async function createSession(
-  user: SessionUser,
-  device?: string,
-  ipAddress?: string,
-  rememberMe: boolean = false,
-): Promise<string> {
-  const payload: SessionPayload = {
-    userId: user.id,
-    email: user.email,
-    storeId: user.storeId,
-    storeName: user.storeName,
-    role: user.role,
-  };
-
-  const token = generateToken(payload);
-
-  // Calculate expiration date
-  // 30 days if rememberMe, 1 day if not (Standard security practice)
-  const expirationDays = rememberMe ? 30 : 1;
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + expirationDays);
-
-  // Create session record in database
-  await prisma.merchantSession.create({
-    data: {
-      userId: user.id,
-      token,
-      device: device || null,
-      ipAddress: ipAddress || null,
-      expiresAt,
-    },
-  });
-
-  // Set HTTP-only cookie
-  const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: expirationDays * 24 * 60 * 60,
-    path: "/",
-  });
-
-  return token;
-}
-
-/**
- * Get session from cookie and validate
- */
-export async function getSession(): Promise<SessionPayload | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  // Verify token
-  const payload = verifyToken(token);
-  if (!payload) {
-    return null;
-  }
-
-  // Check if session exists in database and hasn't expired
-  const session = await prisma.merchantSession.findUnique({
-    where: { token },
-  });
-
-  if (!session || session.expiresAt < new Date()) {
-    // Session expired or doesn't exist, clear cookie
-    await clearSession();
-    return null;
-  }
-
-  return payload;
-}
-
-/**
- * Get full user data from session
- */
-export async function getSessionUser(): Promise<SessionUser | null> {
-  const session = await getSession();
-  if (!session) {
-    return null;
-  }
-
-  // Fetch user with store membership
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
+  // Lazy sync user to Prisma
+  let user = await prisma.user.findUnique({
+    where: { authId },
     include: {
       memberships: {
-        where: {
-          storeId: session.storeId,
-          status: "active",
-        },
-        include: {
-          store: true,
-        },
+        where: { status: "active" },
+        include: { store: true },
       },
     },
   });
 
+  if (!user) {
+    // Try finding by email (migration scenario)
+    user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        memberships: {
+          where: { status: "active" },
+          include: { store: true },
+        },
+      },
+    });
+
+    if (user) {
+      // Link existing user to Auth
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { authId },
+        include: {
+          memberships: {
+            where: { status: "active" },
+            include: { store: true },
+          },
+        },
+      });
+    } else {
+      // Create new user
+      user = await prisma.user.create({
+        data: {
+          authId,
+          email,
+          firstName: (sessionUser as any).firstName || sessionUser.name?.split(' ')[0],
+          lastName: (sessionUser as any).lastName || sessionUser.name?.split(' ').slice(1).join(' '),
+          isEmailVerified: sessionUser.emailVerified,
+        },
+        include: {
+          memberships: {
+            where: { status: "active" },
+            include: { store: true },
+          },
+        },
+      });
+    }
+  }
+
+  return user;
+}
+
+/**
+ * Get full user data from Auth user and sync with Prisma
+ * Returns null if user is not authenticated or has no store membership.
+ */
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const sessionData = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!sessionData?.user) {
+    return null;
+  }
+
+  const user = await syncUser(sessionData.user);
   if (!user || user.memberships.length === 0) {
     return null;
   }
 
+  // Use the first active membership
   const membership = user.memberships[0];
 
   return {
     id: user.id,
     email: user.email,
+    name: user.name || `${user.firstName} ${user.lastName}`.trim() || user.email,
     firstName: user.firstName,
     lastName: user.lastName,
+    phone: user.phone,
     storeId: membership.storeId,
     storeName: membership.store.name,
     role: membership.role,
+    emailVerified: user.isEmailVerified || false,
+    onboardingCompleted: membership.store.onboardingStatus === "COMPLETE",
   };
-}
-
-/**
- * Clear session cookie and delete from database
- */
-export async function clearSession(): Promise<void> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-
-  if (token) {
-    // Delete session from database
-    try {
-      await prisma.merchantSession.delete({
-        where: { token },
-      });
-    } catch (error: any) {
-      // Session might not exist, ignore error
-      console.warn("Session deletion failed:", error);
-    }
-  }
-
-  // Clear cookie
-  cookieStore.delete(COOKIE_NAME);
 }
 
 /**
@@ -206,9 +144,84 @@ export async function requireAuth(): Promise<SessionUser> {
 }
 
 /**
+ * Get user data for Onboarding context
+ * PERMISSIVE: Returns user even if they have no store membership.
+ */
+export async function getOnboardingUser(): Promise<OnboardingUser | null> {
+  const sessionData = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!sessionData?.user) {
+    return null;
+  }
+
+  const user = await syncUser(sessionData.user);
+  if (!user) return null;
+
+  const membership = user.memberships[0];
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name || `${user.firstName} ${user.lastName}`.trim() || user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    phone: user.phone,
+    emailVerified: user.isEmailVerified || false,
+    storeId: membership?.storeId,
+    onboardingCompleted: membership?.store?.onboardingStatus === "COMPLETE"
+  };
+}
+
+/**
  * Check if user is authenticated
  */
 export async function isAuthenticated(): Promise<boolean> {
-  const session = await getSession();
-  return session !== null;
+  const sessionData = await auth.api.getSession({
+    headers: await headers()
+  });
+  return !!sessionData?.user;
+}
+
+/**
+ * Require access to a specific store
+ */
+export async function requireStoreAccess(storeId: string): Promise<SessionUser> {
+  const user = await requireAuth();
+  if (user.storeId !== storeId) {
+    throw new Error("Forbidden: Access to this store denied");
+  }
+  return user;
+}
+
+// ALIASES FOR BACKWARD COMPATIBILITY
+export const getSession = getSessionUser;
+export type SessionPayload = SessionUser;
+export const COOKIE_NAME = "better-auth.session_token";
+
+/**
+ * Higher-order function to wrap API handlers with authentication
+ */
+export function withAuth(
+  handler: (request: Request, user: SessionUser) => Promise<NextResponse>,
+) {
+  return async (request: Request) => {
+    try {
+      const user = await requireAuth();
+      return await handler(request, user);
+    } catch (error: any) {
+      if (error.message === "Unauthorized") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (error.message.startsWith("Forbidden")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      console.error("[withAuth] Error:", error);
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 },
+      );
+    }
+  };
 }

@@ -12,6 +12,7 @@ import { NotificationCenter } from "./notifications/NotificationCenter";
 import { GlobalBanner } from "./notifications/GlobalBanner";
 import { Logo } from "./Logo";
 import { SupportChat } from "./support/support-chat";
+import { CommandPalette } from "./ai/CommandPalette";
 import { FEATURES } from "@/lib/env-validation";
 
 const ALL_NAV_ITEMS = [
@@ -168,10 +169,40 @@ const ALL_NAV_ITEMS = [
     alwaysShow: true,
   },
   {
+    name: "Magic Studio",
+    icon: "Wand2",
+    href: "/dashboard/tools/cut-pro",
+    alwaysShow: true,
+  },
+  {
     name: "Help & Support",
     icon: "HelpCircle",
     href: "/dashboard/help",
     alwaysShow: true,
+  },
+];
+
+// Items for business settings sidebar
+const SETTINGS_NAV_ITEMS = [
+  { name: "General", icon: "Store", href: "/dashboard/settings/overview" },
+  { name: "Integrations", icon: "Puzzle", href: "/dashboard/settings/integrations" },
+  { name: "AI Agent", icon: "Zap", href: "/dashboard/settings/ai-agent" },
+  { name: "Team & Members", icon: "Users", href: "/dashboard/settings/team" },
+  { name: "Billing & Plan", icon: "CreditCard", href: "/dashboard/settings/billing" },
+];
+
+// Items for personal account sidebar
+const ACCOUNT_SIDEBAR_NAV_ITEMS = [
+  { name: "Personal Info", icon: "User", href: "/dashboard/account/overview" },
+  { name: "Sign In & Security", icon: "Shield", href: "/dashboard/account/security" },
+];
+
+// Items that should appear in the avatar dropdown
+const ACCOUNT_DROPDOWN_ITEMS = [
+  {
+    name: "Account Overview",
+    icon: "User",
+    href: "/dashboard/account/overview",
   },
 ];
 
@@ -215,6 +246,7 @@ export const AdminShell = ({
   // Store URL logic
   const [storeLink, setStoreLink] = useState<string>("");
   const [storeStatus, setStoreStatus] = useState<"live" | "draft">("draft");
+  const [storeLogo, setStoreLogo] = useState<string | null>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -232,9 +264,21 @@ export const AdminShell = ({
     fetch("/api/auth/merchant/me")
       .then((res) => res.json())
       .then((data) => {
-        if (data.store?.settings?.modules) {
-          setEnabledModules(data.store.settings.modules);
+        // Correctly handle the API response structure { user, merchant }
+        const merchantData = data.merchant || {};
+
+        // Use merchant logo if available
+        if (merchantData.logoUrl) {
+          setStoreLogo(merchantData.logoUrl);
+        }
+
+        // Check for modules in merchant settings or fallback
+        // Note: The API returns 'merchant' with flattened props, so we might need to check how settings are returned.
+        // If settings are not in the response yet, we might fallback to all true or default.
+        if (merchantData.settings?.modules) {
+          setEnabledModules(merchantData.settings.modules);
         } else {
+          // Default modules if not found
           setEnabledModules({ commerceRetail: true });
         }
       })
@@ -267,12 +311,20 @@ export const AdminShell = ({
     logout();
   };
 
+  // Switcher Logic for Sidebar
+  const isSettingsPath = pathname.startsWith("/dashboard/settings");
+  const isAccountPath = pathname.startsWith("/dashboard/account");
+
   // Filter Items
-  const visibleNavItems = ALL_NAV_ITEMS.filter((item) => {
-    if (item.alwaysShow) return true;
-    if (item.module && enabledModules[item.module]) return true;
-    return false;
-  });
+  const visibleNavItems = isSettingsPath
+    ? SETTINGS_NAV_ITEMS
+    : isAccountPath
+      ? ACCOUNT_SIDEBAR_NAV_ITEMS
+      : ALL_NAV_ITEMS.filter((item) => {
+        if (item.alwaysShow) return true;
+        if (item.module && enabledModules[item.module]) return true;
+        return false;
+      });
 
   // Sidebar Animation Variants
   const sidebarVariants = {
@@ -294,12 +346,12 @@ export const AdminShell = ({
   const bottomNavItems = [
     { name: "Home", icon: "LayoutDashboard", href: "/dashboard" },
     { name: "Orders", icon: "ShoppingBag", href: "/dashboard/orders" },
-    { name: "Wallet", icon: "Wallet", href: "/dashboard/finance/wallet" },
     { name: "Products", icon: "Package", href: "/dashboard/products" },
+    { name: "Wallet", icon: "Wallet", href: "/dashboard/finance/wallet" },
   ];
 
   return (
-    <div className="flex h-screen w-full bg-[#FBFCFC] overflow-hidden text-[#0B0B0B]">
+    <div className="flex h-screen w-full bg-background bg-noise overflow-hidden text-[#0B0B0B]">
       {/* MOBILE OVERLAY */}
       <AnimatePresence>
         {isMobile && mobileMenuOpen && (
@@ -316,7 +368,7 @@ export const AdminShell = ({
       {/* SIDEBAR (Drawer) */}
       <motion.aside
         className={cn(
-          "fixed md:relative h-full z-50 flex flex-col bg-white border-r border-gray-100 text-[#0B0B0B]",
+          "fixed md:relative h-full z-50 flex flex-col border-r border-gray-200/50 text-[#0B0B0B] bg-white/80 backdrop-blur-xl",
           isMobile ? "top-0 left-0 shadow-2xl w-[280px]" : "",
         )}
         variants={sidebarVariants}
@@ -326,16 +378,17 @@ export const AdminShell = ({
         onMouseEnter={() => !isMobile && setIsSidebarExpanded(true)}
         onMouseLeave={() => !isMobile && setIsSidebarExpanded(false)}
       >
-        {/* Mobile Drawer Header */}
-        <div className="h-[72px] md:h-[100px] flex items-center justify-between md:justify-center px-4 md:px-0 shrink-0 relative">
+        {/* Vayva Logo Top Left - Clickable to Dashboard */}
+        <div className="h-[72px] md:h-[100px] flex items-center justify-start px-6 shrink-0 relative">
           <Logo
+            href="/dashboard"
             size={isMobile ? "sm" : "lg"}
             showText={isMobile || isSidebarExpanded}
           />
           {isMobile && (
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+              className="p-2 rounded-full hover:bg-gray-100 text-gray-500 ml-auto"
             >
               <Icon name="X" size={24} />
             </button>
@@ -411,7 +464,7 @@ export const AdminShell = ({
           })}
         </nav>
 
-        {/* Bottom Card - Control Center */}
+        {/* Control Center - Locked to Sidebar Bottom */}
         <div className="p-4 mt-auto border-t border-gray-100 pb-safe">
           <Link href="/dashboard/control-center">
             <div
@@ -433,9 +486,10 @@ export const AdminShell = ({
                 }}
                 className="overflow-hidden"
               >
-                <p className="text-xs font-bold text-gray-900">
+                <p className="text-xs font-bold text-gray-900 leading-tight">
                   Control Center
                 </p>
+                <p className="text-[10px] text-gray-500 leading-tight">Templates & Domains</p>
               </motion.div>
             </div>
           </Link>
@@ -443,20 +497,13 @@ export const AdminShell = ({
       </motion.aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 h-full flex flex-col relative overflow-hidden bg-[#F8F9FA]">
+      <main className="flex-1 h-full flex flex-col relative overflow-hidden bg-background bg-noise">
         <GlobalBanner />
 
         {/* Top Command Bar */}
-        <header className="h-[60px] md:h-[72px] w-full bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 md:px-8 shrink-0 relative z-30 sticky top-0">
+        <header className="h-[60px] md:h-[72px] w-full glass-panel flex items-center justify-between px-4 md:px-8 shrink-0 relative z-30 sticky top-0">
           <div className="flex items-center gap-4 md:gap-6">
-            {/* Mobile: Logo Only (Burger is now bottom nav) */}
-            <div className="flex items-center gap-6 md:hidden">
-              <Logo size="sm" showText={true} />
-            </div>
-
-            <div className="hidden md:flex items-center gap-6">
-              {/* Breadcrumbs could go here */}
-            </div>
+            <Logo href="/dashboard" size="sm" showText={true} className="md:hidden" />
           </div>
 
           {/* Right Actions */}
@@ -472,9 +519,6 @@ export const AdminShell = ({
                   ? "bg-black text-white hover:bg-gray-800"
                   : "bg-gray-100 text-gray-400 cursor-not-allowed",
               )}
-              title={
-                storeStatus === "draft" ? "Store is not live" : "Visit Store"
-              }
             >
               Visit Store <Icon name="ExternalLink" size={12} />
             </a>
@@ -499,16 +543,17 @@ export const AdminShell = ({
 
             <div className="h-6 w-px bg-gray-200 mx-1 hidden sm:block" />
 
-            {/* Avatar / User Menu */}
+            {/* Avatar / User Menu (Header Top Right) */}
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-50 transition-colors"
+                id="user-menu-button"
               >
                 <Avatar
+                  src={storeLogo || (user as any)?.avatarUrl || (user as any)?.image || undefined}
                   fallback={initials}
                   className="bg-indigo-600"
-                  size="sm"
                 />
                 <Icon
                   name="ChevronDown"
@@ -531,19 +576,27 @@ export const AdminShell = ({
                         {merchantName}
                       </p>
                       <p className="text-xs text-gray-500 truncate">
-                        {storeName}
+                        Owner Identity
                       </p>
                     </div>
                     <div className="p-1">
-                      <Link href="/dashboard/settings/overview">
-                        <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#525252] hover:text-[#0B0B0B] hover:bg-gray-50 rounded-lg transition-colors text-left">
-                          <Icon name="Settings" size={16} />
-                          Account Overview
-                        </button>
-                      </Link>
+                      {ACCOUNT_DROPDOWN_ITEMS.map((item) => (
+                        <Link key={item.href} href={item.href}>
+                          <button
+                            onClick={() => setShowUserMenu(false)}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#525252] hover:text-[#0B0B0B] hover:bg-gray-50 rounded-lg transition-colors text-left"
+                          >
+                            <Icon name={item.icon as any} size={16} />
+                            {item.name}
+                          </button>
+                        </Link>
+                      ))}
+
+                      <div className="h-px bg-gray-50 my-1" />
+
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left font-medium"
                       >
                         <Icon name="LogOut" size={16} />
                         Sign out
@@ -556,8 +609,18 @@ export const AdminShell = ({
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-8 custom-scrollbar pb-24 md:pb-8">
-          <div className="max-w-[1400px] mx-auto min-h-full">{children}</div>
+        <div className="flex-1 overflow-y-auto px-3 md:px-8 py-3 md:py-8 custom-scrollbar pb-24 md:pb-8">
+          <div className="max-w-[1400px] mx-auto min-h-full">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              {children}
+            </motion.div>
+          </div>
         </div>
 
         {/* BOTTOM NAVIGATION (Mobile Only) */}
@@ -568,48 +631,56 @@ export const AdminShell = ({
               <Link
                 key={item.name}
                 href={item.href}
-                className="flex flex-col items-center gap-1 min-w-[64px]"
+                className="flex flex-col items-center gap-0.5 min-w-[56px] relative"
               >
                 <div
                   className={cn(
-                    "p-1.5 rounded-xl transition-colors",
-                    isActive ? "bg-black text-white" : "text-gray-400",
+                    "p-2 rounded-2xl transition-all duration-300",
+                    isActive
+                      ? "bg-gray-900 text-white shadow-lg scale-110 -translate-y-1"
+                      : "text-gray-400 hover:text-gray-600",
                   )}
                 >
                   {/* @ts-ignore */}
-                  <Icon name={item.icon} size={20} />
+                  <Icon name={item.icon} size={22} />
                 </div>
                 <span
                   className={cn(
-                    "text-[10px] font-medium leading-none",
-                    isActive ? "text-black font-bold" : "text-gray-400",
+                    "text-[9px] font-bold uppercase tracking-tight transition-colors",
+                    isActive ? "text-gray-900" : "text-gray-400",
                   )}
                 >
                   {item.name}
                 </span>
+                {isActive && (
+                  <motion.div
+                    layoutId="bottomNavActive"
+                    className="absolute -top-1 w-1 h-1 bg-gray-900 rounded-full"
+                  />
+                )}
               </Link>
             );
           })}
           {/* Menu Trigger */}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="flex flex-col items-center gap-1 min-w-[64px]"
+            className="flex flex-col items-center gap-0.5 min-w-[56px]"
           >
             <div
               className={cn(
-                "p-1.5 rounded-xl transition-colors",
-                mobileMenuOpen ? "bg-black text-white" : "text-gray-400",
+                "p-2 rounded-2xl transition-colors",
+                mobileMenuOpen ? "bg-gray-900 text-white" : "text-gray-400",
               )}
             >
-              <Icon name="Menu" size={20} />
+              <Icon name="Menu" size={22} />
             </div>
             <span
               className={cn(
-                "text-[10px] font-medium leading-none",
-                mobileMenuOpen ? "text-black font-bold" : "text-gray-400",
+                "text-[9px] font-bold uppercase tracking-tight",
+                mobileMenuOpen ? "text-gray-900" : "text-gray-400",
               )}
             >
-              Menu
+              More
             </span>
           </button>
         </div>
@@ -623,6 +694,7 @@ export const AdminShell = ({
         />
       )}
       <SupportChat />
+      <CommandPalette />
     </div>
   );
 };

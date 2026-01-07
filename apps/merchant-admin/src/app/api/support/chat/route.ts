@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 import { SupportBotService } from "@/lib/support/support-bot.service";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/session";
+
+
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const user = await requireAuth();
+    if (!user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const storeId = (session.user as any).storeId;
+    const storeId = user.storeId;
 
     // 0. Feature Flags & Kill Switch
     const ALLOWLIST = ["store_placeholder_123", "store_dev_pilot"]; // Replace with real IDs

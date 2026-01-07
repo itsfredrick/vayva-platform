@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+
 import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
 import { prisma } from "@vayva/db";
 import { executeApproval } from "@/lib/approvals/execute";
 import { EventBus } from "@/lib/events/eventBus";
+import { requireAuth } from "@/lib/session";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await requireAuth();
+  
 
   const { id } = await params;
 
@@ -21,14 +21,14 @@ export async function POST(
     where: { id },
   });
   if (!request) return new NextResponse("Not Found", { status: 404 });
-  if (request.merchantId !== (session!.user as any).storeId)
+  if (request.merchantId !== user.storeId)
     return new NextResponse("Forbidden", { status: 403 });
   if (request.status !== "PENDING")
     return new NextResponse("Request not pending", { status: 400 });
 
   // Check DECIDE Permission
   const canDecide = await hasPermission(
-    (session!.user as any).id,
+    user.id,
     request.merchantId,
     PERMISSIONS.APPROVALS_DECIDE,
   );
@@ -54,7 +54,7 @@ export async function POST(
 
   if (actionPerm) {
     const canApproveAction = await hasPermission(
-      (session!.user as any).id,
+      user.id,
       request.merchantId,
       actionPerm,
     );
@@ -72,8 +72,8 @@ export async function POST(
     where: { id },
     data: {
       status: "APPROVED",
-      decidedByUserId: (session!.user as any).id,
-      decidedByLabel: `${(session!.user as any).firstName} ${(session!.user as any).lastName}`,
+      decidedByUserId: user.id,
+      decidedByLabel: `${user.firstName} ${user.lastName}`,
       decidedAt: new Date(),
       decisionReason: reason,
     },
@@ -85,9 +85,9 @@ export async function POST(
     type: "approvals.approved",
     payload: { approvalId: id },
     ctx: {
-      actorId: (session!.user as any).id,
+      actorId: user.id,
       actorType: "user" as any,
-      actorLabel: `${(session!.user as any).firstName} ${(session!.user as any).lastName}`,
+      actorLabel: `${user.firstName} ${user.lastName}`,
       correlationId: request.correlationId || `req_${id}`,
     },
   });
@@ -97,7 +97,7 @@ export async function POST(
   try {
     await executeApproval(
       id,
-      (session!.user as any).id,
+      user.id,
       request.correlationId || `req_${id}`,
     );
   } catch (err: any) {

@@ -62,7 +62,7 @@ export const GizmoTechHome = ({ store, products }: GizmoTechHomeProps) => {
             <p className="text-gray-400 text-sm mb-4">
               Complete your workstation with our pro accessories.
             </p>
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-bold w-full hover:bg-blue-500 transition-colors">
+            <button className="bg-brand text-white px-6 py-2 rounded-lg text-sm font-bold w-full hover:opacity-90 transition-colors">
               View Accessories
             </button>
           </div>
