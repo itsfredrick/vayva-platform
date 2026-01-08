@@ -14,9 +14,9 @@
         "@vayva/theme": "workspace:*",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.0.0",
-        "framer-motion": "^12.23.26",
-        "lucide-react": "^0.469.0",
-        "react": "19.2.3",
+        "framer-motion": "^12.24.10",
+        "lucide-react": "^0.562.0",
+        "react": "18.3.1",
         "react-dom": "19.2.3",
         "tailwind-merge": "^2.0.0"
     },
