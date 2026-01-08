@@ -27,7 +27,7 @@ export const OrdersController = {
       },
       include: {
         Customer: true,
-        OrderItem: true,
+        items: true,
         OrderEvent: { orderBy: { createdAt: "desc" }, take: 1 }, // Latest event
       },
       orderBy: { createdAt: "desc" },
@@ -44,7 +44,7 @@ export const OrdersController = {
       where: { id },
       include: {
         Customer: true,
-        OrderItem: true,
+        items: true,
         OrderEvent: { orderBy: { createdAt: "desc" } },
         PaymentTransaction: true,
         Shipment: true,
@@ -98,8 +98,8 @@ export const OrdersController = {
       data: {
         refCode: `ORD-${Date.now()}`,
         orderNumber: `#${Math.floor(1000 + Math.random() * 9000)}-${Date.now().toString().slice(-4)}`, // Simple unique calc
-        storeId,
-        customerId,
+        store: { connect: { id: storeId } },
+        Customer: customerId ? { connect: { id: customerId } } : undefined,
         customerPhone: customer?.phone,
         customerEmail: customer?.email,
 
@@ -116,7 +116,7 @@ export const OrdersController = {
         subtotal: subtotal as any,
         total: total as any,
 
-        OrderItem: {
+        items: {
           create: items.map((item: any) => ({
             title: item.title,
             productId: item.productId,
