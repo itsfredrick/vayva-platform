@@ -1,63 +1,32 @@
+"use client";
+
 import { useState, useEffect } from "react";
 
-// Single source type definition
-export type BillingPlan = "free" | "growth" | "pro";
-
-export interface UserPlan {
-  tier: BillingPlan;
-  loading: boolean;
-  source: string;
-  isAuthenticated: boolean;
-}
-
-export function useUserPlan(): UserPlan {
-  const [plan, setPlan] = useState<BillingPlan>("free");
-  const [source, setSource] = useState("initial");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export function useUserPlan() {
+  const [data, setData] = useState<{ plan: any } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-
     async function fetchPlan() {
       try {
         const res = await fetch("/api/me/plan");
-
-        // Handle non-OK responses gracefully
-        if (!res.ok) {
-          console.warn(`Failed to fetch plan: ${res.status} ${res.statusText}`);
-          if (mounted) {
-            setSource("api_error_fallback");
-            setLoading(false);
-          }
-          return;
-        }
-
-        const data = await res.json();
-
-        if (mounted) {
-          setPlan((data.plan as BillingPlan) || "free");
-          setSource(data.source || "api");
-          setIsAuthenticated(!!data.isAuthenticated);
-        }
-      } catch (err) {
-        console.error("Error fetching user plan:", err);
-        if (mounted) {
-          setSource("error_fallback");
-        }
+        if (!res.ok) throw new Error("Failed to fetch plan");
+        const json = await res.json();
+        setData(json);
+      } catch (err: any) {
+        setError(err);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     }
 
     fetchPlan();
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
-  return { tier: plan, loading, source, isAuthenticated };
+  return {
+    plan: data?.plan,
+    isLoading: loading,
+    error,
+  };
 }

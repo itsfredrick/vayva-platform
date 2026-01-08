@@ -562,6 +562,7 @@ model Customer {
   store             Store             @relation(fields: [storeId], references: [id])
   addresses         CustomerAddress[]
   orders            Order[]
+  bookings          Booking[]
   supportTickets    SupportTicket[]
 
   @@unique([storeId, email])
@@ -1420,7 +1421,8 @@ model Order {
   Customer           Customer?            @relation(fields: [customerId], references: [id])
   store              Store                @relation(fields: [storeId], references: [id])
   OrderEvent         OrderEvent[]
-  OrderItem          OrderItem[]
+  items       OrderItem[]
+  bookings    Booking[]
   OrderTimelineEvent OrderTimelineEvent[]
   PaymentIntent      PaymentIntent[]
   PaymentTransaction PaymentTransaction[]
@@ -1683,6 +1685,8 @@ model Product {
   MarketplaceListing MarketplaceListing?
   store              Store               @relation(fields: [storeId], references: [id])
   ProductImage       ProductImage[]
+  bookings           Booking[]
+  raffleEntries      RaffleEntry[]
   ProductVariant     ProductVariant[]
 
   @@unique([storeId, handle])
@@ -2028,6 +2032,8 @@ model Store {
   storefrontDraft          StorefrontDraft?
   storefrontPublished      StorefrontPublished?
   flashSales               FlashSale[]
+  bookings                 Booking[]
+  raffleEntries            RaffleEntry[]
 }
 
 model FlashSale {
@@ -2357,6 +2363,7 @@ model User {
   memberships      Membership[]
   merchantSessions MerchantSession[]
   tenantMemberships TenantMembership[]
+  raffleEntries     RaffleEntry[]
 }
 
 model Wallet {
@@ -4490,4 +4497,60 @@ model RescueFixAction {
   performedBy   String    @default("SYSTEM_RESCUE") // SYSTEM_RESCUE, opsUserId
   
   Incident      RescueIncident @relation(fields: [incidentId], references: [id])
+}
+
+// Booking & Raffle System
+model Booking {
+  id          String   @id @default(uuid())
+  storeId     String
+  customerId  String?
+  serviceId   String
+  orderId     String?
+  startsAt    DateTime
+  endsAt      DateTime
+  status      BookingStatus @default(CONFIRMED)
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store       Store    @relation(fields: [storeId], references: [id])
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  service     Product  @relation(fields: [serviceId], references: [id])
+  order       Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([storeId, startsAt])
+  @@index([serviceId, startsAt])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+model RaffleEntry {
+  id        String   @id @default(uuid())
+  storeId   String
+  raffleId  String
+  userId    String?
+  customerEmail String
+  status    RaffleEntryStatus @default(PENDING)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  store     Store    @relation(fields: [storeId], references: [id])
+  raffle    Product  @relation(fields: [raffleId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@unique([raffleId, customerEmail])
+  @@index([storeId])
+}
+
+enum RaffleEntryStatus {
+  PENDING
+  WON
+  LOST
 }

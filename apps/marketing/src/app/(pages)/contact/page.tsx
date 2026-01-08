@@ -6,18 +6,49 @@ import { motion } from "framer-motion";
 import { Twitter, Linkedin, Instagram } from "lucide-react";
 
 export default function ContactPage() {
-  const [status, setStatus] = useState<"idle" | "submitting" | "success">(
-    "idle",
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">(
+    "idle"
   );
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("submitting");
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    setStatus("success");
+      if (!res.ok) throw new Error("Failed to send message");
+
+      setStatus("success");
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        subject: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error(error);
+      setStatus("error");
+    }
   };
 
   return (
@@ -137,6 +168,9 @@ export default function ContactPage() {
                   </label>
                   <input
                     type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
                     required
                     className="w-full h-12 rounded-xl bg-gray-50 border border-gray-100 px-4 text-[#1d1d1f] focus:outline-none focus:border-[#46EC13] transition-colors"
                     placeholder="John"
@@ -148,6 +182,9 @@ export default function ContactPage() {
                   </label>
                   <input
                     type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
                     required
                     className="w-full h-12 rounded-xl bg-gray-50 border border-gray-100 px-4 text-[#1d1d1f] focus:outline-none focus:border-[#46EC13] transition-colors"
                     placeholder="Doe"
@@ -161,6 +198,9 @@ export default function ContactPage() {
                 </label>
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   required
                   className="w-full h-12 rounded-xl bg-gray-50 border border-gray-100 px-4 text-[#1d1d1f] focus:outline-none focus:border-[#46EC13] transition-colors"
                   placeholder="john@company.com"
@@ -173,6 +213,9 @@ export default function ContactPage() {
                 </label>
                 <input
                   type="text"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
                   required
                   className="w-full h-12 rounded-xl bg-gray-50 border border-gray-100 px-4 text-[#1d1d1f] focus:outline-none focus:border-[#46EC13] transition-colors"
                   placeholder="How can we help?"
@@ -184,6 +227,9 @@ export default function ContactPage() {
                   Message
                 </label>
                 <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
                   required
                   className="w-full h-32 rounded-xl bg-gray-50 border border-gray-100 p-4 text-[#1d1d1f] focus:outline-none focus:border-[#46EC13] transition-colors resize-none"
                   placeholder="Tell us more about your inquiry..."
@@ -197,6 +243,11 @@ export default function ContactPage() {
               >
                 {status === "submitting" ? "Sending..." : "Send Message"}
               </Button>
+              {status === "error" && (
+                <p className="text-red-500 text-center text-sm font-bold">
+                  Something went wrong. Please try again or email us directly.
+                </p>
+              )}
             </form>
           )}
         </motion.div>

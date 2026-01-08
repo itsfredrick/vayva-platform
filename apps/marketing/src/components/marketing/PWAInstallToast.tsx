@@ -18,7 +18,8 @@ export function PWAInstallToast() {
 
         // Show after scrolling a bit, similar to Cookie Banner but right side
         const scrollHandler = () => {
-            if (window.scrollY > 400) {
+            const hasConsent = localStorage.getItem("vayva_cookie_consent");
+            if (hasConsent && window.scrollY > 400) {
                 setIsVisible(true);
             } else {
                 setIsVisible(false);

@@ -62,7 +62,7 @@ export const CheckoutModal = ({
       // Only works if storeId is available on product (it should be)
       // If CORS is an issue, we might need a proxy in next.config.js, but let's assume same-domain or CORS enabled.
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002"}/api/orders/create`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"}/orders/create`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

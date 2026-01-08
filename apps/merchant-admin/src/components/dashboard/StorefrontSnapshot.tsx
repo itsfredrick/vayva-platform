@@ -13,9 +13,10 @@ export const StorefrontSnapshot = ({ store }: StorefrontSnapshotProps) => {
   if (!store) return null;
 
   const isPublished = store.status === "published";
+  const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "vayva.ng";
   const storefrontBase = process.env.NEXT_PUBLIC_STOREFRONT_URL || "http://localhost:3001";
   const storeUrl = isPublished
-    ? `https://${store.slug}.vayva.ng`
+    ? `https://${store.slug}.${APP_DOMAIN}`
     : `${storefrontBase}?store=${store.slug}`;
 
 
@@ -54,7 +55,7 @@ export const StorefrontSnapshot = ({ store }: StorefrontSnapshotProps) => {
             <h3 className="text-xl font-bold text-white mb-1">{store.name}</h3>
             <div className="flex items-center gap-2">
               <span className="text-sm text-text-secondary">
-                vayva.ng/{store.slug}
+                {APP_DOMAIN}/{store.slug}
 
               </span>
               <button

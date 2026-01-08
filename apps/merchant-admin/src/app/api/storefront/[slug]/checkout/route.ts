@@ -34,7 +34,7 @@ export async function POST(
     // Create Order
     const order = await prisma.order.create({
       data: {
-        storeId: store.id,
+        store: { connect: { id: store.id } },
         refCode,
         orderNumber,
         customerEmail: customer.email,
@@ -43,7 +43,7 @@ export async function POST(
         status: "DRAFT",
         subtotal: total,
         total: total,
-        OrderItem: {
+        items: {
           create: items.map((item: any) => ({
             title: item.name,
             price: item.price,

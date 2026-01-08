@@ -66,7 +66,7 @@ export async function POST(
         return NextResponse.json({
             success: true,
             token,
-            redirectUrl: process.env.NEXT_PUBLIC_STOREFRONT_URL || "https://vayva.ng"
+            redirectUrl: process.env.NEXT_PUBLIC_APP_URL || "https://app.vayva.ng"
         });
 
     } catch (error: any) {

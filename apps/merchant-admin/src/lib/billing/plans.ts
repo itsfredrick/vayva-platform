@@ -77,4 +77,5 @@ export const PLANS: Record<string, PlanDefinition> = {
   },
 };
 
+export type { PlanKey };
 export type PlanSlug = PlanKey;

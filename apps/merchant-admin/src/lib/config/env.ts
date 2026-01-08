@@ -7,6 +7,7 @@ const envSchema = z.object({
 
   // App URLs
   NEXT_PUBLIC_APP_URL: z.string().url(),
+  NEXT_PUBLIC_APP_DOMAIN: z.string().default("vayva.ng"),
 
   // Auth / Secrets
   NEXTAUTH_SECRET: z.string().min(1),

@@ -178,6 +178,16 @@ export default function SigninPage() {
         >
           Create an account
         </Link>
+        <div className="mt-2">
+          <a
+            href="https://vayva.ng/help"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Having trouble?
+          </a>
+        </div>
       </div>
 
       {/* Google OAuth Placeholder Modal */}

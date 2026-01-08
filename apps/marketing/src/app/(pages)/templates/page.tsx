@@ -30,6 +30,19 @@ import { ProConsultBooking } from "@/components/storefront/ProConsultBooking";
 import { SkillAcademyCourses } from "@/components/storefront/SkillAcademyCourses";
 import { LearnHubCourses } from "@/components/storefront/LearnHubCourses";
 import { DigitalVaultStore } from "@/components/storefront/DigitalVaultStore";
+import SliceLifePizza from "@/components/storefront/SliceLifePizza";
+import GiveFlowHome from "@/components/storefront/GiveFlowHome";
+import HomeListHome from "@/components/storefront/HomeListHome";
+import BulkTradeHome from "@/components/storefront/BulkTradeHome";
+import OneProductHome from "@/components/storefront/OneProductHome";
+import { CreativeMarketStore } from "@/components/storefront/CreativeMarketStore";
+import { EventTicketsPro } from "@/components/storefront/EventTicketsPro";
+
+// New Standard Components
+import { StandardFoodHome } from "@/components/storefront/StandardFoodHome";
+import { StandardServiceHome } from "@/components/storefront/StandardServiceHome";
+import { StandardDigitalHome } from "@/components/storefront/StandardDigitalHome";
+import { StandardEventsHome } from "@/components/storefront/StandardEventsHome";
 
 // Helper for plan badges
 function PlanBadge({ plan }: { plan: BillingPlan }) {
@@ -49,7 +62,17 @@ function PlanBadge({ plan }: { plan: BillingPlan }) {
 
 // Component map for previews
 const PREVIEW_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  StoreShell: StandardRetailHome,
+  // Classic Standards
+  StoreShell: StandardRetailHome, // Alias for backward compat
+  StandardRetailHome: StandardRetailHome,
+
+  // New Standards
+  StandardFoodHome: StandardFoodHome,
+  StandardServiceHome: StandardServiceHome,
+  StandardDigitalHome: StandardDigitalHome,
+  StandardEventsHome: StandardEventsHome,
+
+  // Existing Components
   AAFashionHome: AAFashionHome,
   GizmoTechHome: GizmoTechHome,
   BloomeHomeLayout: BloomeHome,
@@ -58,8 +81,26 @@ const PREVIEW_COMPONENTS: Record<string, React.ComponentType<any>> = {
   WellnessBooking: WellnessBooking,
   ProConsultBooking: ProConsultBooking,
   SkillAcademyCourses: SkillAcademyCourses,
+  EduflowLayout: SkillAcademyCourses, // Alias
   LearnHubCourses: LearnHubCourses,
   DigitalVaultStore: DigitalVaultStore,
+  SliceLifePizza: SliceLifePizza,
+  // New Components
+  GiveFlowHome: GiveFlowHome,
+  GiveFlowLayout: GiveFlowHome,
+  HomeListHome: HomeListHome,
+  HomeListLayout: HomeListHome,
+  BulkTradeHome: BulkTradeHome,
+  BulkTradeLayout: BulkTradeHome,
+  OneProductHome: OneProductHome,
+  OneProductLayout: OneProductHome,
+  EventTicketsPro: EventTicketsPro,
+  TicketlyLayout: EventTicketsPro,
+  CreativeMarketStore: CreativeMarketStore,
+  MarketHubLayout: CreativeMarketStore, // Alias for marketplace
+  BooklyLayout: StandardServiceHome, // Remap to Standard Service
+  FileVaultLayout: StandardDigitalHome, // Remap to Standard Digital
+  ChopnowLayout: QuickBitesFood, // Remap to QuickBites
 };
 
 const DEMO_SLUGS: Record<string, string> = {
@@ -69,6 +110,7 @@ const DEMO_SLUGS: Record<string, string> = {
   AAFashionHome: "demo-retail",
   GizmoTechHome: "demo-retail",
   BloomeHomeLayout: "demo-retail",
+  SliceLifePizza: "slice-life",
   // Fallback others to demo-retail
 };
 
@@ -163,6 +205,7 @@ function TemplatesLandingPageContent() {
                 storeSlug={
                   DEMO_SLUGS[selectedTemplate.layoutComponent] || "demo-retail"
                 }
+                {...selectedTemplate?.componentProps}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">
@@ -265,6 +308,7 @@ function TemplatesLandingPageContent() {
                                   storeSlug:
                                     DEMO_SLUGS[t.layoutComponent || ""] ||
                                     "demo-retail",
+                                  ...t.componentProps,
                                 },
                               )
                             ) : (

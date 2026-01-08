@@ -60,7 +60,7 @@ export const CookieBanner: React.FC = () => {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-6 left-6 right-6 z-[100] md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[600px]"
+            className="fixed bottom-6 left-6 right-6 z-[100] md:left-auto md:right-6 md:translate-x-0 md:w-[420px]"
           >
             <div className="bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl p-6 md:p-8">
               <div className="flex flex-col md:flex-row items-start md:items-center gap-6">

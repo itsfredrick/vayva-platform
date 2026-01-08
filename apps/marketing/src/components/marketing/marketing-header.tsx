@@ -73,10 +73,14 @@ export function MarketingHeader() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="text-[#0F172A] hover:text-[#22C55E] hover:bg-gray-50 px-4 py-3 rounded-xl transition-all font-bold text-lg flex items-center justify-between group"
               >
-                {link.label}
-                {link.label === "Help" && (
-                  <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase tracking-wide">New</span>
-                )}
+                <div className="flex items-center gap-3">
+                  {link.label}
+                  {link.label === "Help" && (
+                    <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                      New
+                    </span>
+                  )}
+                </div>
                 <span className="text-gray-300 group-hover:text-[#22C55E]">→</span>
               </Link>
             ))}

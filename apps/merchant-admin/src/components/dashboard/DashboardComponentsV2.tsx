@@ -122,9 +122,10 @@ export const StorefrontSnapshotV2 = ({ store }: any) => {
   if (!store) return null;
 
   const isPublished = store.status === "published";
+  const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "vayva.ng";
   const storefrontBase = process.env.NEXT_PUBLIC_STOREFRONT_URL || "http://localhost:3001";
   const storeUrl = isPublished
-    ? `https://${store.slug}.vayva.ng`
+    ? `https://${store.slug}.${APP_DOMAIN}`
     : `${storefrontBase}?store=${store.slug}`;
 
 
@@ -158,7 +159,7 @@ export const StorefrontSnapshotV2 = ({ store }: any) => {
             target="_blank"
             className="text-sm text-gray-500 hover:text-[#0B0B0B] hover:underline flex items-center gap-1"
           >
-            {store.slug}.vayva.ng
+            {store.slug}.{APP_DOMAIN}
 
             <Icon name="ExternalLink" size={12} />
           </a>

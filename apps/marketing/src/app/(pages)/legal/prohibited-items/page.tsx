@@ -16,9 +16,9 @@ export default function ProhibitedItemsPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="flex gap-12">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           {/* Sidebar Navigation */}
-          <aside className="w-64 flex-shrink-0">
+          <aside className="w-full lg:w-64 flex-shrink-0">
             <nav className="sticky top-24">
               <h3 className="text-sm font-semibold text-gray-900 mb-4">
                 Legal Documents
@@ -28,11 +28,10 @@ export default function ProhibitedItemsPage() {
                   <li key={doc.href}>
                     <Link
                       href={doc.href}
-                      className={`block px-3 py-2 text-sm rounded ${
-                        doc.active
+                      className={`block px-3 py-2 text-sm rounded ${doc.active
                           ? "bg-gray-100 text-gray-900 font-medium"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                      }`}
+                        }`}
                     >
                       {doc.title}
                     </Link>

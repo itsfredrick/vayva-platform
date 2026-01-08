@@ -25,11 +25,13 @@ export function resolveRequest(input: ResolverInput): RoutingResult {
   const { hostname, path, tenantMap } = input;
   const host = hostname.toLowerCase();
 
+  const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "vayva.ng";
+
   // 1. Platform Root (Marketing)
   // We handle vayva.ng, www.vayva.ng, and apex domains for localhost/preview
   if (
-    host === "vayva.ng" ||
-    host === "www.vayva.ng" ||
+    host === APP_DOMAIN ||
+    host === `www.${APP_DOMAIN}` ||
     host === "localhost" ||
     host.startsWith("localhost:")
   ) {
@@ -43,19 +45,19 @@ export function resolveRequest(input: ResolverInput): RoutingResult {
   }
 
   // 2. Admin Portal
-  if (host === "admin.vayva.ng") {
+  if (host === `admin.${APP_DOMAIN}`) {
     return {
       resolvedTenant: null,
       tenantType: "admin",
       action: "redirect",
-      destination: `https://vayva.ng/dashboard`,
+      destination: `https://${APP_DOMAIN}/dashboard`,
       reason: "Admin subdomain deprecated. Redirecting to /dashboard.",
     };
   }
 
   // 3. Tenant Storefronts (*.vayva.ng)
-  if (host.endsWith(".vayva.ng")) {
-    const subdomain = host.replace(".vayva.ng", "");
+  if (host.endsWith(`.${APP_DOMAIN}`)) {
+    const subdomain = host.replace(`.${APP_DOMAIN}`, "");
 
     // Handle deeply nested subdomains as invalid (e.g. foo.bar.vayva.ng)
     if (subdomain.includes(".")) {

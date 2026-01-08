@@ -11,6 +11,8 @@ interface CheckoutModalProps {
   total: number;
   storeSlug: string;
   onSuccess: () => void;
+  requireAddress?: boolean;
+  submitFn?: (data: any) => Promise<any>;
 }
 
 export function CheckoutModal({
@@ -20,6 +22,8 @@ export function CheckoutModal({
   total,
   storeSlug,
   onSuccess,
+  requireAddress = true,
+  submitFn,
 }: CheckoutModalProps) {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,31 +40,43 @@ export function CheckoutModal({
     setIsLoading(true);
 
     try {
-      const res = await fetch(`/api/storefront/${storeSlug}/checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      if (submitFn) {
+        await submitFn({
           customer: formData,
           items: cart,
-          total,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Checkout failed");
-
-      if (data.authorization_url) {
-        toast.loading("Redirecting to secure payment...", { duration: 4000 });
-        // Delay slightly to show toast
-        setTimeout(() => {
-          window.location.href = data.authorization_url;
-        }, 1000);
-      } else {
-        // Fallback for non-payment orders
-        toast.success("Order placed successfully!");
+          total
+        });
+        // If submitFn doesn't throw, assume success
+        toast.success("Processed successfully!");
         onSuccess();
         onClose();
+      } else {
+        const res = await fetch(`/api/storefront/${storeSlug}/checkout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer: formData,
+            items: cart,
+            total,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Checkout failed");
+
+        if (data.authorization_url) {
+          toast.loading("Redirecting to secure payment...", { duration: 4000 });
+          // Delay slightly to show toast
+          setTimeout(() => {
+            window.location.href = data.authorization_url;
+          }, 1000);
+        } else {
+          // Fallback for non-payment orders
+          toast.success("Order placed successfully!");
+          onSuccess();
+          onClose();
+        }
       }
     } catch (error: any) {
       console.error(error);
@@ -113,29 +129,34 @@ export function CheckoutModal({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Delivery Address</label>
-          <input
-            required
-            type="text"
-            placeholder="Address Line"
-            className="w-full p-2 border rounded-md"
-            value={formData.address}
-            onChange={(e) =>
-              setFormData({ ...formData, address: e.target.value })
-            }
-          />
-          <input
-            required
-            type="text"
-            placeholder="City"
-            className="w-full p-2 border rounded-md"
-            value={formData.city}
-            onChange={(e) =>
-              setFormData({ ...formData, city: e.target.value })
-            }
-          />
-        </div>
+
+        {
+          requireAddress && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Delivery Address</label>
+              <input
+                required
+                type="text"
+                placeholder="Address Line"
+                className="w-full p-2 border rounded-md"
+                value={formData.address}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
+              />
+              <input
+                required
+                type="text"
+                placeholder="City"
+                className="w-full p-2 border rounded-md"
+                value={formData.city}
+                onChange={(e) =>
+                  setFormData({ ...formData, city: e.target.value })
+                }
+              />
+            </div>
+          )
+        }
 
         <div className="pt-4 border-t border-gray-100">
           <div className="flex justify-between mb-4 text-sm">
@@ -151,7 +172,7 @@ export function CheckoutModal({
             Pay ₦{total.toLocaleString()}
           </button>
         </div>
-      </form>
-    </Modal>
+      </form >
+    </Modal >
   );
 }

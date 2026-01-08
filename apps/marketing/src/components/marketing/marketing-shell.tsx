@@ -1,4 +1,5 @@
 import React from "react";
+import { ScrollToTop } from "./ScrollToTop";
 
 interface MarketingShellProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ export function MarketingShell({
       </div>
 
       <div className="relative z-10 w-full">{children}</div>
+      <ScrollToTop />
     </div>
   );
 }
