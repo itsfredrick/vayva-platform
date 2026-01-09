@@ -25,6 +25,7 @@ export const CheckoutModal = ({
   const [state, setState] = useState("");
   const [upsellAdded, setUpsellAdded] = useState(false);
   const [step, setStep] = useState(1);
+  const [confirmationData, setConfirmationData] = useState<{ storeName?: string; orderNumber?: string; bankDetails?: any } | null>(null);
 
   if (!isOpen) return null;
 
@@ -88,8 +89,10 @@ export const CheckoutModal = ({
       );
 
       if (res.ok) {
+        const data = await res.json();
+        setConfirmationData(data); // Save response data for display
         setStep(2);
-        setTimeout(() => onClose(), 5000); // Give more time to read confirmation
+        // Removed setTimeout to allow user to read bank details
       } else {
         alert("Failed to place order. Please try again.");
       }
@@ -112,9 +115,27 @@ export const CheckoutModal = ({
             Order Confirmed!
           </h3>
           <p className="text-gray-500 mb-6">
-            We've sent a receipt to <b>{email}</b>. We'll start processing your
-            delivery to <b>{city}</b> shortly.
+            Ref: <b>{confirmationData?.orderNumber}</b><br />
+            We've sent a receipt to <b>{email}</b>.
           </p>
+
+          {confirmationData?.bankDetails && (
+            <div className="bg-gray-50 p-4 rounded-xl text-left border border-gray-200 mb-6">
+              <p className="text-xs font-bold uppercase text-gray-500 mb-2">Please transfer to:</p>
+              <div className="text-sm space-y-1">
+                <div className="flex justify-between"><span>Bank:</span> <span className="font-semibold">{confirmationData.bankDetails.bankName}</span></div>
+                <div className="flex justify-between"><span>Account:</span> <span className="font-semibold text-lg">{confirmationData.bankDetails.accountNumber}</span></div>
+                <div className="flex justify-between"><span>Name:</span> <span className="font-semibold">{confirmationData.bankDetails.accountName}</span></div>
+              </div>
+              <div className="mt-3 text-xs text-center text-gray-400">
+                Paying to <b>{confirmationData?.storeName}</b>
+              </div>
+            </div>
+          )}
+
+          <button onClick={onClose} className="w-full bg-black text-white font-bold py-3 rounded-xl">
+            I have made payment
+          </button>
         </div>
       </div>
     );

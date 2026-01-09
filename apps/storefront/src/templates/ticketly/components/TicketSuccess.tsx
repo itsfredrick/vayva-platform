@@ -5,12 +5,18 @@ import { PublicProduct } from "@/types/storefront";
 interface TicketSuccessProps {
   event: PublicProduct;
   attendee: { name: string; email: string };
+  bankDetails?: any;
+  storeName?: string;
+  orderNumber?: string;
   onClose: () => void;
 }
 
 export const TicketSuccess = ({
   event,
   attendee,
+  bankDetails,
+  storeName,
+  orderNumber,
   onClose,
 }: TicketSuccessProps) => {
   return (
@@ -35,9 +41,24 @@ export const TicketSuccess = ({
           <h2 className="text-2xl font-black text-gray-900 mb-1">
             You're going!
           </h2>
-          <p className="text-gray-500 text-sm mb-8">
+          {orderNumber && <p className="text-xs text-gray-400 mb-1">Ref: {orderNumber}</p>}
+          <p className="text-gray-500 text-sm mb-6">
             Order sent to {attendee.email}
           </p>
+
+          {bankDetails && (
+            <div className="bg-purple-50 p-4 rounded-xl text-left border border-purple-100 mb-6">
+              <p className="text-xs font-bold uppercase text-purple-600 mb-2">Payment Required</p>
+              <div className="text-sm space-y-1 text-gray-800">
+                <div className="flex justify-between"><span>Bank:</span> <span className="font-semibold">{bankDetails.bankName}</span></div>
+                <div className="flex justify-between"><span>Account:</span> <span className="font-semibold text-lg">{bankDetails.accountNumber}</span></div>
+                <div className="flex justify-between"><span>Name:</span> <span className="font-semibold">{bankDetails.accountName}</span></div>
+              </div>
+              <div className="mt-3 text-xs text-center text-purple-400">
+                Paying to <b>{storeName}</b>
+              </div>
+            </div>
+          )}
 
           {/* Ticket Pending Test */}
           <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 relative mb-6">

@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import { X, ArrowRight, Lock } from "lucide-react";
 
 interface CheckoutOverlayProps {
+  storeId: string;
+  productId: string;
   total: number;
   count: number;
   onClose: () => void;
-  onComplete: (attendee: { name: string; email: string }) => void;
+  onComplete: (data: any) => void;
 }
 
 export const CheckoutOverlay = ({
+  storeId,
+  productId,
   total,
   count,
   onClose,
@@ -18,12 +22,42 @@ export const CheckoutOverlay = ({
   const [name, setName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    setTimeout(() => {
-      onComplete({ name, email });
-    }, 1500);
+
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId,
+          items: [{ id: productId, quantity: count, price: total / count, title: "Ticket" }], // Simple mapping
+          total,
+          subtotal: total,
+          customer: { email, firstName: name.split(" ")[0] },
+          paymentMethod: "BANK_TRANSFER",
+          deliveryMethod: "digital"
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        onComplete({
+          attendee: { name, email },
+          bankDetails: data.bankDetails,
+          storeName: data.storeName,
+          orderNumber: data.orderNumber
+        });
+      } else {
+        alert("Failed to create ticket order.");
+        setIsProcessing(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsProcessing(false);
+      alert("Something went wrong");
+    }
   };
 
   return (

@@ -1,20 +1,133 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { Button, Input, Textarea, Label } from "@vayva/ui";
-import { useState } from "react";
+import { Button, Input, Textarea, Label, Badge, Icon } from "@vayva/ui";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { X, Plus, Trash2 } from "lucide-react";
 
 interface RetailProductFormProps {
     productId?: string;
     initialData?: any;
+    storeCategory?: string;
 }
 
-export function RetailProductForm({ productId, initialData }: RetailProductFormProps) {
+interface ProductOption {
+    id: string;
+    name: string;
+    values: string[];
+}
+
+interface GeneratedVariant {
+    id: string; // internal temp id
+    title: string;
+    options: Record<string, string>;
+    price: number;
+    sku: string;
+    stock: number;
+}
+
+export function RetailProductForm({ productId, initialData, storeCategory }: RetailProductFormProps) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { register, handleSubmit, formState: { errors } } = useForm({
+
+    // Variant State
+    const [options, setOptions] = useState<ProductOption[]>([]);
+    const [variants, setVariants] = useState<GeneratedVariant[]>([]);
+
+    // Helper to add a new empty option
+    const addOption = () => {
+        setOptions([...options, { id: crypto.randomUUID(), name: "", values: [] }]);
+    };
+
+    // Helper to remove an option
+    const removeOption = (index: number) => {
+        const newOptions = [...options];
+        newOptions.splice(index, 1);
+        setOptions(newOptions);
+    };
+
+    // Helper to update option name
+    const updateOptionName = (index: number, name: string) => {
+        const newOptions = [...options];
+        newOptions[index].name = name;
+        setOptions(newOptions);
+    };
+
+    // Helper to add a value to an option
+    const addValueToOption = (index: number, value: string) => {
+        if (!value.trim()) return;
+        const newOptions = [...options];
+        if (!newOptions[index].values.includes(value)) {
+            newOptions[index].values.push(value);
+            setOptions(newOptions);
+        }
+    };
+
+    // Helper to remove a value
+    const removeValueFromOption = (optionIndex: number, valueIndex: number) => {
+        const newOptions = [...options];
+        newOptions[optionIndex].values.splice(valueIndex, 1);
+        setOptions(newOptions);
+    };
+
+    // Cartesian Product Generator
+    useEffect(() => {
+        if (options.length === 0) {
+            setVariants([]);
+            return;
+        }
+
+        // Filter out incomplete options
+        const validOptions = options.filter(o => o.name && o.values.length > 0);
+        if (validOptions.length === 0) {
+            setVariants([]);
+            return;
+        }
+
+        const cartesian = (args: ProductOption[]): any[] => {
+            const r: any[] = [];
+            const max = args.length - 1;
+            function helper(arr: any[], i: number) {
+                for (let j = 0, l = args[i].values.length; j < l; j++) {
+                    const a = arr.slice(0); // clone arr
+                    a.push({ [args[i].name]: args[i].values[j] });
+                    if (i === max) r.push(a);
+                    else helper(a, i + 1);
+                }
+            }
+            helper([], 0);
+            return r;
+        };
+
+        const combinations = cartesian(validOptions);
+
+        // Map combinations to flat variant objects
+        const newVariants = combinations.map((combo: any[]) => {
+            // Merge array of objects into single object: [{Color: Red}, {Size: L}] -> {Color: Red, Size: L}
+            const optionsMap = combo.reduce((acc, curr) => ({ ...acc, ...curr }), {});
+            const title = Object.values(optionsMap).join(" / ");
+
+            // Try to preserve existing variant data (sku/stock) if title matches
+            // This is a naive heuristic; ideally use ID but these are dynamically generated
+            const existing = variants.find(v => v.title === title);
+
+            return {
+                id: existing?.id || crypto.randomUUID(),
+                title,
+                options: optionsMap,
+                price: existing?.price || getValues("price") || 0,
+                sku: existing?.sku || "",
+                stock: existing?.stock || 0
+            };
+        });
+
+        setVariants(newVariants);
+
+    }, [options]); // Depend only on options structure changing
+
+    const { register, handleSubmit, getValues, formState: { errors } } = useForm({
         defaultValues: initialData || {
             title: "",
             description: "",
@@ -34,10 +147,18 @@ export function RetailProductForm({ productId, initialData }: RetailProductFormP
 
             const method = productId ? "PATCH" : "POST";
 
+            // Payload Construction
+            const payload = {
+                ...data,
+                // If variants exist, we send them. 
+                // Note: The API must handle this.
+                variants: variants.length > 0 ? variants : undefined
+            };
+
             const res = await fetch(endpoint, {
                 method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
+                body: JSON.stringify(payload),
             });
 
             if (!res.ok) throw new Error("Failed to save product");
@@ -50,6 +171,18 @@ export function RetailProductForm({ productId, initialData }: RetailProductFormP
             setIsSubmitting(false);
         }
     };
+
+    // Helper for generating SKU
+    const generateBaseSku = () => {
+        return variants.map((v, i) => updateVariantField(i, 'sku', `${getValues('sku')}-${i + 1}`));
+    }
+
+    const updateVariantField = (index: number, field: keyof GeneratedVariant, value: any) => {
+        const newVariants = [...variants];
+        // @ts-ignore
+        newVariants[index][field] = value;
+        setVariants(newVariants);
+    }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -79,12 +212,148 @@ export function RetailProductForm({ productId, initialData }: RetailProductFormP
                 </div>
             </div>
 
+            {/* Automotive Fields */}
+            {storeCategory === "Automotive" && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
+                    <h3 className="text-lg font-semibold border-b pb-2 text-blue-700">Vehicle Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <Label htmlFor="year">Year</Label>
+                            <Input
+                                id="year"
+                                type="number"
+                                {...register("vehicle.year", { valueAsNumber: true })}
+                                placeholder="2024"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="make">Make</Label>
+                            <Input
+                                id="make"
+                                {...register("vehicle.make")}
+                                placeholder="Toyota"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="model">Model</Label>
+                            <Input
+                                id="model"
+                                {...register("vehicle.model")}
+                                placeholder="Camry"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="vin">VIN (Optional)</Label>
+                            <Input
+                                id="vin"
+                                {...register("vehicle.vin")}
+                                placeholder="17-char VIN"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="mileage">Mileage</Label>
+                            <Input
+                                id="mileage"
+                                type="number"
+                                {...register("vehicle.mileage", { valueAsNumber: true })}
+                                placeholder="0"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="fuelType">Fuel Type</Label>
+                            <select
+                                id="fuelType"
+                                {...register("vehicle.fuelType")}
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <option value="PETROL">Petrol</option>
+                                <option value="DIESEL">Diesel</option>
+                                <option value="ELECTRIC">Electric</option>
+                                <option value="HYBRID">Hybrid</option>
+                            </select>
+                        </div>
+                        <div>
+                            <Label htmlFor="transmission">Transmission</Label>
+                            <select
+                                id="transmission"
+                                {...register("vehicle.transmission")}
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <option value="AUTOMATIC">Automatic</option>
+                                <option value="MANUAL">Manual</option>
+                                <option value="CVT">CVT</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Travel Fields */}
+            {storeCategory === "Travel" && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
+                    <h3 className="text-lg font-semibold border-b pb-2 text-indigo-700">Accommodation Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <Label htmlFor="type">Room Type</Label>
+                            <select
+                                id="type"
+                                {...register("accommodation.type")}
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <option value="ROOM">Room</option>
+                                <option value="SUITE">Suite</option>
+                                <option value="VILLA">Villa</option>
+                                <option value="APARTMENT">Apartment</option>
+                                <option value="HOSTEL_BED">Hostel Bed</option>
+                                <option value="CAMP_SITE">Camp Site</option>
+                            </select>
+                        </div>
+                        <div>
+                            <Label htmlFor="maxGuests">Max Guests</Label>
+                            <Input
+                                id="maxGuests"
+                                type="number"
+                                {...register("accommodation.maxGuests", { valueAsNumber: true })}
+                                placeholder="2"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="bedCount">Bed Count</Label>
+                            <Input
+                                id="bedCount"
+                                type="number"
+                                {...register("accommodation.bedCount", { valueAsNumber: true })}
+                                placeholder="1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="bathrooms">Bathrooms</Label>
+                            <Input
+                                id="bathrooms"
+                                type="number"
+                                {...register("accommodation.bathrooms", { valueAsNumber: true })}
+                                placeholder="1"
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="totalUnits">Total Units (Inventory)</Label>
+                            <Input
+                                id="totalUnits"
+                                type="number"
+                                {...register("accommodation.totalUnits", { valueAsNumber: true })}
+                                placeholder="1"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Pricing & Inventory */}
             <div className="space-y-4">
                 <h3 className="text-lg font-semibold border-b pb-2">Pricing & Inventory</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                        <Label htmlFor="price">Price</Label>
+                        <Label htmlFor="price">Base Price</Label>
                         <Input
                             id="price"
                             type="number"
@@ -107,9 +376,149 @@ export function RetailProductForm({ productId, initialData }: RetailProductFormP
                             id="stockQuantity"
                             type="number"
                             {...register("stockQuantity", { min: 0 })}
+                            disabled={variants.length > 0} // Disable main stock if variants exist
                         />
+                        {variants.length > 0 && <p className="text-xs text-gray-500 mt-1">Managed via variants</p>}
                     </div>
                 </div>
+            </div>
+
+            {/* VARIANTS SECTION */}
+            <div className="space-y-6 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Product Options</h3>
+                    <Button type="button" variant="outline" size="sm" onClick={addOption} className="gap-2">
+                        <Plus size={16} /> Add Option
+                    </Button>
+                </div>
+
+                {options.length === 0 && (
+                    <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg border border-dashed border-gray-200">
+                        Does this product have variants like Color or Size? Click "Add Option" to configure.
+                    </div>
+                )}
+
+                {/* Option Configurator */}
+                <div className="space-y-4">
+                    {options.map((option, idx) => (
+                        <div key={option.id} className="bg-white border rounded-xl p-4 shadow-sm relative group">
+                            <button
+                                type="button"
+                                onClick={() => removeOption(idx)}
+                                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <X size={16} />
+                            </button>
+
+                            <div className="grid md:grid-cols-[200px_1fr] gap-6">
+                                <div>
+                                    <Label className="mb-2 block text-xs uppercase tracking-wider text-gray-500">Option Name</Label>
+                                    <Input
+                                        value={option.name}
+                                        onChange={(e) => updateOptionName(idx, e.target.value)}
+                                        placeholder="e.g. Color"
+                                        className="h-9"
+                                    />
+                                </div>
+                                <div>
+                                    <Label className="mb-2 block text-xs uppercase tracking-wider text-gray-500">Option Values</Label>
+                                    <div className="flex flex-wrap gap-2 items-center">
+                                        {option.values.map((val, vIdx) => (
+                                            <Badge key={vIdx} variant="default" className="bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors py-1.5 px-3">
+                                                {val}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeValueFromOption(idx, vIdx)}
+                                                    className="ml-2 hover:text-red-500"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </Badge>
+                                        ))}
+                                        <div className="relative">
+                                            <Input
+                                                placeholder="Add value..."
+                                                className="h-9 w-[120px] bg-transparent border-dashed"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        addValueToOption(idx, e.currentTarget.value);
+                                                        e.currentTarget.value = "";
+                                                    }
+                                                }}
+                                                onBlur={(e) => {
+                                                    if (e.target.value) {
+                                                        addValueToOption(idx, e.target.value);
+                                                        e.target.value = "";
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Generated Variants Table */}
+                {variants.length > 0 && (
+                    <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-500">Preview ({variants.length} Variants)</h4>
+                        </div>
+                        <div className="border rounded-xl bg-white overflow-hidden shadow-sm">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-50 border-b">
+                                        <tr>
+                                            <th className="px-4 py-3 font-medium text-gray-700">Variant</th>
+                                            <th className="px-4 py-3 font-medium text-gray-700 w-[120px]">Price</th>
+                                            <th className="px-4 py-3 font-medium text-gray-700 w-[100px]">Stock</th>
+                                            <th className="px-4 py-3 font-medium text-gray-700 w-[150px]">SKU</th>
+                                            <th className="px-4 py-3 font-medium text-gray-700 w-[50px]"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {variants.map((variant, i) => (
+                                            <tr key={variant.id} className="group hover:bg-gray-50 transition-colors">
+                                                <td className="px-4 py-3 font-medium text-gray-900">{variant.title}</td>
+                                                <td className="px-4 py-2">
+                                                    <Input
+                                                        type="number"
+                                                        value={variant.price}
+                                                        onChange={(e) => updateVariantField(i, 'price', parseFloat(e.target.value))}
+                                                        className="h-9"
+                                                        prefix="₦"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-2">
+                                                    <Input
+                                                        type="number"
+                                                        value={variant.stock}
+                                                        onChange={(e) => updateVariantField(i, 'stock', parseInt(e.target.value))}
+                                                        className="h-9"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-2">
+                                                    <Input
+                                                        value={variant.sku}
+                                                        onChange={(e) => updateVariantField(i, 'sku', e.target.value)}
+                                                        className="h-9"
+                                                        placeholder="SKU"
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-2 text-right">
+                                                    {/* Actions if needed */}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Images - Placeholder for now */}

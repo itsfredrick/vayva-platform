@@ -75,6 +75,14 @@ export function ProductFormFactory({ productId }: { productId?: string }) {
         case TemplateCategory.EDUCATION:
             return <EducationProductForm productId={productId} />;
 
+        case TemplateCategory.AUTOMOTIVE:
+            return <RetailProductForm productId={productId} storeCategory="Automotive" />;
+
+        case TemplateCategory.TRAVEL:
+            return <RetailProductForm productId={productId} storeCategory="Travel" />;
+
+
+
         default:
             return (
                 <EmptyState

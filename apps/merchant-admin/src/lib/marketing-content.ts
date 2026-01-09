@@ -47,6 +47,22 @@ export const CATEGORY_MARKETING: Record<
     headline: "Professional listings for real estate and property.",
     subheadline: "Showcase rentals, sales, and land with map-based discovery.",
   },
+  [TemplateCategory.CREATIVE]: {
+    headline: "Showcase your portfolio and creative work.",
+    subheadline: "Beautiful galleries for photographers, designers, and artists.",
+  },
+  [TemplateCategory.AUTOMOTIVE]: {
+    headline: "Drive sales with automotive listings.",
+    subheadline: "Showroom style templates for dealers and parts shops.",
+  },
+  [TemplateCategory.TRAVEL]: {
+    headline: "Bookings and experiences for travel.",
+    subheadline: "Hotels, tours, and experiences made easy.",
+  },
+  [TemplateCategory.BLOG]: {
+    headline: "Content-first designs for publishers.",
+    subheadline: "Monetize your audience with subscriptions and ads.",
+  },
 };
 
 export const TEMPLATE_MARKETING: Record<string, { oneLiner: string }> = {

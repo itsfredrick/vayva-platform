@@ -108,12 +108,31 @@ export async function POST(req: NextRequest) {
       return order;
     });
 
+    // 4. Fetch Merchant Wallet Details for Display
+    const wallet = await prisma.wallet.findUnique({
+      where: { storeId: storeId! },
+      select: { vaBankName: true, vaAccountNumber: true, vaAccountName: true }
+    });
+
+    const store = await prisma.store.findUnique({
+      where: { id: storeId! },
+      select: { name: true }
+    });
+
     // Return success
     return NextResponse.json({
       success: true,
       orderId: result.id,
+      orderNumber: result.orderNumber,
       paymentUrl: `/checkout/pay/${result.id}`,
+      storeName: store?.name || "Store",
+      bankDetails: wallet ? {
+        bankName: wallet.vaBankName,
+        accountNumber: wallet.vaAccountNumber,
+        accountName: wallet.vaAccountName
+      } : null
     });
+
   } catch (error: any) {
     reportError(error, { route: "POST /api/orders", storeId: storeId });
     return NextResponse.json(

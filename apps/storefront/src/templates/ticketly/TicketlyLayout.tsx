@@ -21,10 +21,13 @@ export const TicketlyLayout = ({ store, products }: TicketlyLayoutProps) => {
   const [checkoutData, setCheckoutData] = useState<{
     total: number;
     count: number;
+    productId: string;
   } | null>(null);
-  const [successAttendee, setSuccessAttendee] = useState<{
-    name: string;
-    email: string;
+  const [successData, setSuccessData] = useState<{
+    attendee: { name: string; email: string };
+    bankDetails?: any;
+    storeName?: string;
+    orderNumber?: string;
   } | null>(null);
 
   const handleBuyClick = () => {
@@ -32,14 +35,14 @@ export const TicketlyLayout = ({ store, products }: TicketlyLayoutProps) => {
     document.getElementById("tickets")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleTicketSelect = (_id: string, count: number, total: number) => {
-    setCheckoutData({ total, count });
+  const handleTicketSelect = (id: string, count: number, total: number) => {
+    setCheckoutData({ total, count, productId: id });
     setIsCheckingOut(true);
   };
 
-  const handlePaymentComplete = (attendee: any) => {
+  const handlePaymentComplete = (data: any) => {
     setIsCheckingOut(false);
-    setSuccessAttendee(attendee);
+    setSuccessData(data);
   };
 
   if (!mainEvent) return <div>No events found.</div>;
@@ -106,16 +109,21 @@ export const TicketlyLayout = ({ store, products }: TicketlyLayoutProps) => {
         <CheckoutOverlay
           total={checkoutData.total}
           count={checkoutData.count}
+          storeId={store.id}
+          productId={checkoutData.productId}
           onClose={() => setIsCheckingOut(false)}
           onComplete={handlePaymentComplete}
         />
       )}
 
-      {successAttendee && (
+      {successData && (
         <TicketSuccess
           event={mainEvent}
-          attendee={successAttendee}
-          onClose={() => setSuccessAttendee(null)}
+          attendee={successData.attendee}
+          bankDetails={successData.bankDetails}
+          storeName={successData.storeName}
+          orderNumber={successData.orderNumber}
+          onClose={() => setSuccessData(null)}
         />
       )}
     </div>

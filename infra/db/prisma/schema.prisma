@@ -1697,6 +1697,9 @@ model Product {
 
   @@unique([storeId, handle])
   @@index([storeId, status])
+  VehicleProduct     VehicleProduct?
+  AccommodationProduct AccommodationProduct?
+  blogPosts          BlogPostProduct[]
 }
 
 model ProductImage {
@@ -1934,6 +1937,7 @@ model Store {
   id                       String                    @id @default(uuid())
   name                     String
   slug                     String                    @unique
+  blogPosts                BlogPost[]
   logoUrl                  String?
   onboardingStatus         OnboardingStatus          @default(NOT_STARTED)
   onboardingLastStep       String?                   @default("START")
@@ -1998,6 +2002,7 @@ model Store {
   notificationTemplates    NotificationTemplate[]
   orders                   Order[]
   orderEvents              OrderEvent[]
+  portfolioProjects        PortfolioProject[]
   paymentAccounts          PaymentAccount[]
   paymentCustomers         PaymentCustomer[]
   paymentIntents           PaymentIntent[]
@@ -3915,6 +3920,8 @@ enum FlagSeverity {
 
 enum FulfillmentStatus {
   UNFULFILLED
+  PREPARING        // [NEW] For KDS
+  READY_FOR_PICKUP // [NEW] For KDS
   PROCESSING
   OUT_FOR_DELIVERY
   DELIVERED
@@ -4546,6 +4553,7 @@ model Booking {
 
   store       Store    @relation(fields: [storeId], references: [id])
   customer    Customer? @relation(fields: [customerId], references: [id])
+
   service     Product  @relation(fields: [serviceId], references: [id])
   order       Order?   @relation(fields: [orderId], references: [id])
 
@@ -4583,4 +4591,144 @@ enum RaffleEntryStatus {
   PENDING
   WON
   LOST
+}
+
+// Creative & Portfolio (Industry Expansion)
+model PortfolioProject {
+  id          String   @id @default(uuid())
+  storeId     String
+  title       String
+  slug        String
+  description String?
+  images      Json?    // Array of { url, caption, order }
+  clientMode  Boolean  @default(false)
+  password    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store       Store            @relation(fields: [storeId], references: [id])
+  comments    ProjectComment[]
+
+  @@unique([storeId, slug])
+}
+
+model ProjectComment {
+  id         String   @id @default(uuid())
+  projectId  String
+  imageIndex Int      @default(0) // Which image in the JSON array
+  content    String
+  author     String // "Client" or "Merchant"
+  createdAt  DateTime @default(now())
+
+  project    PortfolioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// Automotive (Industry Expansion)
+enum FuelType {
+  PETROL
+  DIESEL
+  ELECTRIC
+  HYBRID
+  PLUGIN_HYBRID
+}
+
+enum Transmission {
+  AUTOMATIC
+  MANUAL
+  CVT
+}
+
+model VehicleProduct {
+  id           String       @id @default(uuid())
+  productId    String       @unique
+  vin          String?
+  make         String
+  model        String
+  year         Int
+  mileage      Int          @default(0)
+  fuelType     FuelType     @default(PETROL)
+  transmission Transmission @default(AUTOMATIC)
+  color        String?
+  bodyType     String?      // SUV, Sedan, Coupe...
+  condition    String?      // New, Used, Certified
+  
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([make, model, year])
+  @@index([year])
+  @@index([make])
+}
+
+// Travel & Hospitality (Industry Expansion)
+enum AccommodationType {
+  ROOM
+  SUITE
+  VILLA
+  APARTMENT
+  HOSTEL_BED
+  CAMP_SITE
+}
+
+model AccommodationProduct {
+  id           String            @id @default(uuid())
+  productId    String            @unique
+  type         AccommodationType @default(ROOM)
+  maxGuests    Int               @default(2)
+  bedCount     Int               @default(1)
+  bathrooms    Int               @default(1)
+  totalUnits   Int               @default(1) // Inventory for this room type
+  amenities    Json?             // Array of strings
+  checkInTime  String?           // "14:00"
+  checkOutTime String?           // "11:00"
+  
+  product      Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([type])
+  @@index([maxGuests])
+}
+
+// Blog & Media (Industry Expansion)
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model BlogPost {
+  id            String    @id @default(uuid())
+  storeId       String
+  title         String
+  slug          String
+  excerpt       String?   @db.Text
+  content       String?   @db.Text
+  featuredImage String?
+  publishedAt   DateTime?
+  status        PostStatus @default(DRAFT)
+  tags          String[]
+  
+  metaTitle     String?
+  metaDesc      String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  store         Store     @relation(fields: [storeId], references: [id])
+  products      BlogPostProduct[] // "Shop the Look"
+
+  @@unique([storeId, slug])
+  @@index([storeId, status])
+}
+
+model BlogPostProduct {
+  postId    String
+  productId String
+  
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([postId, productId])
+  @@index([postId])
+  @@index([productId])
 }
