@@ -15,12 +15,13 @@ export const FEES = {
 };
 
 // 1:1 Mapping to Prisma SubscriptionPlan enum
-export type PlanKey = "STARTER" | "GROWTH" | "PRO";
+export type PlanKey = "FREE" | "STARTER" | "PRO";
 
 export type Plan = {
   key: PlanKey;
   name: string;
-  monthlyAmount: number; // NGN
+  monthlyAmount: number; // NGN (Inclusive of 7.5% VAT)
+  baseAmount?: number;
   tagline: string;
   trialDays?: number;
   bullets: string[];
@@ -30,27 +31,28 @@ export type Plan = {
 
 export const PLANS: Plan[] = [
   {
-    key: "STARTER",
+    key: "FREE",
     name: "Free",
     monthlyAmount: 0,
     trialDays: 7,
     tagline: "Perfect for testing ideas.",
     bullets: [
-      "4 Included Templates",
+      "No staff seats",
+      "2 Included Templates",
       "Basic Storefront",
-      "Vayva Branding",
       "Standard Analytics",
     ],
     ctaLabel: "Start Free",
   },
   {
-    key: "GROWTH",
-    name: "Starter", // Marketing name "Starter" maps to "GROWTH" plan technically (paid tier 1)
-    monthlyAmount: 30000,
+    key: "STARTER",
+    name: "Starter",
+    monthlyAmount: 32250,
+    baseAmount: 30000,
     tagline: "For growing brands.",
     bullets: [
-      "9 Included Templates",
-      "Growth Templates",
+      "1 Staff Seat",
+      "5 Included Templates",
       "Service & Digital Modules",
       "Remove Branding",
     ],
@@ -60,13 +62,14 @@ export const PLANS: Plan[] = [
   {
     key: "PRO",
     name: "Pro",
-    monthlyAmount: 40000,
+    monthlyAmount: 43000,
+    baseAmount: 40000,
     tagline: "High volume scaling.",
     bullets: [
+      "3 Staff Seats",
       "All Templates (Any Choice)",
-      "B2B & Wholesale",
-      "Multi-vendor",
-      "Dedicated Support",
+      "Unlimited Everything",
+      "Vayva Cut Pro Included",
     ],
     ctaLabel: "Upgrade to Pro",
   },

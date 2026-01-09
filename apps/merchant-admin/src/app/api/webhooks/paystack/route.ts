@@ -68,10 +68,42 @@ export async function POST(req: NextRequest) {
       backoff: { type: "exponential", delay: 1000 },
     });
 
-    // 3. INTEGRATION: WhatsApp Receipt (If 'charge.success')
+    // 3. Subscription Handling
+    if (eventType === "charge.success" && data.metadata?.type === "subscription") {
+      const { storeId, newPlan } = data.metadata;
+
+      if (storeId && newPlan) {
+        try {
+          await prisma.merchantSubscription.upsert({
+            where: { storeId },
+            create: {
+              storeId,
+              planSlug: newPlan,
+              status: "active",
+              provider: "paystack",
+              currentPeriodStart: new Date(),
+              currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+              trialEndsAt: null, // End trial immediately
+            },
+            update: {
+              planSlug: newPlan,
+              status: "active",
+              currentPeriodStart: new Date(),
+              currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              trialEndsAt: null,
+            }
+          });
+          console.log(`Updated subscription for store ${storeId} to ${newPlan}`);
+        } catch (subErr) {
+          console.error("Failed to update merchant subscription", subErr);
+        }
+      }
+    }
+
+    // 4. INTEGRATION: WhatsApp Receipt (If 'charge.success')
     // We do this immediately here for Reliability in this specific task scope
     // Ideally this goes into the Worker, but we are ensuring it works now.
-    if (eventType === "charge.success" && data.customer?.phone) {
+    if (eventType === "charge.success" && data.customer?.phone && data.metadata?.type !== "subscription") {
       try {
         // Attempt to find Order ID from metadata or fetch via reference
         // Metadata often has { orderId: "..." }

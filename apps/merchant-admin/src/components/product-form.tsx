@@ -16,6 +16,57 @@ export const ProductForm = ({
 }: ProductFormProps) => {
   const router = useRouter();
   const [hasVariants, setHasVariants] = useState(false);
+  const [options, setOptions] = useState<{ name: string, values: string[] }[]>([]);
+  const [variants, setVariants] = useState<{ name: string, price?: number, inventory?: number, sku?: string }[]>([]);
+
+  const [newOptionName, setNewOptionName] = useState("");
+  const [newOptionValues, setNewOptionValues] = useState("");
+
+  const handleAddOption = () => {
+    if (!newOptionName || !newOptionValues) return;
+    const values = newOptionValues.split(",").map(v => v.trim()).filter(Boolean);
+    const newOptions = [...options, { name: newOptionName, values }];
+    setOptions(newOptions);
+    setNewOptionName("");
+    setNewOptionValues("");
+    generateVariants(newOptions);
+  };
+
+  const removeOption = (idx: number) => {
+    const newOptions = [...options];
+    newOptions.splice(idx, 1);
+    setOptions(newOptions);
+    generateVariants(newOptions);
+  };
+
+  const generateVariants = (opts: typeof options) => {
+    if (opts.length === 0) {
+      setVariants([]);
+      return;
+    }
+
+    // Cartesian Product
+    const cartesian = (sets: string[][]) => {
+      return sets.reduce<string[][]>((acc, set) => {
+        return acc.flatMap(x => set.map(y => [...x, y]));
+      }, [[]]);
+    };
+
+    const combinations = cartesian(opts.map(o => o.values));
+    const newVariants = combinations.map(combo => ({
+      name: combo.join(" / "),
+      price: initialData?.price,
+      inventory: 0,
+      sku: ""
+    }));
+    setVariants(newVariants);
+  };
+
+  const updateVariant = (idx: number, field: string, value: any) => {
+    const updated = [...variants];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setVariants(updated);
+  };
 
   // Test save
   const handleSave = () => {
@@ -110,31 +161,94 @@ export const ProductForm = ({
             </div>
 
             {hasVariants && (
-              <div className="mt-6 pt-6 border-t border-white/5">
-                {isEdit ? (
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                    <div>
-                      <p className="font-bold text-white">Manage Variants</p>
-                      <p className="text-xs text-text-secondary">
-                        Edit sizes, colors, and prices
-                      </p>
+              <div className="mt-6 pt-6 border-t border-white/5 space-y-6">
+
+                {/* Option Builder */}
+                <div className="space-y-4">
+                  {options.map((opt, idx) => (
+                    <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/10">
+                      <div className="flex justify-between mb-2">
+                        <span className="font-bold text-white">{opt.name}</span>
+                        <button onClick={() => removeOption(idx)} className="text-xs text-red-400 hover:text-red-300">Remove</button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {opt.values.map((val, vIdx) => (
+                          <span key={vIdx} className="bg-white/10 px-2 py-1 rounded text-xs text-white border border-white/10">{val}</span>
+                        ))}
+                      </div>
                     </div>
-                    <Link
-                      href={`/dashboard/products/${initialData?.id || "new"}/variants`}
-                    >
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="bg-white/10 text-white hover:bg-white/20"
-                      >
-                        Open Editor
-                      </Button>
-                    </Link>
+                  ))}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-2 block">Option Name</label>
+                      <Input
+                        placeholder="e.g. Size"
+                        value={newOptionName}
+                        onChange={(e) => setNewOptionName(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-text-secondary uppercase font-bold tracking-wider mb-2 block">Option Values</label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="e.g. Small, Medium (comma separated)"
+                          value={newOptionValues}
+                          onChange={(e) => setNewOptionValues(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddOption();
+                            }
+                          }}
+                        />
+                        <Button onClick={handleAddOption} disabled={!newOptionName || !newOptionValues}>Add</Button>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-sm text-state-warning bg-state-warning/10 p-4 rounded-xl border border-state-warning/20">
-                    You can configure variants after saving the product for the
-                    first time.
+                </div>
+
+                {/* Generated Variants Table */}
+                {variants.length > 0 && (
+                  <div className="overflow-x-auto rounded-xl border border-white/10">
+                    <table className="w-full text-left text-sm text-white">
+                      <thead className="bg-white/5 uppercase text-xs text-text-secondary font-bold">
+                        <tr>
+                          <th className="p-3">Variant</th>
+                          <th className="p-3">Price</th>
+                          <th className="p-3">Stock</th>
+                          <th className="p-3">SKU</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {variants.map((variant, idx) => (
+                          <tr key={idx} className="hover:bg-white/5 transition-colors">
+                            <td className="p-3 font-medium">{variant.name}</td>
+                            <td className="p-3">
+                              <Input
+                                className="h-8 w-24 text-right font-mono"
+                                defaultValue={initialData?.price || 0}
+                                onChange={(e) => updateVariant(idx, 'price', e.target.value)}
+                              />
+                            </td>
+                            <td className="p-3">
+                              <Input
+                                className="h-8 w-20 text-right font-mono"
+                                defaultValue={0}
+                                onChange={(e) => updateVariant(idx, 'inventory', e.target.value)}
+                              />
+                            </td>
+                            <td className="p-3">
+                              <Input
+                                className="h-8 w-32 font-mono text-xs"
+                                placeholder="SKU"
+                                onChange={(e) => updateVariant(idx, 'sku', e.target.value)}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>

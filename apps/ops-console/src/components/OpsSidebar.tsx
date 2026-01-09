@@ -3,6 +3,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -75,9 +76,20 @@ export function OpsSidebar({ isCollapsed, onToggle }: OpsSidebarProps) {
   return (
     <div className={`${isCollapsed ? "w-20" : "w-64"} bg-white border-r border-gray-200 h-screen flex flex-col fixed left-0 top-0 z-50 transition-all duration-300`}>
       <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100">
+
         {!isCollapsed && (
-          <div className="font-bold text-lg tracking-tight whitespace-nowrap">
-            Vayva <span className="text-gray-400">Ops</span>
+          <div className="flex items-center gap-3 px-2">
+            <Image
+              src="/vayva-logo.png"
+              alt="Vayva Ops"
+              width={28}
+              height={28}
+              className="rounded-md object-contain"
+            />
+            <div className="flex flex-col leading-none">
+              <span className="font-bold text-sm tracking-tight text-gray-900">Vayva Ops</span>
+              <span className="text-[10px] font-bold text-white bg-black px-1.5 py-0.5 rounded w-fit mt-0.5">ADMIN</span>
+            </div>
           </div>
         )}
         <button
