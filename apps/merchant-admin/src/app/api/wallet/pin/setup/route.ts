@@ -4,7 +4,7 @@ import { prisma } from "@vayva/db";
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 // POST /api/wallet/pin/setup
 export async function POST(request: NextRequest) {
@@ -58,12 +58,15 @@ export async function POST(request: NextRequest) {
         });
 
         // 6. Security Alert: Notify Merchant via Email
+        // 6. Security Alert: Notify Merchant via Email
         if (process.env.RESEND_API_KEY) {
-            await resend.emails.send({
-                from: process.env.RESEND_FROM_EMAIL || "security@vayva.app",
-                to: user.email, // Assuming user.email exists in session or fetch from user profile
-                subject: `Security Alert: Wallet PIN ${isChange ? "Changed" : "Set"}`,
-                html: `
+            try {
+                const resend = new Resend(process.env.RESEND_API_KEY);
+                await resend.emails.send({
+                    from: process.env.RESEND_FROM_EMAIL || "security@vayva.app",
+                    to: user.email, // Assuming user.email exists in session or fetch from user profile
+                    subject: `Security Alert: Wallet PIN ${isChange ? "Changed" : "Set"}`,
+                    html: `
                     <div style="font-family: sans-serif; padding: 20px;">
                         <h2>Wallet Security Alert</h2>
                         <p>Hello,</p>
@@ -73,7 +76,10 @@ export async function POST(request: NextRequest) {
                         <p>Time: ${new Date().toLocaleString()}</p>
                     </div>
                 `
-            });
+                });
+            } catch (emailError) {
+                console.error("Failed to send wallet security email:", emailError);
+            }
         }
 
         return NextResponse.json({ success: true, message: "PIN set successfully" });
