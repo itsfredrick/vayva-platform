@@ -4,14 +4,26 @@ import { FEATURES } from "../env-validation";
 import { BRAND, getCanonicalUrl } from "@vayva/shared";
 
 
-const RESEND_KEY =
-  process.env.NODE_ENV === "test"
-    ? process.env.RESEND_API_KEY || "re_test_test_key_123"
-    : process.env.RESEND_API_KEY;
-
-const resend = new Resend(RESEND_KEY);
 
 export class ResendEmailService {
+  private static resendClient: Resend | null = null;
+
+  private static get client() {
+    if (!this.resendClient) {
+      const RESEND_KEY =
+        process.env.NODE_ENV === "test"
+          ? process.env.RESEND_API_KEY || "re_test_test_key_123"
+          : process.env.RESEND_API_KEY;
+
+      if (!RESEND_KEY) {
+        // In build context or when key is missing, return a dummy or throw when used
+        console.warn("[ResendEmailService] RESEND_API_KEY is missing.");
+      }
+      this.resendClient = new Resend(RESEND_KEY);
+    }
+    return this.resendClient;
+  }
+
   private static fromEmail =
     process.env.RESEND_FROM_EMAIL || `No-reply@${BRAND.domain}`;
   private static billingEmail = process.env.EMAIL_BILLING || `Billing@${BRAND.domain}`;
@@ -33,7 +45,7 @@ export class ResendEmailService {
     this.assertConfigured();
 
     try {
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await this.client.emails.send({
         from: this.fromEmail,
         to,
         subject: "Verify your email - Vayva",
@@ -61,7 +73,7 @@ export class ResendEmailService {
     this.assertConfigured();
 
     try {
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await this.client.emails.send({
         from: this.helloEmail,
         to,
         subject: `Welcome to Vayva, ${firstName}!`,
@@ -88,7 +100,7 @@ export class ResendEmailService {
     this.assertConfigured();
 
     try {
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await this.client.emails.send({
         from: this.fromEmail,
         to,
         subject: "Security Alert: Password Changed",
@@ -119,7 +131,7 @@ export class ResendEmailService {
     this.assertConfigured();
 
     try {
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await this.client.emails.send({
         from: this.billingEmail,
         to,
         subject: `Receipt for ${storeName} - ${invoiceNumber}`,
@@ -156,7 +168,7 @@ export class ResendEmailService {
       const billingUrl = getCanonicalUrl("/dashboard/settings/billing");
 
 
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await this.client.emails.send({
         from: this.billingEmail,
         to,
         subject: `Action Required: Your subscription for ${storeName} expires in 3 days`,

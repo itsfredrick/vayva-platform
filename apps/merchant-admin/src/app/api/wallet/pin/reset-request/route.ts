@@ -4,7 +4,7 @@ import { prisma } from "@vayva/db";
 import { Resend } from "resend";
 import jwt from "jsonwebtoken";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";
 
 // POST /api/wallet/pin/reset-request
@@ -31,12 +31,15 @@ export async function POST(request: NextRequest) {
         const resetUrl = `${appUrl}/dashboard/account/reset-pin?token=${token}`;
 
         // 3. Send Email
+        // 3. Send Email
         if (process.env.RESEND_API_KEY) {
-            await resend.emails.send({
-                from: process.env.RESEND_FROM_EMAIL || "security@vayva.app",
-                to: user.email,
-                subject: "Action Required: Reset your Wallet PIN",
-                html: `
+            try {
+                const resend = new Resend(process.env.RESEND_API_KEY);
+                await resend.emails.send({
+                    from: process.env.RESEND_FROM_EMAIL || "security@vayva.app",
+                    to: user.email,
+                    subject: "Action Required: Reset your Wallet PIN",
+                    html: `
                     <div style="font-family: sans-serif; padding: 20px;">
                         <h2>Reset Wallet PIN</h2>
                         <p>Hello,</p>
@@ -46,7 +49,10 @@ export async function POST(request: NextRequest) {
                         <p>If you didn't request this, you can safely ignore this email.</p>
                     </div>
                 `
-            });
+                });
+            } catch (emailError) {
+                console.error("Failed to send PIN reset email:", emailError);
+            }
         }
 
         // 4. Log/Persist if needed (Audit Log)

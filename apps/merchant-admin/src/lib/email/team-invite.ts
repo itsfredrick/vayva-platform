@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import { wrapEmail, renderButton, BRAND_COLOR } from "./layout";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 interface SendTeamInviteParams {
   email: string;
@@ -62,6 +62,11 @@ export async function sendTeamInvite({
     `;
 
   try {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn("RESEND_API_KEY missing, skipping team invite email");
+      return { success: false, error: "Missing API Key" };
+    }
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const { data, error } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "Vayva <noreply@vayva.ng>",
       to: [email],

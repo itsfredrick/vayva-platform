@@ -11,15 +11,22 @@ import { getRouteForTemplate } from "../sender-routing";
  * - X-Vayva Headers
  */
 export class ResendAdapter implements EmailAdapter {
-  private client: Resend;
+  private _client: Resend | null = null;
 
   constructor() {
-    if (!process.env.RESEND_API_KEY) {
-      console.warn(
-        "[ResendAdapter] Missing RESEND_API_KEY. Emails will fail if not tested.",
-      );
+    // Lazy init
+  }
+
+  private get client(): Resend {
+    if (!this._client) {
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey) {
+        console.warn("[ResendAdapter] Missing RESEND_API_KEY. Emails will fail.");
+        // We can throw here or allow it to fail later. Throwing is safer for debugging but better to fail at send time.
+      }
+      this._client = new Resend(apiKey);
     }
-    this.client = new Resend(process.env.RESEND_API_KEY);
+    return this._client;
   }
 
   async send(payload: EmailPayload): Promise<EmailResult> {
