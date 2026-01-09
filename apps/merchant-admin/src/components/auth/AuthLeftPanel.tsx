@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Icon } from "@vayva/ui";
 
 interface AuthLeftPanelProps {
   showSignInLink?: boolean;
@@ -14,78 +15,80 @@ export const AuthLeftPanel = ({
   showSignUpLink,
 }: AuthLeftPanelProps) => {
   return (
-    <div className="hidden lg:flex lg:w-[45%] bg-gray-50 flex-col justify-between p-12 relative">
-      {/* Top: Logo at 2x size (100% increase) */}
-      <div>
+    <div className="hidden lg:flex lg:w-[45%] bg-[#0A0A0A] flex-col justify-between p-12 relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2" />
+
+      {/* Top: Branding */}
+      <div className="relative z-10">
         <Link href="/" className="inline-flex items-center gap-3 group">
-          <Image
-            src="/brand-logo.png"
-            alt="Vayva Logo"
-            width={64}
-            height={64}
-            className="object-contain"
-            priority
-          />
-          <span className="text-3xl font-bold text-black">Vayva</span>
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+            <span className="font-black text-xl tracking-tighter">V</span>
+          </div>
+          <span className="text-2xl font-bold text-white tracking-tight">Vayva</span>
         </Link>
       </div>
 
-      {/* Center: Context & Reassurance */}
-      <div className="flex flex-col items-start justify-center flex-1 py-12 max-w-md">
-        {/* Subtle abstract illustration */}
-        <div className="w-full mb-12">
-          <div className="aspect-[4/3] bg-gradient-to-br from-gray-200 to-gray-100 rounded-2xl flex items-center justify-center relative overflow-hidden">
-            {/* Abstract WhatsApp-adjacent visual */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 border-4 border-gray-300 rounded-3xl rotate-12 opacity-40"></div>
-              <div className="absolute w-24 h-24 border-4 border-gray-400 rounded-2xl -rotate-6 opacity-30"></div>
+      {/* Center: Hero Visual (CSS Mock Dashboard) */}
+      <div className="relative z-10 flex-1 flex items-center justify-center py-12">
+        <div className="relative w-full max-w-sm aspect-square">
+          {/* Main Card */}
+          <div className="absolute inset-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 transform -rotate-6 shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <div className="w-24 h-2 bg-white/20 rounded-full mb-2" />
+                <div className="w-16 h-2 bg-white/10 rounded-full" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                <Icon name="TrendingUp" size={16} className="text-green-400" />
+              </div>
+            </div>
+            {/* Chart Mock */}
+            <div className="h-32 w-full flex items-end gap-2 mb-6">
+              {[40, 65, 45, 80, 55, 90, 75].map((h, i) => (
+                <div key={i} className="flex-1 bg-gradient-to-t from-green-500/20 to-green-500/50 rounded-t-sm" style={{ height: `${h}%` }} />
+              ))}
+            </div>
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/5 p-3 rounded-xl">
+                <div className="text-xs text-white/40 mb-1">Total Sales</div>
+                <div className="text-lg font-bold text-white">₦2.4M</div>
+              </div>
+              <div className="bg-white/5 p-3 rounded-xl">
+                <div className="text-xs text-white/40 mb-1">Orders</div>
+                <div className="text-lg font-bold text-white">1,248</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Floating Notification Card */}
+          <div className="absolute -bottom-4 -right-4 bg-[#111] border border-gray-800 p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
+              <Icon name="ShoppingBag" size={20} />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-white">New Order</div>
+              <div className="text-xs text-green-400">+ ₦45,000.00</div>
             </div>
           </div>
         </div>
-
-        {/* Headline */}
-        <h2 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">
-          Run your business on WhatsApp — with structure behind it.
-        </h2>
-
-        {/* Supporting copy */}
-        <p className="text-lg text-gray-700 mb-3 leading-relaxed">
-          Vayva turns conversations into orders, payments, deliveries, and
-          reliable business records.
-        </p>
-
-        {/* Optional secondary line */}
-        <p className="text-sm text-gray-600 leading-relaxed">
-          Built for African merchants.
-        </p>
       </div>
 
-      {/* Bottom: Navigation links */}
-      <div className="flex items-center justify-between text-sm">
-        <Link
-          href="/"
-          className="text-gray-700 hover:text-black font-medium transition-colors"
-        >
-          ← Back to home
-        </Link>
+      {/* Bottom: Copy */}
+      <div className="relative z-10 max-w-md">
+        <h2 className="text-3xl font-black text-white mb-4 leading-tight">
+          Run your business on WhatsApp. With structure.
+        </h2>
 
-        {showSignInLink && (
-          <Link
-            href="/signin"
-            className="text-gray-700 hover:text-black font-medium transition-colors"
-          >
-            Sign in
-          </Link>
-        )}
-
-        {showSignUpLink && (
-          <Link
-            href="/signup"
-            className="text-gray-700 hover:text-black font-medium transition-colors"
-          >
-            Create account
-          </Link>
-        )}
+        <div className="flex gap-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="w-2 h-2 rounded-full bg-white/20" />
+          ))}
+          <div className="w-8 h-2 rounded-full bg-green-500" />
+        </div>
       </div>
     </div>
   );
