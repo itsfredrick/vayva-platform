@@ -3,9 +3,6 @@ import { requireAuth } from "@/lib/auth/session";
 import { prisma } from "@vayva/db";
 import Groq from "groq-sdk";
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-});
 
 export async function GET() {
     try {
@@ -62,14 +59,23 @@ export async function GET() {
             Keep the tone professional and helpful.
         `;
 
-        const completion = await groq.chat.completions.create({
-            messages: [{ role: "user", content: prompt }],
-            model: "llama3-8b-8192",
-            response_format: { type: "json_object" },
-        });
+        let aiInsights = {
+            summary: "AI Insights unavailable (Key missing)",
+            growthTip: "Check your settings to enable AI features.",
+            churnRisk: "Unknown",
+            inventoryHint: "Track inventory manually"
+        };
 
-        const responseContent = completion.choices[0].message.content;
-        const aiInsights = responseContent ? JSON.parse(responseContent) : {};
+        if (process.env.GROQ_API_KEY) {
+            const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+            const completion = await groq.chat.completions.create({
+                messages: [{ role: "user", content: prompt }],
+                model: "llama3-8b-8192",
+                response_format: { type: "json_object" },
+            });
+            const responseContent = completion.choices[0].message.content;
+            if (responseContent) aiInsights = JSON.parse(responseContent);
+        }
 
         return NextResponse.json({
             stats: {
