@@ -14,10 +14,10 @@
     "@vayva/schemas": "workspace:*",
     "@vayva/theme": "workspace:*",
     "@vayva/ui": "workspace:*",
-    "framer-motion": "^12.23.26",
-    "lucide-react": "^0.469.0",
+    "framer-motion": "^12.26.0",
+    "lucide-react": "^0.562.0",
     "next": "16.1.1",
-    "react": "19.2.3",
+    "react": "18.3.1",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
