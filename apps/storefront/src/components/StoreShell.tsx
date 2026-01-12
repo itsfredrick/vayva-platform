@@ -144,6 +144,83 @@ export function StoreShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[60] md:hidden">
+          <button
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            aria-label="Close mobile menu"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="absolute top-4 left-4 right-4 rounded-2xl bg-white shadow-xl border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 bg-black text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {store?.name?.charAt(0)}
+                </div>
+                <span className="font-bold text-lg tracking-tight">
+                  {store?.name}
+                </span>
+              </div>
+              <button
+                className="p-2 rounded-full hover:bg-gray-100"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close menu"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <nav className="space-y-4 text-sm font-medium">
+              <Link
+                href={`/?store=${store?.slug}`}
+                className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Home <ChevronRight size={16} />
+              </Link>
+              <Link
+                href={`/products?store=${store?.slug}`}
+                className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Shop <ChevronRight size={16} />
+              </Link>
+              <Link
+                href={`/pages/about?store=${store?.slug}`}
+                className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                About <ChevronRight size={16} />
+              </Link>
+              <Link
+                href={`/pages/contact?store=${store?.slug}`}
+                className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Contact <ChevronRight size={16} />
+              </Link>
+            </nav>
+
+            <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+              <Link
+                href={`/${lang}/account`}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-200 px-4 py-2 font-medium hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <User size={16} /> Account
+              </Link>
+              <Link
+                href={`/cart?store=${store?.slug}`}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-4 py-2 font-medium text-white hover:bg-gray-900"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <ShoppingBag size={16} /> Cart
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="flex-1">{children}</main>
 
