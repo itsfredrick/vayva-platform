@@ -148,27 +148,79 @@ export default function StoreHome() {
   return (
     <StoreShell>
       {/* Hero Section */}
-      <section className="relative px-4 py-20 bg-gray-50 mb-16">
-        <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-            {store.name}
-          </h1>
-          <p className="text-lg md:text-xl text-gray-500 max-w-2xl mb-10 leading-relaxed">
-            {store.tagline ||
-              "Explore our varied collection of premium products."}
-          </p>
-          <Link href={`/collections/all?store=${store.slug}`}>
-            <button className="bg-black text-white px-8 py-4 rounded-full font-bold text-sm tracking-wide hover:bg-gray-900 transition-colors">
-              Shop All Products
-            </button>
-          </Link>
+      <section className="relative px-4 pt-20 pb-16 bg-gradient-to-b from-gray-50 via-white to-white mb-16 overflow-hidden">
+        <div className="max-w-7xl mx-auto grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
+          <div className="text-center lg:text-left">
+            <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+              Curated daily drops
+            </span>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-6 mb-6 text-gray-900">
+              {store.name}
+            </h1>
+            <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto lg:mx-0 mb-8 leading-relaxed">
+              {store.tagline ||
+                "Explore our varied collection of premium products."}
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <Link href={`/collections/all?store=${store.slug}`}>
+                <button className="bg-black text-white px-8 py-4 rounded-full font-bold text-sm tracking-wide hover:bg-gray-900 transition-colors">
+                  Shop All Products
+                </button>
+              </Link>
+              <Link
+                href={`/collections/new?store=${store.slug}`}
+                className="text-sm font-semibold text-gray-700 hover:text-black"
+              >
+                View new arrivals →
+              </Link>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+            <div className="grid gap-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-2">
+                  Why shop here
+                </p>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Trusted by customers who care about quality.
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {[
+                  "Fast, trackable delivery",
+                  "Secure checkout",
+                  "Handpicked collections",
+                  "Friendly support",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-gray-600 font-medium"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between rounded-2xl border border-gray-100 px-4 py-3 text-sm text-gray-500">
+                <span>Orders fulfilled in</span>
+                <span className="font-semibold text-gray-900">
+                  24-48 hours
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Featured Products */}
       <section className="max-w-7xl mx-auto px-4 mb-24">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold">Featured</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
+              Curated for you
+            </p>
+            <h2 className="text-2xl font-bold">Featured</h2>
+          </div>
           <Link
             href={`/collections/all?store=${store.slug}`}
             className="flex items-center gap-2 text-sm font-medium hover:text-gray-600"
