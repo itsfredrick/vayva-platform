@@ -10,7 +10,7 @@
         "fastify": "^4.21.0",
         "@fastify/cors": "^8.3.0",
         "@vayva/db": "workspace:*",
-        "@prisma/client": "^5.7.0",
+        "@prisma/client": "^5.22.0",
         "axios": "^1.6.0",
         "crypto": "^1.0.1"
     },
