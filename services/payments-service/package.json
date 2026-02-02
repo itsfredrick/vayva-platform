@@ -17,7 +17,7 @@
         "zod": "^3.22.4",
         "bullmq": "^5.4.1",
         "dotenv": "^16.4.5",
-        "axios": "^1.6.7",
+        "axios": "^1.13.4",
         "bcryptjs": "^2.4.3"
     },
     "devDependencies": {
